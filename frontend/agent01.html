@@ -42,9 +42,9 @@
       justify-content: space-between;
       gap: 18px;
       padding: 14px 18px;
-      margin-bottom: 16px;
+      margin-bottom: 0;
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 0;
       background: rgba(255, 255, 255, 0.94);
       box-shadow: 0 6px 16px rgba(9, 30, 66, 0.05);
       position: sticky;
@@ -115,10 +115,11 @@
       justify-content: space-between;
       gap: 18px;
       align-items: flex-start;
-      margin-bottom: 18px;
+      margin-bottom: 0;
       padding: 20px 22px;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-top: 0;
+      border-radius: 0;
       background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
       box-shadow: 0 8px 24px rgba(9, 30, 66, 0.06);
     }
@@ -135,20 +136,28 @@
     .grid {
       display: grid;
       grid-template-columns: 1.04fr 0.96fr;
-      gap: 18px;
-      margin-bottom: 18px;
+      gap: 0;
+      margin-bottom: 0;
     }
     .column-stack {
       display: grid;
-      gap: 18px;
+      gap: 0;
       align-content: start;
     }
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 18px;
+      border-top: 0;
+      border-left: 0;
+      border-radius: 0;
+      padding: 20px 22px;
       box-shadow: 0 10px 28px rgba(9, 30, 66, 0.06);
+    }
+    .grid > section.panel:first-child {
+      border-left: 1px solid var(--line);
+    }
+    .grid > .column-stack > .panel:first-child {
+      border-left: 0;
     }
     .stats {
       display: grid;
@@ -488,6 +497,12 @@
     }
     .accept { background: linear-gradient(135deg, #56be70, #00ad0f); }
     .reject { background: linear-gradient(135deg, #cb0000, #de350b); color: #ffffff; }
+    #decisionSection,
+    #analysisSection {
+      margin: 0;
+      border-top: 0;
+      border-left: 1px solid var(--line);
+    }
     @media (max-width: 980px) {
       .grid, .row, .row-3, .stats, .summary-grid, .benchmark-kpis { grid-template-columns: 1fr; }
       .top { display: block; }
@@ -712,7 +727,7 @@
       </section>
     </div>
 
-	    <section class="panel" id="decisionSection" style="margin-bottom: 18px;">
+	    <section class="panel" id="decisionSection">
       <div class="section-head">
         <div>
           <div class="step-title">Decision Review Queue</div>
