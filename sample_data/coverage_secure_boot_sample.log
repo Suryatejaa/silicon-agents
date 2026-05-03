@@ -1,0 +1,15 @@
+COVERAGE REPORT - Secure Boot ROM v3.2
+Tool: Synopsys VCS M-2024.06
+Project: secure_boot_revE
+Block: secure_boot_top
+Regression: nightly_secure_boot_2026_05_02
+Testbench: tb_secure_boot_uvm
+Coverage model owner: security_dv_team
+Cover Group: image_authentication [Coverage: 50.0%]
+bins signed_image_nominal: 144 hits PASS
+bins rollback_protection_fault: 0 hits FAIL gap
+bins key_revocation_path: 0 hits FAIL gap
+
+Cover Group: lifecycle_lockdown [Coverage: 50.0%]
+bins lifecycle_fuse_program: 73 hits PASS
+bins debug_unlock_denied: 2 hits FAIL below threshold

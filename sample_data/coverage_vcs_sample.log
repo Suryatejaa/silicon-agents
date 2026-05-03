@@ -1,0 +1,17 @@
+COVERAGE REPORT - USB Controller v2.3
+Tool: Synopsys VCS M-2023.12
+Project: usb_ctrl_revA
+Block: usb_controller_top
+Regression: nightly_usb_full_2026_05_02
+Testbench: tb_usb_controller_uvm
+Coverage model owner: verification_team_usb
+Cover Group: usb_transfer_type [Coverage: 62.5%]
+bins bulk_transfer: 847 hits PASS
+bins interrupt_transfer: 312 hits PASS
+bins isochronous_transfer: 0 hits FAIL gap
+bins control_transfer_error: 0 hits FAIL gap
+
+Cover Group: dma_arbitration [Coverage: 33.3%]
+bins single_dma_active: 1204 hits PASS
+bins concurrent_dma_conflict: 0 hits FAIL gap
+bins dma_during_interrupt: 3 hits FAIL below threshold

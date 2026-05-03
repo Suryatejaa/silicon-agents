@@ -1,0 +1,22 @@
+Run: nightly_secure_boot_regression_2026_05_02
+RTL Change: secure_boot_v3.2 to v3.3 (commit e901cf)
+Block: secure_boot_top
+Branch: feature/key-rollback-hardening
+Simulator: Synopsys VCS M-2024.06
+Verification owner: secure_boot_verification
+Total: 22 | PASSED: 9 | FAILED: 13
+secure_boot_hash_test_001 FAIL hash mismatch remained latched after secondary image retry
+secure_boot_hash_test_002 FAIL hash mismatch remained latched after secondary image retry
+secure_boot_hash_test_003 FAIL retry image digest was not re-sampled after auth restart
+secure_boot_hash_test_004 FAIL retry image digest was not re-sampled after auth restart
+secure_boot_hash_test_005 FAIL hash mismatch remained latched after secondary image retry
+secure_boot_hash_test_006 FAIL retry image digest was not re-sampled after auth restart
+secure_boot_hash_test_007 FAIL hash mismatch remained latched after secondary image retry
+secure_boot_hash_test_008 FAIL retry image digest was not re-sampled after auth restart
+secure_boot_hash_test_009 FAIL hash mismatch remained latched after secondary image retry
+secure_boot_hash_test_010 FAIL retry image digest was not re-sampled after auth restart
+rollback_counter_test_011 FAIL rollback counter window stayed open after fuse sample
+rollback_counter_test_012 FAIL rollback counter window stayed open after fuse sample
+rollback_counter_test_013 FAIL rollback counter window stayed open after fuse sample
+secure_boot_smoke_014 PASS
+secure_boot_smoke_015 PASS

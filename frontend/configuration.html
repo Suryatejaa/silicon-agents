@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Enterprise Configuration</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --line: #dfe1e6;
+      --text: #172b4d;
+      --muted: #5e6c84;
+      --accent: #0c66e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #fbfcfe 0%, #f4f5f7 100%);
+      color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 22px 40px;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 6px 16px rgba(9, 30, 66, 0.05);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .app-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .hero {
+      margin-bottom: 18px;
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+      box-shadow: 0 8px 24px rgba(9, 30, 66, 0.06);
+    }
+    h1 {
+      margin: 6px 0;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      max-width: 960px;
+      line-height: 1.55;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(9, 30, 66, 0.06);
+    }
+    .section-title {
+      color: var(--accent);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .section-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      max-width: 820px;
+    }
+    .status-banner {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-2);
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .status-strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    textarea, select, input, button {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field-stack {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .field-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+    .field-note {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      margin: -4px 0 12px;
+    }
+    .custom-field {
+      display: none;
+    }
+    .custom-field.is-visible {
+      display: block;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .toolbar button {
+      width: auto;
+      min-width: 150px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(12, 102, 228, 0.22);
+    }
+    .ghost {
+      background: #ffffff;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+    .summary-k {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+    .summary-v {
+      line-height: 1.5;
+    }
+    @media (max-width: 980px) {
+      .grid, .row, .row-3, .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .app-header {
+        display: block;
+        position: static;
+      }
+      .app-brand {
+        margin-bottom: 12px;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+      .status-banner {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">Enterprise Configuration Center</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" id="navHome">Home</a>
+        <a href="/agent01" id="navAgent01">Agent 01</a>
+        <a href="/agent02" id="navAgent02">Agent 02</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="/configuration" class="is-current" id="navConfig">Enterprise Config</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="section-title">Enterprise Configuration</div>
+      <h1>Centralized Governance Layer</h1>
+      <div class="sub">
+        This page no longer defines per-run chip programs, sample artifacts, or lot-specific context. Those now belong to workspace run profiles.
+        Enterprise configuration is reserved for organization-level review policy, escalation posture, naming conventions, and non-negotiable instructions that should influence every run.
+      </div>
+    </section>
+
+    <div class="status-banner">
+      <div><span class="status-strong" id="saveStatus">Ready.</span> Saved enterprise policy is stored in this browser for the current machine.</div>
+      <div id="lastSaved">No saved updates yet.</div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="section-title">Agent 01 Enterprise Policy</div>
+        <div class="section-copy">Set how verification findings should be framed for your organization. These controls should be owned by principal engineers, signoff leads, or platform owners, not changed every run.</div>
+        <div class="field-note">Run profiles in Agent 01 will supply the active design, mode, artifact, and historical run context. This page only sets organization-level interpretation and review posture.</div>
+        <div class="row-3">
+          <div class="field-stack">
+            <div class="field-label">Organization</div>
+            <select id="agent01OrgNameSelect"></select>
+            <input id="agent01OrgName" class="custom-field" value="Fabless Semiconductor Division" />
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Review Board</div>
+            <select id="agent01ReviewBoardSelect"></select>
+            <input id="agent01ReviewBoard" class="custom-field" value="Verification Signoff Council" />
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Output Style</div>
+            <select id="agent01OutputStyleSelect"></select>
+            <input id="agent01OutputStyle" class="custom-field" value="Evidence-first engineering review" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field-stack">
+            <div class="field-label">Escalation Policy</div>
+            <select id="agent01EscalationPolicySelect"></select>
+            <textarea id="agent01EscalationPolicy" class="custom-field">Escalate zero-hit protocol gaps and repeat regression clusters before cosmetic closure debt.</textarea>
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Evidence Policy</div>
+            <select id="agent01EvidencePolicySelect"></select>
+            <textarea id="agent01EvidencePolicy" class="custom-field">Every recommendation must cite the precise covergroup, bin, or clustered failure signal that justifies the action.</textarea>
+          </div>
+        </div>
+        <div class="field-stack">
+          <div class="field-label">Enterprise Instruction Addendum</div>
+          <select id="agent01InstructionAddendumSelect"></select>
+          <textarea id="agent01InstructionAddendum" class="custom-field">Prefer actions that fit the organization's standard DV workflow and minimize unnecessary RTL churn before signoff reviews.</textarea>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">Agent 02 Enterprise Policy</div>
+        <div class="section-copy">Set how yield and SPC findings should be framed for your organization. These controls represent standing operating policy, not the active lot review context.</div>
+        <div class="field-note">Run profiles in Agent 02 will supply the active lot style, artifact, and yield scenario. This page only defines management-level review posture and escalation guidance.</div>
+        <div class="row-3">
+          <div class="field-stack">
+            <div class="field-label">Organization</div>
+            <select id="agent02OrgNameSelect"></select>
+            <input id="agent02OrgName" class="custom-field" value="Product and Yield Engineering" />
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Review Board</div>
+            <select id="agent02ReviewBoardSelect"></select>
+            <input id="agent02ReviewBoard" class="custom-field" value="Yield Escalation Committee" />
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Output Style</div>
+            <select id="agent02OutputStyleSelect"></select>
+            <input id="agent02OutputStyle" class="custom-field" value="Revenue-aware lot review" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field-stack">
+            <div class="field-label">Escalation Policy</div>
+            <select id="agent02EscalationPolicySelect"></select>
+            <textarea id="agent02EscalationPolicy" class="custom-field">Escalate likely mis-bins and sustained SPC drift before low-value noise or isolated outliers.</textarea>
+          </div>
+          <div class="field-stack">
+            <div class="field-label">Risk Policy</div>
+            <select id="agent02RiskPolicySelect"></select>
+            <textarea id="agent02RiskPolicy" class="custom-field">Frame high-priority actions around revenue upside, lot-level containment, and cross-functional follow-up.</textarea>
+          </div>
+        </div>
+        <div class="field-stack">
+          <div class="field-label">Enterprise Instruction Addendum</div>
+          <select id="agent02InstructionAddendumSelect"></select>
+          <textarea id="agent02InstructionAddendum" class="custom-field">Prefer operationally actionable yield recommendations that can be routed to product, test, and process stakeholders without ambiguity.</textarea>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="section-title">Saved Enterprise Policy Summary</div>
+      <div class="section-copy">The agent workspaces merge this governance layer with the selected run profile at send time. Run profiles drive the active artifact and chip program. Enterprise policy only adds durable organization-level constraints.</div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-k">Agent 01 Policy</div>
+          <div class="summary-v" id="agent01Summary">No saved enterprise policy yet.</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-k">Agent 02 Policy</div>
+          <div class="summary-v" id="agent02Summary">No saved enterprise policy yet.</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="saveAll" type="button">Save Enterprise Policy</button>
+        <button id="resetDefaults" class="ghost" type="button">Reset To Default Policy</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
+    document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
+    document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
+    document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+    document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+
+    const FIELD_CONFIG = {
+      agent01: [
+        { key: "org_name", selectId: "agent01OrgNameSelect", customId: "agent01OrgName" },
+        { key: "review_board", selectId: "agent01ReviewBoardSelect", customId: "agent01ReviewBoard" },
+        { key: "output_style", selectId: "agent01OutputStyleSelect", customId: "agent01OutputStyle" },
+        { key: "escalation_policy", selectId: "agent01EscalationPolicySelect", customId: "agent01EscalationPolicy" },
+        { key: "evidence_policy", selectId: "agent01EvidencePolicySelect", customId: "agent01EvidencePolicy" },
+        { key: "instruction_addendum", selectId: "agent01InstructionAddendumSelect", customId: "agent01InstructionAddendum" }
+      ],
+      agent02: [
+        { key: "org_name", selectId: "agent02OrgNameSelect", customId: "agent02OrgName" },
+        { key: "review_board", selectId: "agent02ReviewBoardSelect", customId: "agent02ReviewBoard" },
+        { key: "output_style", selectId: "agent02OutputStyleSelect", customId: "agent02OutputStyle" },
+        { key: "escalation_policy", selectId: "agent02EscalationPolicySelect", customId: "agent02EscalationPolicy" },
+        { key: "risk_policy", selectId: "agent02RiskPolicySelect", customId: "agent02RiskPolicy" },
+        { key: "instruction_addendum", selectId: "agent02InstructionAddendumSelect", customId: "agent02InstructionAddendum" }
+      ]
+    };
+    const OPTION_LIBRARY = {
+      org_name: [
+        "Fabless Semiconductor Division",
+        "InSemi Delivery Unit",
+        "Product and Yield Engineering"
+      ],
+      review_board: [
+        "Verification Signoff Council",
+        "Program Architecture Review Board",
+        "Yield Escalation Committee"
+      ],
+      output_style: [
+        "Evidence-first engineering review",
+        "Executive-ready summary with engineering evidence",
+        "Revenue-aware lot review",
+        "Audit-friendly signoff format"
+      ],
+      escalation_policy: [
+        "Escalate highest escape-risk items before routine optimization work.",
+        "Escalate repeat offenders and blast-radius findings before isolated noise.",
+        "Escalate only when evidence supports cross-team intervention."
+      ],
+      evidence_policy: [
+        "Every recommendation must cite precise report evidence.",
+        "Prefer covergroup and bin level grounding over generic heuristics.",
+        "Do not recommend actions unless evidence is explicit in the parsed artifact."
+      ],
+      risk_policy: [
+        "Prioritize revenue upside and containment before exploratory follow-up.",
+        "Escalate sustained drift and probable mis-bins ahead of isolated parametric anomalies.",
+        "Frame actions for product, test, and process teams with clear ownership."
+      ],
+      instruction_addendum: [
+        "Prefer standard organizational workflows and avoid unnecessary churn.",
+        "Keep recommendations concise, auditable, and review-meeting ready.",
+        "Bias the output toward practical next actions that fit existing review governance."
+      ]
+    };
+
+    function nowLabel() {
+      return new Date().toLocaleString();
+    }
+
+    function setSaveStatus(message) {
+      document.getElementById("saveStatus").textContent = message;
+    }
+
+    function setLastSaved(message) {
+      document.getElementById("lastSaved").textContent = message;
+    }
+
+    async function apiFetch(path, options = {}) {
+      const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+      return fetch(`${apiBase}${path}`, options);
+    }
+
+    function populateFieldSelects(agentKey) {
+      FIELD_CONFIG[agentKey].forEach((field) => {
+        const select = document.getElementById(field.selectId);
+        select.innerHTML = "";
+        (OPTION_LIBRARY[field.key] || []).forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value.length > 80 ? `${value.slice(0, 80)}...` : value;
+          select.appendChild(option);
+        });
+        const custom = document.createElement("option");
+        custom.value = "__custom__";
+        custom.textContent = "Custom";
+        select.appendChild(custom);
+      });
+    }
+
+    function readFieldValue(selectId, customId) {
+      const select = document.getElementById(selectId);
+      const custom = document.getElementById(customId);
+      return select.value === "__custom__" ? custom.value : select.value;
+    }
+
+    function writeFieldValue(agentKey, fieldKey, value) {
+      const field = FIELD_CONFIG[agentKey].find((item) => item.key === fieldKey);
+      if (!field) return;
+      const select = document.getElementById(field.selectId);
+      const custom = document.getElementById(field.customId);
+      const options = Array.from(select.options).map((option) => option.value);
+      if (options.includes(value)) {
+        select.value = value;
+        custom.value = value;
+        custom.classList.remove("is-visible");
+      } else {
+        select.value = "__custom__";
+        custom.value = value || "";
+        custom.classList.add("is-visible");
+      }
+    }
+
+    function bindCustomVisibility(agentKey) {
+      FIELD_CONFIG[agentKey].forEach((field) => {
+        const select = document.getElementById(field.selectId);
+        const custom = document.getElementById(field.customId);
+        select.addEventListener("change", () => {
+          const isCustom = select.value === "__custom__";
+          custom.classList.toggle("is-visible", isCustom);
+          if (!isCustom) {
+            custom.value = select.value;
+          }
+          updateSummaries();
+        });
+      });
+    }
+
+    function defaultAgent01Config() {
+      return {
+        org_name: "Fabless Semiconductor Division",
+        review_board: "Verification Signoff Council",
+        output_style: "Evidence-first engineering review",
+        escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
+        evidence_policy: "Every recommendation must cite precise report evidence.",
+        instruction_addendum: "Prefer standard organizational workflows and avoid unnecessary churn."
+      };
+    }
+
+    function defaultAgent02Config() {
+      return {
+        org_name: "Product and Yield Engineering",
+        review_board: "Yield Escalation Committee",
+        output_style: "Revenue-aware lot review",
+        escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
+        risk_policy: "Prioritize revenue upside and containment before exploratory follow-up.",
+        instruction_addendum: "Prefer operationally actionable recommendations that fit existing review governance."
+      };
+    }
+
+    function readAgent01Form() {
+      return {
+        org_name: readFieldValue("agent01OrgNameSelect", "agent01OrgName"),
+        review_board: readFieldValue("agent01ReviewBoardSelect", "agent01ReviewBoard"),
+        output_style: readFieldValue("agent01OutputStyleSelect", "agent01OutputStyle"),
+        escalation_policy: readFieldValue("agent01EscalationPolicySelect", "agent01EscalationPolicy"),
+        evidence_policy: readFieldValue("agent01EvidencePolicySelect", "agent01EvidencePolicy"),
+        instruction_addendum: readFieldValue("agent01InstructionAddendumSelect", "agent01InstructionAddendum")
+      };
+    }
+
+    function readAgent02Form() {
+      return {
+        org_name: readFieldValue("agent02OrgNameSelect", "agent02OrgName"),
+        review_board: readFieldValue("agent02ReviewBoardSelect", "agent02ReviewBoard"),
+        output_style: readFieldValue("agent02OutputStyleSelect", "agent02OutputStyle"),
+        escalation_policy: readFieldValue("agent02EscalationPolicySelect", "agent02EscalationPolicy"),
+        risk_policy: readFieldValue("agent02RiskPolicySelect", "agent02RiskPolicy"),
+        instruction_addendum: readFieldValue("agent02InstructionAddendumSelect", "agent02InstructionAddendum")
+      };
+    }
+
+    function writeAgent01Form(config) {
+      writeFieldValue("agent01", "org_name", config.org_name || "");
+      writeFieldValue("agent01", "review_board", config.review_board || "");
+      writeFieldValue("agent01", "output_style", config.output_style || "");
+      writeFieldValue("agent01", "escalation_policy", config.escalation_policy || "");
+      writeFieldValue("agent01", "evidence_policy", config.evidence_policy || "");
+      writeFieldValue("agent01", "instruction_addendum", config.instruction_addendum || "");
+    }
+
+    function writeAgent02Form(config) {
+      writeFieldValue("agent02", "org_name", config.org_name || "");
+      writeFieldValue("agent02", "review_board", config.review_board || "");
+      writeFieldValue("agent02", "output_style", config.output_style || "");
+      writeFieldValue("agent02", "escalation_policy", config.escalation_policy || "");
+      writeFieldValue("agent02", "risk_policy", config.risk_policy || "");
+      writeFieldValue("agent02", "instruction_addendum", config.instruction_addendum || "");
+    }
+
+    function updateSummaries() {
+      const a1 = readAgent01Form();
+      const a2 = readAgent02Form();
+      document.getElementById("agent01Summary").textContent = `${a1.org_name} · ${a1.review_board} · ${a1.output_style}`;
+      document.getElementById("agent02Summary").textContent = `${a2.org_name} · ${a2.review_board} · ${a2.output_style}`;
+    }
+
+    async function fetchConfig(agent, defaults) {
+      try {
+        const response = await apiFetch(`/api/v1/config/${agent}`);
+        if (!response.ok) return defaults;
+        const payload = await response.json();
+        return { ...defaults, ...(payload.config || {}) };
+      } catch (error) {
+        return defaults;
+      }
+    }
+
+    async function saveAll() {
+      const [agent01Response, agent02Response] = await Promise.all([
+        apiFetch("/api/v1/config/agent01", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(readAgent01Form())
+        }),
+        apiFetch("/api/v1/config/agent02", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(readAgent02Form())
+        })
+      ]);
+      if (!agent01Response.ok || !agent02Response.ok) {
+        setSaveStatus("Could not save enterprise policy.");
+        return;
+      }
+      setSaveStatus("Enterprise policy saved.");
+      setLastSaved(`Last saved ${nowLabel()}`);
+      updateSummaries();
+    }
+
+    async function resetDefaults() {
+      writeAgent01Form(defaultAgent01Config());
+      writeAgent02Form(defaultAgent02Config());
+      await saveAll();
+    }
+
+    async function initializePage() {
+      populateFieldSelects("agent01");
+      populateFieldSelects("agent02");
+      bindCustomVisibility("agent01");
+      bindCustomVisibility("agent02");
+      const [agent01Config, agent02Config] = await Promise.all([
+        fetchConfig("agent01", defaultAgent01Config()),
+        fetchConfig("agent02", defaultAgent02Config())
+      ]);
+      writeAgent01Form(agent01Config);
+      writeAgent02Form(agent02Config);
+      updateSummaries();
+      setSaveStatus("Ready.");
+    }
+
+    document.getElementById("saveAll").addEventListener("click", () => {
+      saveAll();
+    });
+    document.getElementById("resetDefaults").addEventListener("click", resetDefaults);
+    initializePage().catch(() => {
+      setSaveStatus("Could not load enterprise policy.");
+    });
+  </script>
+</body>
+</html>

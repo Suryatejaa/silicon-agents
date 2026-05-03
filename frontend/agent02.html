@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Agent 02</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --ink: #172b4d;
+      --muted: #5e6c84;
+      --line: #dfe1e6;
+      --accent: #0c66e4;
+      --accent-2: #1d7afc;
+      --high: #ae2a19;
+      --med: #9f6b00;
+      --low: #216e4e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg, #fbfcfe 0%, #f4f5f7 100%);
+    }
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 22px 40px;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 6px 16px rgba(9, 30, 66, 0.05);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .hero {
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+      box-shadow: 0 8px 24px rgba(9, 30, 66, 0.06);
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 6px 0;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.02em;
+    }
+    .sub { color: var(--muted); line-height: 1.55; max-width: 820px; }
+    .app-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(9, 30, 66, 0.06);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .stat-label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    textarea, select, input, button {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #ffffff;
+    }
+    textarea {
+      min-height: 280px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .compact-textarea {
+      min-height: 110px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-profile {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(12, 102, 228, 0.22);
+    }
+    button:disabled,
+    select:disabled,
+    input:disabled,
+    textarea:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .toolbar button {
+      width: auto;
+      min-width: 140px;
+    }
+    .ghost {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      box-shadow: none;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+      max-height: 78vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .box {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+    }
+    .box.is-running {
+      border-color: #8fb8f7;
+      box-shadow: 0 0 0 1px rgba(12, 102, 228, 0.12) inset;
+    }
+    .box.is-complete {
+      border-color: var(--line);
+    }
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .step-state {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(12, 102, 228, 0.18);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+      flex: 0 0 auto;
+    }
+    .spinner.hidden {
+      display: none;
+    }
+    .orchestration-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .HIGH { background: #fdecea; color: var(--high); }
+    .MEDIUM { background: #fff3db; color: var(--med); }
+    .LOW { background: #dcfff1; color: var(--low); }
+    .feedback-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .feedback-row button {
+      width: auto;
+      min-width: 128px;
+      border: none;
+      cursor: pointer;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(9, 30, 66, 0.18);
+    }
+    .accept { background: linear-gradient(135deg, #36b37e, #216e4e); }
+    .reject { background: linear-gradient(135deg, #de350b, #ae2a19); }
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .summary {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .summary-kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid #eef1f5;
+    }
+    .summary-kv:last-child {
+      border-bottom: none;
+    }
+    .summary-k {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+    .summary-v {
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .benchmark-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .benchmark-kpi {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .benchmark-score {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .benchmark-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .results-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .results-actions button {
+      width: auto;
+      min-width: 180px;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .section-copy {
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 860px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (max-width: 980px) {
+      .grid, .row, .row-3, .stats, .summary-grid, .benchmark-kpis { grid-template-columns: 1fr; }
+      .app-header {
+        display: block;
+        position: static;
+      }
+      .app-brand {
+        margin-bottom: 12px;
+      }
+      .app-nav {
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">Agent 02 · Yield Intelligence Copilot</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" id="navHome">Home</a>
+        <a href="/agent01" id="navAgent01">Agent 01</a>
+        <a href="/agent02" class="is-current" id="navAgent02">Agent 02</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="/configuration" id="navConfig">Enterprise Config</a>
+      </nav>
+    </header>
+    <div class="hero">
+      <div class="eyebrow">Silicon Agents / Agent 02</div>
+      <div><a href="/" id="homeLink" style="color: var(--muted); text-decoration: none;">Back to home</a></div>
+      <h1>Yield Intelligence Copilot</h1>
+      <div class="sub">
+        Review lot-level parametric data and SPC behavior in a cleaner operating dashboard. The workspace surfaces
+        orchestrated context, ranked actions, and the supporting analysis stream in a format that fits engineering review meetings.
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="stats">
+          <div class="stat"><div class="stat-label">Status</div><div class="stat-value" id="statusValue">Ready</div></div>
+          <div class="stat"><div class="stat-label">Steps</div><div class="stat-value" id="stepsValue">0</div></div>
+          <div class="stat"><div class="stat-label">Decisions</div><div class="stat-value" id="decisionsValue">0</div></div>
+          <div class="stat"><div class="stat-label">High</div><div class="stat-value" id="highValue">0</div></div>
+        </div>
+        <div class="row-profile">
+          <select id="runProfileSelect">
+            <option value="" selected>Loading run profiles...</option>
+          </select>
+          <select id="mode">
+            <option value="ate">ATE Anomaly + Binning</option>
+            <option value="spc">SPC Drift</option>
+          </select>
+        </div>
+        <div class="row-3">
+          <select id="sampleSelect">
+            <optgroup label="Yield Benchmarks">
+              <option value="ate_parametric_sample.csv">ATE Parametric Sample</option>
+              <option value="spc_trend_sample.csv">SPC Trend Sample</option>
+            </optgroup>
+            <option value="">Custom Lot Data</option>
+          </select>
+          <input id="projectId" value="mobile-soc-yield-ops" />
+          <input id="lotId" value="LOT_004" />
+        </div>
+        <div class="row">
+          <input id="contextText" value="Yield monitoring for mobile SOC lot review" />
+          <div class="box" style="padding: 12px 14px; display: flex; align-items: center;">
+            <div>
+              <div class="eyebrow">Run posture</div>
+              <div class="sub" style="max-width:none; margin: 4px 0 0;">Daily engineers can switch run style here. Enterprise policy remains in the separate configuration page.</div>
+            </div>
+          </div>
+        </div>
+        <div class="box" style="margin-bottom: 12px;">
+          <div class="eyebrow">Configuration Source</div>
+          <div class="sub" id="configStatus" style="max-width: none; margin: 0 0 10px;">This workspace reads top-level policy from the dedicated configuration page and combines it with the active lot or SPC artifact.</div>
+          <div class="toolbar" style="margin-top: 0;">
+            <button id="openConfig" class="ghost" type="button">Open Enterprise Configuration</button>
+          </div>
+        </div>
+        <textarea id="csvData" placeholder="Paste ATE CSV or SPC trend data here"></textarea>
+        <div class="toolbar">
+          <button id="loadSample" class="ghost" type="button">Load Sample</button>
+          <button id="clearRun" class="ghost" type="button">Clear</button>
+          <button id="submitBtn" type="button">Run Agent 02</button>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="summary-grid">
+          <div class="summary">
+            <div class="eyebrow">Impact Snapshot</div>
+            <div class="summary-kv">
+              <div class="summary-k">Likely workflow</div>
+              <div class="summary-v" id="impactWorkflow">Awaiting artifact</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Estimated review time saved</div>
+              <div class="summary-v" id="impactSavings">Not available yet</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Execution priority</div>
+              <div class="summary-v" id="impactPriority">Pending analysis</div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="eyebrow">First Recommended Action</div>
+            <div class="summary-kv">
+              <div class="summary-k">Target</div>
+              <div class="summary-v" id="impactTarget">No findings yet</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Why now</div>
+              <div class="summary-v" id="impactReason">Run an analysis to generate a ranked lot review queue.</div>
+            </div>
+          </div>
+        </div>
+        <div class="summary" style="margin-bottom: 14px;">
+          <div class="eyebrow">Benchmark Scorecard</div>
+          <div class="summary-kv">
+            <div class="summary-k">Benchmark</div>
+            <div class="summary-v" id="benchmarkName">Load a bundled benchmark artifact to enable scorecard grading.</div>
+          </div>
+          <div class="benchmark-kpis">
+            <div class="benchmark-kpi">
+              <div class="summary-k">Overall score</div>
+              <div class="benchmark-score" id="benchmarkScore">--</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">Expected findings matched</div>
+              <div class="summary-v" id="benchmarkCoverage">Not scored yet</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">First action alignment</div>
+              <div class="summary-v" id="benchmarkFirst">Pending analysis</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">Review time saved</div>
+              <div class="summary-v" id="benchmarkSavings">Not available yet</div>
+            </div>
+          </div>
+          <div class="summary-kv">
+            <div class="summary-k">Assessment</div>
+            <ul class="benchmark-list" id="benchmarkNotes">
+              <li>Scorecard is available for the bundled Agent 02 benchmark artifacts.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="box" style="margin-bottom: 12px;">
+          <div class="eyebrow">Orchestration Preview</div>
+          <div><strong id="orchChipFocus">Awaiting enterprise configuration.</strong></div>
+          <p id="orchOutputEmphasis" class="sub" style="max-width: none; margin-top: 8px;">No orchestrated plan yet.</p>
+          <div class="row">
+            <div>
+              <div class="eyebrow">Instruction priorities</div>
+              <ul class="orchestration-list" id="orchInstructions">
+                <li>Run an analysis to preview the active run plan.</li>
+              </ul>
+            </div>
+            <div>
+              <div class="eyebrow">Reference priorities</div>
+              <ul class="orchestration-list" id="orchReferences">
+                <li>Reference weighting for this run will appear here.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="status-line">
+          <div id="statusText">Ready to analyse yield or SPC data.</div>
+          <div id="providerText">Provider: mock/local</div>
+        </div>
+        <div class="results-actions">
+          <button id="exportBrief" class="ghost" type="button" disabled>Export Yield Brief</button>
+          <button id="exportJira" class="ghost" type="button" disabled>Export Jira</button>
+          <button id="exportEmail" class="ghost" type="button" disabled>Export Email</button>
+          <button id="openHistory" class="ghost" type="button" disabled>Open Run History</button>
+        </div>
+        <div class="summary">
+          <div class="eyebrow">Review Workspace</div>
+          <div class="section-copy">Use the sections below to review ranked yield actions first and then inspect the supporting reasoning trace separately.</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" id="decisionSection" style="margin-top: 18px; margin-bottom: 18px;">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Decision Review Queue</div>
+          <div class="section-copy">Ranked yield and SPC actions are separated here so reviewers can focus on actionability, evidence, and priority before reading the reasoning trace.</div>
+        </div>
+      </div>
+      <div class="stack" id="decisionEvents"></div>
+    </section>
+
+    <section class="panel" id="analysisSection">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Analysis Trace</div>
+          <div class="section-copy">The five-step reasoning stream lives here so reviewers can audit the supporting analysis separately from the action queue.</div>
+        </div>
+      </div>
+      <div class="stack" id="analysisEvents"></div>
+    </section>
+  </main>
+
+  <script>
+    const decisionEventsEl = document.getElementById("decisionEvents");
+    const analysisEventsEl = document.getElementById("analysisEvents");
+    const csvEl = document.getElementById("csvData");
+    const modeEl = document.getElementById("mode");
+    const runProfileEl = document.getElementById("runProfileSelect");
+	    const sampleSelectEl = document.getElementById("sampleSelect");
+	    const submitBtnEl = document.getElementById("submitBtn");
+	    const loadSampleBtnEl = document.getElementById("loadSample");
+	    const clearRunBtnEl = document.getElementById("clearRun");
+      const exportBriefEl = document.getElementById("exportBrief");
+      const exportJiraEl = document.getElementById("exportJira");
+      const exportEmailEl = document.getElementById("exportEmail");
+      const openHistoryEl = document.getElementById("openHistory");
+      const openConfigBtnEl = document.getElementById("openConfig");
+	    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+	    document.getElementById("homeLink").href = window.location.protocol === "file:" ? "./index.html" : "/";
+      document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
+      document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
+      document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
+      document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+      document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+      openConfigBtnEl.onclick = () => {
+        window.location.href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+      };
+      const KNOWN_BENCHMARKS = {
+        "ate_parametric_sample.csv": "Mobile SoC Yield Benchmark · ATE Parametric Review",
+        "spc_trend_sample.csv": "PMIC SPC Benchmark · Leakage Drift Review"
+      };
+	    const state = {
+        steps: 0,
+        decisions: 0,
+        high: 0,
+        orchestration: null,
+        benchmarkId: null,
+        benchmarkTitle: "",
+        benchmarkScore: "",
+        decisionsData: [],
+        analysisLog: [],
+        provider: "mock/local",
+        artifactName: "",
+        runProfileId: "",
+        runId: null
+      };
+	    let activeStepNode = null;
+	    let activeStepBody = null;
+	    let activeStepState = null;
+	    let activeStepSpinner = null;
+	    let isRunning = false;
+      let runProfiles = [];
+
+    function syncStats(status) {
+      document.getElementById("statusValue").textContent = status;
+      document.getElementById("stepsValue").textContent = state.steps;
+      document.getElementById("decisionsValue").textContent = state.decisions;
+      document.getElementById("highValue").textContent = state.high;
+    }
+
+    function setStatus(text, provider = "mock/local") {
+      state.provider = provider;
+      document.getElementById("statusText").textContent = text;
+      document.getElementById("providerText").textContent = `Provider: ${provider}`;
+    }
+
+	    function appendBox(title, body) {
+	      const node = document.createElement("div");
+	      node.className = "box";
+	      node.innerHTML = `<div class="eyebrow">${title}</div><div>${body}</div>`;
+	      decisionEventsEl.appendChild(node);
+	      node.scrollIntoView({ behavior: "smooth", block: "end" });
+	    }
+
+	    function setRunControls(running) {
+	      isRunning = running;
+	      submitBtnEl.disabled = running;
+	      loadSampleBtnEl.disabled = running;
+	      clearRunBtnEl.disabled = running;
+	      modeEl.disabled = running;
+	      runProfileEl.disabled = running;
+	      sampleSelectEl.disabled = running;
+	      csvEl.disabled = running;
+	      document.getElementById("projectId").disabled = running;
+	      document.getElementById("lotId").disabled = running;
+	      document.getElementById("contextText").disabled = running;
+	      openConfigBtnEl.disabled = running;
+	      submitBtnEl.textContent = running ? "Analysing..." : "Run Agent 02";
+	    }
+
+	    function completeActiveStep(stateLabel = "Complete") {
+	      if (!activeStepNode) return;
+	      activeStepNode.classList.remove("is-running");
+	      activeStepNode.classList.add("is-complete");
+	      if (activeStepState) activeStepState.textContent = stateLabel;
+	      if (activeStepSpinner) activeStepSpinner.classList.add("hidden");
+	      activeStepNode = null;
+	      activeStepBody = null;
+	      activeStepState = null;
+	      activeStepSpinner = null;
+	    }
+
+	    function startStep(title) {
+	      completeActiveStep();
+        state.analysisLog.push(title);
+	      const node = document.createElement("div");
+	      node.className = "box is-running";
+	      const header = document.createElement("div");
+	      header.className = "step-header";
+	      const label = document.createElement("div");
+	      label.className = "step-label";
+	      const spinner = document.createElement("div");
+	      spinner.className = "spinner";
+	      const titleEl = document.createElement("div");
+	      titleEl.className = "eyebrow";
+	      titleEl.textContent = title;
+	      label.appendChild(spinner);
+	      label.appendChild(titleEl);
+	      const stateEl = document.createElement("div");
+	      stateEl.className = "step-state";
+	      stateEl.textContent = "Running";
+	      header.appendChild(label);
+	      header.appendChild(stateEl);
+	      const body = document.createElement("div");
+	      body.className = "sub";
+	      body.style.maxWidth = "none";
+	      body.style.margin = "0";
+	      body.textContent = "Waiting for reasoning output...";
+	      node.appendChild(header);
+	      node.appendChild(body);
+	      analysisEventsEl.appendChild(node);
+	      node.scrollIntoView({ behavior: "smooth", block: "end" });
+	      activeStepNode = node;
+	      activeStepBody = body;
+	      activeStepState = stateEl;
+	      activeStepSpinner = spinner;
+	    }
+
+    function appendStepReasoning(text) {
+      state.analysisLog.push(`Reasoning: ${text}`);
+	      if (!activeStepBody) startStep("Reasoning");
+	      const line = document.createElement("div");
+	      line.textContent = text;
+	      if (activeStepBody.textContent === "Waiting for reasoning output...") {
+	        activeStepBody.textContent = "";
+	      }
+	      activeStepBody.appendChild(line);
+	      activeStepNode?.scrollIntoView({ behavior: "smooth", block: "end" });
+	    }
+
+    function setOrchestrationList(elementId, items, fallbackText) {
+      const node = document.getElementById(elementId);
+      node.innerHTML = "";
+      const source = items && items.length ? items : [fallbackText];
+      source.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        node.appendChild(li);
+      });
+    }
+
+    function renderOrchestrationIdle() {
+	      document.getElementById("orchChipFocus").textContent = "Awaiting run profile or artifact analysis.";
+      document.getElementById("orchOutputEmphasis").textContent = "No run plan yet.";
+      setOrchestrationList("orchInstructions", [], "Run an analysis to preview the active run plan.");
+      setOrchestrationList("orchReferences", [], "Reference weighting for this run will appear here.");
+      state.orchestration = null;
+    }
+
+    function renderOrchestrationPreview(payload) {
+      state.orchestration = payload;
+      document.getElementById("orchChipFocus").textContent = `${payload.chip_focus || "General chip workflow"} · Plan source: ${payload.provider || "mock"}`;
+      document.getElementById("orchOutputEmphasis").textContent = payload.output_emphasis || payload.prompt_addendum || "No explicit emphasis supplied.";
+      setOrchestrationList("orchInstructions", payload.instruction_overrides || [], "No instruction overrides supplied.");
+      setOrchestrationList("orchReferences", payload.reference_priorities || [], "No reference priorities supplied.");
+    }
+
+    function populateRunProfiles(profiles) {
+      runProfileEl.innerHTML = "";
+      profiles.forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = `${profile.label} · ${profile.mode === "spc" ? "SPC" : "ATE"}`;
+        runProfileEl.appendChild(option);
+      });
+      const customOption = document.createElement("option");
+      customOption.value = "";
+      customOption.textContent = "Custom Run Profile";
+      runProfileEl.appendChild(customOption);
+    }
+
+    function getRunProfile(profileId) {
+      return runProfiles.find((profile) => profile.id === profileId) || null;
+    }
+
+    function findRunProfileBySample(sampleName, mode) {
+      return runProfiles.find((profile) => profile.sample === sampleName && (!mode || profile.mode === mode)) || null;
+    }
+
+    function updateConfigSummary(config, profile = null) {
+      const policyText = `${config.org_name || "enterprise policy"} · ${config.review_board || "review board not set"}`;
+      if (profile) {
+        document.getElementById("configStatus").textContent =
+          `Using top-level policy for ${policyText}. Active run profile: ${profile.label}.`;
+        return;
+      }
+      document.getElementById("configStatus").textContent =
+        `Using top-level policy for ${policyText}. Active run profile: Custom workspace run.`;
+    }
+
+    async function sendFeedback(decisionId, accepted, note, node) {
+      const payload = {
+        decision_id: decisionId,
+        accepted,
+        notes: note,
+        project_id: document.getElementById("projectId").value,
+        engineer_id: "frontend-user",
+        run_id: state.runId
+      };
+      const response = await apiFetch("/api/v1/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const tag = document.createElement("div");
+        tag.className = "sub";
+        tag.style.maxWidth = "none";
+        tag.style.marginTop = "10px";
+        tag.textContent = "Feedback request failed. Check that the local API server is running.";
+        node.appendChild(tag);
+        return;
+      }
+      const tag = document.createElement("div");
+      tag.className = "sub";
+      tag.style.maxWidth = "none";
+      tag.style.marginTop = "10px";
+      tag.textContent = accepted ? "Feedback saved: accepted" : "Feedback saved: rejected";
+      node.appendChild(tag);
+    }
+
+    function appendDecision(decision) {
+      state.decisionsData.push(decision);
+      const node = document.createElement("div");
+      node.className = "box";
+      const evidence = decision.metadata?.evidence ? `<div class="sub" style="max-width:none;margin-top:8px;"><strong>Evidence:</strong> ${decision.metadata.evidence}</div>` : "";
+      const rankBasis = decision.metadata?.rank_basis ? `<div class="sub" style="max-width:none;margin-top:8px;"><strong>Why ranked here:</strong> ${decision.metadata.rank_basis}</div>` : "";
+	      node.innerHTML = `
+        <div class="badge ${decision.priority}">${decision.priority}</div>
+        <div><strong>${decision.target}</strong></div>
+        <p>${decision.action}</p>
+        <div>${decision.rationale}</div>
+        ${evidence}
+        ${rankBasis}
+        <div class="sub" style="max-width:none;margin-top:8px;">Confidence ${Math.round(decision.confidence * 100)}% · Effort ${decision.effort}</div>
+      `;
+      const row = document.createElement("div");
+      row.className = "feedback-row";
+      const acceptButton = document.createElement("button");
+      acceptButton.className = "accept";
+      acceptButton.textContent = "Accept";
+      acceptButton.onclick = () => sendFeedback(decision.id, true, "Accepted from yield review UI", node);
+      const rejectButton = document.createElement("button");
+      rejectButton.className = "reject";
+      rejectButton.textContent = "Reject";
+      rejectButton.onclick = () => sendFeedback(decision.id, false, "Rejected from yield review UI", node);
+      row.appendChild(acceptButton);
+      row.appendChild(rejectButton);
+      node.appendChild(row);
+      decisionEventsEl.appendChild(node);
+      node.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    function setBenchmarkNotes(notes) {
+      const notesEl = document.getElementById("benchmarkNotes");
+      notesEl.innerHTML = "";
+      notes.forEach((note) => {
+        const item = document.createElement("li");
+        item.textContent = note;
+        notesEl.appendChild(item);
+      });
+    }
+
+    function renderBenchmarkIdle() {
+      const benchmarkName = document.getElementById("benchmarkName");
+      state.benchmarkTitle = "";
+      state.benchmarkScore = "";
+      if (!state.benchmarkId) {
+        benchmarkName.textContent = "Load a bundled benchmark artifact to enable scorecard grading.";
+        document.getElementById("benchmarkScore").textContent = "--";
+        document.getElementById("benchmarkCoverage").textContent = "Not scored yet";
+        document.getElementById("benchmarkFirst").textContent = "Pending analysis";
+        document.getElementById("benchmarkSavings").textContent = "Not available yet";
+        setBenchmarkNotes(["Scorecard is available for the bundled Agent 02 benchmark artifacts."]);
+        return;
+      }
+      benchmarkName.textContent = `${KNOWN_BENCHMARKS[state.benchmarkId]} is armed for evaluation.`;
+      document.getElementById("benchmarkScore").textContent = "--";
+      document.getElementById("benchmarkCoverage").textContent = "Awaiting run output";
+      document.getElementById("benchmarkFirst").textContent = "Awaiting run output";
+      document.getElementById("benchmarkSavings").textContent = "Awaiting run output";
+      setBenchmarkNotes([
+        "This run will be compared against the benchmark's expected findings and ranking order.",
+      ]);
+    }
+
+    function renderBenchmarkScorecard(result) {
+      state.benchmarkTitle = result.title;
+      state.benchmarkScore = `${result.metrics.overall_score}/100`;
+      document.getElementById("benchmarkName").textContent = result.title;
+      document.getElementById("benchmarkScore").textContent = state.benchmarkScore;
+      document.getElementById("benchmarkCoverage").textContent =
+        `${result.metrics.matched_expected_findings}/${result.metrics.expected_findings} expected findings`;
+      document.getElementById("benchmarkFirst").textContent =
+        result.metrics.first_action_alignment === 1 ? "Top action aligned" : "Top action diverged";
+      document.getElementById("benchmarkSavings").textContent =
+        `~${result.review_time_saved_minutes} min vs manual first-pass review`;
+      const notes = [...result.notes];
+      if (result.matched_findings.length) {
+        notes.unshift(`Matched findings: ${result.matched_findings.map((item) => item.expected).join(", ")}.`);
+      }
+      setBenchmarkNotes(notes);
+    }
+
+    async function evaluateBenchmark(decisions) {
+      if (!state.benchmarkId || !decisions.length) {
+        renderBenchmarkIdle();
+        return;
+      }
+      const response = await apiFetch("/api/v1/benchmarks/agent02/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          benchmark_id: state.benchmarkId,
+          decisions
+        })
+      });
+      if (!response.ok) {
+        setBenchmarkNotes(["Benchmark scoring is currently unavailable. Check that the API server is running the latest build."]);
+        return;
+      }
+      renderBenchmarkScorecard(await response.json());
+    }
+
+    async function safeEvaluateBenchmark(decisions) {
+      try {
+        await evaluateBenchmark(decisions);
+      } catch (error) {
+        setBenchmarkNotes([
+          `Benchmark scoring could not complete for this run: ${error?.message || error}.`,
+          "The ranked yield decisions are still valid for review.",
+        ]);
+      }
+    }
+
+    function updateImpactSummary(decisions = []) {
+      const top = decisions[0];
+      const highCount = decisions.filter((item) => item.priority === "HIGH").length;
+      const savingsMinutes = modeEl.value === "spc"
+        ? Math.min(110, 18 + decisions.length * 11 + highCount * 8)
+        : Math.min(120, 20 + decisions.length * 12 + highCount * 10);
+      document.getElementById("impactWorkflow").textContent =
+        modeEl.value === "spc" ? "SPC drift review" : "ATE anomaly and binning review";
+      document.getElementById("impactSavings").textContent = decisions.length ? `~${savingsMinutes} min of first-pass review effort` : "Not available yet";
+      document.getElementById("impactPriority").textContent =
+        highCount >= 2 ? "Immediate engineering review" : highCount === 1 ? "High-value follow-up" : decisions.length ? "Routine review candidate" : "Pending analysis";
+      document.getElementById("impactTarget").textContent = top ? top.target : "No findings yet";
+      document.getElementById("impactReason").textContent =
+        top ? (top.metadata?.rank_basis || top.rationale) : "Run an analysis to generate a ranked lot review queue.";
+    }
+
+    async function exportYieldBrief() {
+      if (!state.decisionsData.length) return;
+      const response = await apiFetch("/api/v1/yield/export/html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: document.getElementById("projectId").value,
+          lot_id: document.getElementById("lotId").value,
+          mode: modeEl.value,
+          context: document.getElementById("contextText").value,
+          provider: state.provider,
+          artifact_name: state.artifactName || sampleSelectEl.value,
+          workflow_label: document.getElementById("impactWorkflow").textContent,
+          review_time_saved: document.getElementById("impactSavings").textContent,
+          benchmark_title: state.benchmarkTitle,
+          benchmark_score: state.benchmarkScore,
+          benchmark_notes: Array.from(document.querySelectorAll("#benchmarkNotes li")).map((item) => item.textContent || ""),
+          decisions: state.decisionsData,
+          analysis_log: state.analysisLog
+        })
+      });
+      if (!response.ok) {
+        setStatus("Export failed. Check that the local API server is running.", state.provider);
+        return;
+      }
+      const html = await response.text();
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${document.getElementById("projectId").value}-yield-brief.html`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportStructuredRun(target) {
+      if (!state.runId) return;
+      const response = await apiFetch(`/api/v1/runs/${state.runId}/export/${target}`);
+      if (!response.ok) {
+        setStatus(`Export failed for ${target}. Check that the local API server is running.`, state.provider);
+        return;
+      }
+      const payload = await response.json();
+      const blob = new Blob([JSON.stringify(payload.payload, null, 2)], { type: payload.mime_type || "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = payload.filename || `${state.runId}-${target}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+	    function resetRun() {
+	      completeActiveStep();
+	      decisionEventsEl.innerHTML = "";
+	      analysisEventsEl.innerHTML = "";
+	      state.steps = 0;
+	      state.decisions = 0;
+	      state.high = 0;
+        state.decisionsData = [];
+        state.analysisLog = [];
+        state.provider = "mock/local";
+        state.runId = null;
+	      syncStats("Ready");
+	      setStatus("Ready to analyse yield or SPC data.");
+        updateImpactSummary([]);
+        renderBenchmarkIdle();
+	      renderOrchestrationIdle();
+        exportBriefEl.disabled = true;
+        exportJiraEl.disabled = true;
+        exportEmailEl.disabled = true;
+        openHistoryEl.disabled = true;
+	      setRunControls(false);
+	    }
+
+    async function apiFetch(path, options = {}) {
+      return fetch(`${apiBase}${path}`, options);
+    }
+
+    async function loadRunProfiles() {
+      const response = await apiFetch("/sample-data/client_profiles.json");
+      if (!response.ok) return;
+      const library = await response.json();
+      runProfiles = library.agent02 || [];
+      populateRunProfiles(runProfiles);
+    }
+
+    async function applyRunProfile(profileId) {
+      const profile = getRunProfile(profileId);
+      if (!profile) {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        updateConfigSummary(loadAgent02Config(), null);
+        if (csvEl.value.trim()) {
+          state.benchmarkId = null;
+          renderBenchmarkIdle();
+        }
+        return;
+      }
+      state.runProfileId = profile.id;
+      runProfileEl.value = profile.id;
+      modeEl.value = profile.mode;
+      sampleSelectEl.value = profile.sample;
+      document.getElementById("projectId").value = profile.project_id || profile.id;
+      document.getElementById("lotId").value = profile.lot_id || "CUSTOM_LOT";
+      document.getElementById("contextText").value = profile.context || "";
+      updateConfigSummary(loadAgent02Config(), profile);
+      await loadSample();
+    }
+
+      function defaultAgent02Config() {
+        return {
+          org_name: "Product and Yield Engineering",
+          review_board: "Yield Escalation Committee",
+          output_style: "Revenue-aware lot review",
+          escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
+          risk_policy: "Prioritize revenue upside and containment before exploratory follow-up.",
+          instruction_addendum: "Prefer operationally actionable recommendations that fit existing review governance."
+        };
+      }
+
+      let enterpriseConfig = defaultAgent02Config();
+
+      function loadAgent02Config() {
+        return enterpriseConfig;
+      }
+
+      async function refreshAgent02Config() {
+        try {
+          const response = await apiFetch("/api/v1/config/agent02");
+          if (!response.ok) {
+            enterpriseConfig = defaultAgent02Config();
+            return enterpriseConfig;
+          }
+          const payload = await response.json();
+          enterpriseConfig = { ...defaultAgent02Config(), ...(payload.config || {}) };
+          return enterpriseConfig;
+        } catch (error) {
+          enterpriseConfig = defaultAgent02Config();
+          return enterpriseConfig;
+        }
+      }
+
+      function applyAgent02Config(config) {
+        updateConfigSummary(config, getRunProfile(state.runProfileId));
+      }
+
+    async function loadSample() {
+      const selected = sampleSelectEl.value;
+      if (!selected) {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        state.artifactName = "Custom lot data";
+        state.benchmarkId = null;
+        renderBenchmarkIdle();
+        updateConfigSummary(loadAgent02Config(), null);
+        return;
+      }
+      const response = await apiFetch(`/sample-data/${selected}`);
+      csvEl.value = await response.text();
+      modeEl.value = selected.includes("spc") ? "spc" : "ate";
+      state.artifactName = selected;
+      state.benchmarkId = selected;
+      const matchedProfile = findRunProfileBySample(selected, modeEl.value);
+      if (matchedProfile) {
+        state.runProfileId = matchedProfile.id;
+        runProfileEl.value = matchedProfile.id;
+        document.getElementById("projectId").value = matchedProfile.project_id || matchedProfile.id;
+        document.getElementById("lotId").value = matchedProfile.lot_id || "CUSTOM_LOT";
+        document.getElementById("contextText").value = matchedProfile.context || "";
+        updateConfigSummary(loadAgent02Config(), matchedProfile);
+      } else {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        updateConfigSummary(loadAgent02Config(), null);
+      }
+      renderBenchmarkIdle();
+      updateImpactSummary([]);
+    }
+
+	    async function runAgent() {
+	      if (isRunning) return;
+	      resetRun();
+	      setRunControls(true);
+	      syncStats("Running");
+	      setStatus("Agent 02 is analysing lot behavior...");
+	      try {
+	        const config = loadAgent02Config();
+          const activeProfile = getRunProfile(state.runProfileId);
+          const enterpriseInstructionBlocks = [
+            config.review_board ? `Review board: ${config.review_board}.` : "",
+            config.output_style ? `Output style: ${config.output_style}.` : "",
+            config.escalation_policy ? `Escalation policy: ${config.escalation_policy}` : "",
+            config.risk_policy ? `Risk policy: ${config.risk_policy}` : "",
+            config.instruction_addendum ? `Enterprise addendum: ${config.instruction_addendum}` : ""
+          ].filter(Boolean).join(" ");
+	        const payload = {
+	          csv_data: csvEl.value,
+	          lot_id: document.getElementById("lotId").value,
+	          mode: modeEl.value,
+	          project_id: document.getElementById("projectId").value,
+	          context: document.getElementById("contextText").value,
+	          artifact_name: state.artifactName || sampleSelectEl.value || "Custom lot data",
+	          run_profile_id: activeProfile?.id || null,
+	          run_profile_name: activeProfile?.label || null,
+	          chip_type: activeProfile?.chip_type || "Custom yield program",
+	          client_profile: activeProfile?.client_profile || `${config.org_name || "Enterprise"} yield workflow`,
+	          custom_instructions: [activeProfile?.custom_instructions, enterpriseInstructionBlocks].filter(Boolean).join("\n\n"),
+	          reference_data: activeProfile?.reference_data || "",
+	          reference_data_label: activeProfile?.reference_data_label || "Run profile reference pack"
+	        };
+	        const response = await apiFetch("/api/v1/yield", {
+	          method: "POST",
+	          headers: { "Content-Type": "application/json" },
+	          body: JSON.stringify(payload)
+	        });
+	        if (!response.ok || !response.body) {
+	          setStatus("Could not reach the API. If you opened this page directly, start the FastAPI server on http://127.0.0.1:8000.");
+	          syncStats("Error");
+	          return;
+	        }
+	        const reader = response.body.getReader();
+	        const decoder = new TextDecoder();
+	        let buffer = "";
+          const seenDecisions = [];
+	        while (true) {
+	          const { value, done } = await reader.read();
+	          if (done) break;
+	          buffer += decoder.decode(value, { stream: true });
+	          const parts = buffer.split("\n\n");
+	          buffer = parts.pop() || "";
+	          for (const part of parts) {
+	            if (!part.startsWith("data: ")) continue;
+	            const event = JSON.parse(part.slice(6));
+              try {
+	              if (event.type === "orchestration") {
+	                renderOrchestrationPreview(event.payload);
+	              }
+	              if (event.type === "step") {
+	                state.steps += 1;
+	                syncStats("Running");
+	                startStep(`Step ${event.payload.num} · ${event.payload.label}`);
+	              }
+	              if (event.type === "chunk") appendStepReasoning(event.payload.text);
+	              if (event.type === "decision") {
+	                state.decisions += 1;
+	                if (event.payload.priority === "HIGH") state.high += 1;
+	                syncStats("Running");
+                  seenDecisions.push(event.payload);
+                  updateImpactSummary(seenDecisions);
+	                appendDecision(event.payload);
+	              }
+	              if (event.type === "done") {
+	                completeActiveStep("Complete");
+	                syncStats("Done");
+	                setStatus("Run completed. Review the ranked yield actions.", event.payload.provider || "mock/local");
+                  state.runId = event.payload.run_id || null;
+                  updateImpactSummary(seenDecisions);
+                  await safeEvaluateBenchmark(seenDecisions);
+                  exportBriefEl.disabled = seenDecisions.length === 0;
+                  exportJiraEl.disabled = !state.runId;
+                  exportEmailEl.disabled = !state.runId;
+                  openHistoryEl.disabled = !state.runId;
+	                appendBox("Done", `${event.payload.total_decisions} decisions generated · High ${event.payload.high} · Medium ${event.payload.medium} · Low ${event.payload.low}`);
+	              }
+              } catch (eventError) {
+                appendBox("Run Warning", `A post-processing step hit an issue: ${eventError?.message || eventError}`);
+              }
+	          }
+	        }
+	        completeActiveStep("Complete");
+	      } catch (error) {
+	        completeActiveStep("Error");
+	        setStatus(`Analysis failed before completion. ${error?.message || "Check the API server and try again."}`);
+	        syncStats("Error");
+	      } finally {
+	        setRunControls(false);
+	      }
+	    }
+
+	    document.getElementById("loadSample").addEventListener("click", loadSample);
+      sampleSelectEl.addEventListener("change", loadSample);
+	    document.getElementById("clearRun").addEventListener("click", resetRun);
+	    document.getElementById("submitBtn").addEventListener("click", runAgent);
+      exportBriefEl.addEventListener("click", exportYieldBrief);
+      exportJiraEl.addEventListener("click", () => exportStructuredRun("jira"));
+      exportEmailEl.addEventListener("click", () => exportStructuredRun("email"));
+      openHistoryEl.addEventListener("click", () => {
+        const base = window.location.protocol === "file:" ? "./history.html" : "/history";
+        const suffix = state.runId ? `?run_id=${encodeURIComponent(state.runId)}` : "";
+        window.location.href = `${base}${suffix}`;
+      });
+      csvEl.addEventListener("input", () => {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        sampleSelectEl.value = "";
+        state.artifactName = "Custom lot data";
+        state.benchmarkId = null;
+        renderBenchmarkIdle();
+        updateConfigSummary(loadAgent02Config(), null);
+        if (csvEl.value.trim()) {
+          setStatus("Custom lot data detected. Run scoring will focus on the live output for this review.", state.provider);
+        }
+      });
+      runProfileEl.addEventListener("change", async () => {
+        if (!runProfileEl.value) {
+          state.runProfileId = "";
+          updateConfigSummary(loadAgent02Config(), null);
+          return;
+        }
+        await applyRunProfile(runProfileEl.value);
+      });
+      modeEl.addEventListener("change", async () => {
+        const activeProfile = getRunProfile(runProfileEl.value);
+        if (activeProfile && activeProfile.mode === modeEl.value) {
+          return;
+        }
+        const modeMatch = findRunProfileBySample(sampleSelectEl.value, modeEl.value) || runProfiles.find((profile) => profile.mode === modeEl.value);
+        if (modeMatch) {
+          await applyRunProfile(modeMatch.id);
+          return;
+        }
+        sampleSelectEl.value = modeEl.value === "spc" ? "spc_trend_sample.csv" : "ate_parametric_sample.csv";
+        await loadSample();
+      });
+	    async function initializePage() {
+	      await loadRunProfiles();
+	      await refreshAgent02Config();
+	      applyAgent02Config(loadAgent02Config());
+	      await applyRunProfile("mobile_soc_yield");
+	      syncStats("Ready");
+        updateImpactSummary([]);
+        renderBenchmarkIdle();
+	      renderOrchestrationIdle();
+    }
+
+    initializePage();
+  </script>
+</body>
+</html>

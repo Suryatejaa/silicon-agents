@@ -30,7 +30,8 @@ The repo is intentionally local-first but structured like a serious workflow pro
 - Executive-style verification brief with business impact, risk posture, and pilot next step
 - Enterprise orchestration layer for chip-specific instructions, historical logs, and custom analysis style
 - Saved client profile templates for one-click demo switching across chip programs and workflow styles
-- SQLite feedback storage
+- SQLite-backed enterprise policy, run history, feedback, and export audit trail
+- Run history console with Jira-ready and email-ready exports
 - Deterministic offline reasoning fallback so the demo works without live API keys
 - Optional Gemini/OpenAI provider hooks for later activation
 
@@ -79,6 +80,10 @@ Then open `http://127.0.0.1:8000/`.
 - `POST /api/v1/feedback`
 - `GET /api/v1/feedback/{project_id}`
 - `GET /api/v1/decisions/{project_id}`
+- `GET /api/v1/runs`
+- `GET /api/v1/runs/{run_id}`
+- `GET /api/v1/runs/{run_id}/export/jira`
+- `GET /api/v1/runs/{run_id}/export/email`
 
 ## Testing From Day One
 
@@ -107,6 +112,7 @@ There is also a starter CI workflow at [.github/workflows/tests.yml](/Volumes/D-
 5. Review findings with evidence, ranking, and the benchmark scorecard.
 6. Export a verification brief for sponsor or engineering review circulation.
 7. Accept or reject recommendations to build the memory layer.
+8. Open Run History to review saved runs, scorecards, feedback, and Jira/email exports.
 
 Saved demo templates for enterprise profiles live in [sample_data/client_profiles.json](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/sample_data/client_profiles.json).
 

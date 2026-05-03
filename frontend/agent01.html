@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Agent 01</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --panel-2: #ffffff;
+      --panel-3: #f8fafc;
+      --line: #dfe1e6;
+      --line-strong: #c7d1db;
+      --text: #172b4d;
+      --muted: #5e6c84;
+      --accent: #0c66e4;
+      --accent-2: #1d7afc;
+      --high: #ae2a19;
+      --med: #9f6b00;
+      --low: #216e4e;
+      --ok: #1f845a;
+      --bad: #c9372c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #fbfcfe 0%, #f4f5f7 100%);
+      color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px 22px 40px;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 6px 16px rgba(9, 30, 66, 0.05);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-copy {
+      min-width: 0;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    .app-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+    }
+    .app-nav a:hover {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+      box-shadow: 0 8px 24px rgba(9, 30, 66, 0.06);
+    }
+    h1 {
+      margin: 6px 0;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      max-width: 820px;
+      line-height: 1.55;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .column-stack {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(9, 30, 66, 0.06);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .stat-label {
+      font-size: 0.74rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    textarea, select, input, button {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+    }
+    textarea {
+      min-height: 280px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .compact-textarea {
+      min-height: 110px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-profile {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .dropzone {
+      border: 1px dashed #8fb8f7;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      background: #f7fbff;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+    .dropzone.dragover {
+      border-color: var(--accent-2);
+      background: #edf4ff;
+    }
+    .dropzone-title {
+      font-size: 0.92rem;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .dropzone-sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .dropzone-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .upload-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 146px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .upload-pill.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .config-card {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--panel-3);
+    }
+    .config-copy {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .summary-kv {
+      margin-bottom: 10px;
+    }
+    .summary-kv:last-child {
+      margin-bottom: 0;
+    }
+    .summary-k {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+    .summary-v {
+      line-height: 1.5;
+    }
+    .benchmark-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .benchmark-kpi {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+    .benchmark-score {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    .benchmark-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .orchestration-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .orchestration-box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+    .orchestration-list {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    button {
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 10px rgba(12, 102, 228, 0.22);
+    }
+    button:disabled,
+    select:disabled,
+    input:disabled,
+    textarea:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .toolbar button {
+      margin-top: 0;
+      width: auto;
+      min-width: 140px;
+    }
+    .ghost {
+      background: #ffffff;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .section-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      max-width: 760px;
+    }
+    .results-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .results-actions button {
+      width: auto;
+      min-width: 160px;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+      max-height: 56vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .step, .decision, .summary {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .step.is-running {
+      border-color: #8fb8f7;
+      box-shadow: 0 0 0 1px rgba(12, 102, 228, 0.12) inset;
+    }
+    .step.is-complete {
+      border-color: var(--line);
+    }
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .step-title {
+      color: var(--accent);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 0;
+      font-weight: 700;
+    }
+    .step-state {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(12, 102, 228, 0.18);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+      flex: 0 0 auto;
+    }
+    .spinner.hidden {
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .decision h4 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .HIGH { background: #fdecea; color: var(--high); }
+    .MEDIUM { background: #fff3db; color: var(--med); }
+    .LOW { background: #dcfff1; color: var(--low); }
+    .muted { color: var(--muted); }
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .feedback-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .feedback-row button {
+      width: auto;
+      min-width: 120px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+    }
+    .accept { background: linear-gradient(135deg, #56be70, #00ad0f); }
+    .reject { background: linear-gradient(135deg, #cb0000, #de350b); color: #ffffff; }
+    @media (max-width: 980px) {
+      .grid, .row, .row-3, .stats, .summary-grid, .benchmark-kpis { grid-template-columns: 1fr; }
+      .top { display: block; }
+      .section-head { display: block; }
+      .app-header {
+        display: block;
+        position: static;
+      }
+      .app-brand {
+        margin-bottom: 12px;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div class="app-brand-copy">
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">Agent 01 · Verification Workflow Copilot</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" id="navHome">Home</a>
+        <a href="/agent01" class="is-current" id="navAgent01">Agent 01</a>
+        <a href="/agent02" id="navAgent02">Agent 02</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="./configuration.html" id="navConfig">Enterprise Config</a>
+      </nav>
+    </header>
+    <div class="top">
+      <div>
+        <div class="muted">Silicon Agents / Agent 01</div>
+        <h1>Verification Workflow Copilot</h1>
+        <div class="sub">
+          Turn coverage reports and regression logs into ranked, evidence-grounded engineering actions.
+          Silicon Agents does not edit RTL or testbenches automatically. It helps teams decide what to fix next,
+          why it matters, and how to review the recommendation safely.
+        </div>
+      </div>
+      <a href="/" class="muted" id="homeLink">Back to home</a>
+    </div>
+
+	    <div class="grid">
+        <div class="column-stack">
+	      <section class="panel" id="artifactWorkspace">
+	        <div class="stats">
+	          <div class="stat"><div class="stat-label">Status</div><div class="stat-value" id="statusValue">Standby</div></div>
+	          <div class="stat"><div class="stat-label">Steps</div><div class="stat-value" id="stepsValue">0</div></div>
+          <div class="stat"><div class="stat-label">Findings</div><div class="stat-value" id="decisionsValue">0</div></div>
+          <div class="stat"><div class="stat-label">P1</div><div class="stat-value" id="highValue">0</div></div>
+        </div>
+
+        <div class="summary" style="margin-bottom: 14px;">
+          <div class="step-title">Review Guardrail</div>
+          <div class="muted">Human approval required. Recommendations are evidence-grounded hypotheses for verification teams, not automatic testbench or RTL edits.</div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+            <div class="dropzone-title">Upload verification artifact</div>
+            <div class="dropzone-sub">Drop a coverage report or regression log here, or choose a local file. Supported demo inputs are `.log`, `.rpt`, and `.txt` artifacts.</div>
+            <div class="dropzone-actions">
+            <label class="upload-pill" id="artifactLabel" for="artifactFile">Choose Artifact</label>
+            <input id="artifactFile" type="file" accept=".log,.rpt,.txt,.text" hidden />
+            <div class="muted" id="artifactMeta">No uploaded artifact yet.</div>
+          </div>
+        </div>
+
+        <div class="row-profile">
+          <select id="runProfileSelect">
+            <option value="" selected>Loading run profiles...</option>
+          </select>
+          <select id="mode">
+            <option value="coverage">Coverage Closure</option>
+            <option value="triage">Regression Triage</option>
+          </select>
+        </div>
+        <div class="row-3">
+          <select id="sampleSelect">
+            <optgroup label="Coverage Benchmarks">
+              <option value="coverage_vcs_sample.log">USB Controller Benchmark · VCS Coverage</option>
+              <option value="coverage_xcelium_sample.log">Power Mode Benchmark · Xcelium Coverage</option>
+              <option value="coverage_pcie_dma_sample.log">PCIe DMA Benchmark · VCS Coverage</option>
+              <option value="coverage_lpddr_refresh_sample.log">LPDDR Controller Benchmark · Xcelium Coverage</option>
+              <option value="coverage_noc_qos_sample.log">NoC QoS Benchmark · VCS Coverage</option>
+              <option value="coverage_secure_boot_sample.log">Secure Boot Benchmark · VCS Coverage</option>
+            </optgroup>
+            <optgroup label="Regression Benchmarks">
+              <option value="regression_sample.log">Nightly Regression Benchmark</option>
+              <option value="regression_pcie_dma_sample.log">PCIe DMA Regression Benchmark</option>
+              <option value="regression_audio_dsp_sample.log">Audio DSP Regression Benchmark</option>
+              <option value="regression_secure_boot_sample.log">Secure Boot Regression Benchmark</option>
+            </optgroup>
+            <option value="">Custom Artifact · Live Scorecard Mode</option>
+          </select>
+          <input id="projectId" value="usb-controller-revA" />
+        </div>
+	        <div class="row">
+	          <input id="designName" value="USB Controller v2.3" />
+	          <input id="contextText" value="USB 3.0 controller verification focused on transfer modes, arbitration, and interrupt interactions" />
+	        </div>
+          <div class="summary" style="margin-bottom: 14px;">
+            <div class="step-title">Configuration Source</div>
+            <div class="section-copy" id="configStatus">This workspace reads top-level policy from the dedicated configuration page and combines it with the active run artifact.</div>
+            <div class="results-actions" style="margin-bottom: 0;">
+              <button id="openConfig" class="ghost" type="button">Open Enterprise Configuration</button>
+            </div>
+          </div>
+	        <textarea id="reportText" placeholder="Paste a coverage report or regression log from the verification flow"></textarea>
+	        <div class="toolbar">
+	          <button id="loadSample" class="ghost" type="button">Use Benchmark Artifact</button>
+	          <button id="clearRun" class="ghost" type="button">Clear</button>
+	          <button id="submitBtn" type="button">Analyse Verification Artifact</button>
+	        </div>
+	      </section>
+        </div>
+
+	      <section class="panel">
+        <div class="summary-grid">
+          <div class="summary">
+            <div class="step-title">Impact Snapshot</div>
+            <div class="summary-kv">
+              <div class="summary-k">Likely workflow</div>
+              <div class="summary-v" id="impactWorkflow">Awaiting artifact</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Estimated review time saved</div>
+              <div class="summary-v" id="impactSavings">Not available yet</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Execution priority</div>
+              <div class="summary-v" id="impactPriority">Pending analysis</div>
+            </div>
+          </div>
+          <div class="summary">
+            <div class="step-title">First Recommended Action</div>
+            <div class="summary-kv">
+              <div class="summary-k">Target</div>
+              <div class="summary-v" id="impactTarget">No findings yet</div>
+            </div>
+            <div class="summary-kv">
+              <div class="summary-k">Why now</div>
+              <div class="summary-v" id="impactReason">Run an analysis to generate a ranked review queue.</div>
+            </div>
+          </div>
+        </div>
+        <div class="summary" style="margin-bottom: 14px;">
+          <div class="step-title">Run Scorecard</div>
+          <div class="summary-kv">
+            <div class="summary-k">Scorecard Mode</div>
+            <div class="summary-v" id="benchmarkName">Benchmark mode arms when a bundled artifact is loaded. Custom artifacts use live run scoring.</div>
+          </div>
+          <div class="benchmark-kpis">
+            <div class="benchmark-kpi">
+              <div class="summary-k">Overall score</div>
+              <div class="benchmark-score" id="benchmarkScore">--</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">Expected findings matched</div>
+              <div class="summary-v" id="benchmarkCoverage">Not scored yet</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">First action alignment</div>
+              <div class="summary-v" id="benchmarkFirst">Pending analysis</div>
+            </div>
+            <div class="benchmark-kpi">
+              <div class="summary-k">Review time saved</div>
+              <div class="summary-v" id="benchmarkSavings">Not available yet</div>
+            </div>
+          </div>
+          <div class="summary-kv">
+            <div class="summary-k">Assessment</div>
+            <ul class="benchmark-list" id="benchmarkNotes">
+              <li>Scorecard is available for the bundled benchmark artifacts.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="summary" style="margin-bottom: 14px;">
+          <div class="step-title">Orchestration Preview</div>
+          <div class="summary-kv">
+            <div class="summary-k">Chip focus</div>
+            <div class="summary-v" id="orchChipFocus">Awaiting enterprise configuration.</div>
+          </div>
+          <div class="summary-kv">
+            <div class="summary-k">Output emphasis</div>
+            <div class="summary-v" id="orchOutputEmphasis">No orchestrated plan yet.</div>
+          </div>
+          <div class="orchestration-grid">
+            <div class="orchestration-box">
+              <div class="summary-k">Instruction priorities</div>
+              <ul class="orchestration-list" id="orchInstructions">
+                <li>Run an analysis to preview the active run plan.</li>
+              </ul>
+            </div>
+            <div class="orchestration-box">
+              <div class="summary-k">Reference priorities</div>
+              <ul class="orchestration-list" id="orchReferences">
+                <li>Reference weighting for this run will appear here.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="status-line">
+          <div id="statusText">Awaiting a verification artifact for analysis.</div>
+          <div id="providerText">Model source: mock/local</div>
+        </div>
+        <div class="results-actions">
+          <button id="exportBrief" class="ghost" type="button" disabled>Export Verification Brief</button>
+          <button id="exportJira" class="ghost" type="button" disabled>Export Jira</button>
+          <button id="exportEmail" class="ghost" type="button" disabled>Export Email</button>
+          <button id="openHistory" class="ghost" type="button" disabled>Open Run History</button>
+        </div>
+        <div class="summary">
+          <div class="step-title">Review Workspace</div>
+          <div class="section-copy">Use the separate sections below to review ranked findings and then inspect the supporting reasoning trace.</div>
+        </div>
+      </section>
+    </div>
+
+	    <section class="panel" id="decisionSection" style="margin-bottom: 18px;">
+      <div class="section-head">
+        <div>
+          <div class="step-title">Decision Review Queue</div>
+          <div class="section-copy">Ranked findings are separated here so reviewers can focus on actions, evidence, and accept or reject choices without the reasoning stream in the way.</div>
+        </div>
+      </div>
+      <div class="stack" id="decisionEvents"></div>
+    </section>
+
+	    <section class="panel" id="analysisSection">
+      <div class="section-head">
+        <div>
+          <div class="step-title">Analysis Trace</div>
+          <div class="section-copy">The five-step reasoning stream lives here so reviewers can inspect the ranked findings first and then audit the supporting analysis separately.</div>
+        </div>
+      </div>
+      <div class="stack" id="analysisEvents"></div>
+    </section>
+  </main>
+
+  <script>
+    const decisionEventsEl = document.getElementById("decisionEvents");
+    const analysisEventsEl = document.getElementById("analysisEvents");
+    const reportTextEl = document.getElementById("reportText");
+    const modeEl = document.getElementById("mode");
+    const sampleSelectEl = document.getElementById("sampleSelect");
+    const runProfileEl = document.getElementById("runProfileSelect");
+	    const artifactFileEl = document.getElementById("artifactFile");
+	    const artifactLabelEl = document.getElementById("artifactLabel");
+	    const artifactMetaEl = document.getElementById("artifactMeta");
+	    const dropzoneEl = document.getElementById("dropzone");
+	    const exportBriefEl = document.getElementById("exportBrief");
+      const exportJiraEl = document.getElementById("exportJira");
+      const exportEmailEl = document.getElementById("exportEmail");
+      const openHistoryEl = document.getElementById("openHistory");
+	    const submitBtnEl = document.getElementById("submitBtn");
+	    const loadSampleBtnEl = document.getElementById("loadSample");
+	    const clearRunBtnEl = document.getElementById("clearRun");
+      const openConfigBtnEl = document.getElementById("openConfig");
+	    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+      document.getElementById("homeLink").href = window.location.protocol === "file:" ? "./index.html" : "/";
+      document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
+      document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
+      document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
+      document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+      document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+      openConfigBtnEl.onclick = () => {
+        window.location.href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+      };
+	    const KNOWN_BENCHMARKS = {
+      "coverage_vcs_sample.log": "USB Controller Benchmark · VCS Coverage",
+      "coverage_xcelium_sample.log": "Power Mode Benchmark · Xcelium Coverage",
+      "coverage_pcie_dma_sample.log": "PCIe DMA Benchmark · VCS Coverage",
+      "coverage_lpddr_refresh_sample.log": "LPDDR Controller Benchmark · Xcelium Coverage",
+      "coverage_noc_qos_sample.log": "NoC QoS Benchmark · VCS Coverage",
+      "coverage_secure_boot_sample.log": "Secure Boot Benchmark · VCS Coverage",
+      "regression_sample.log": "Nightly Regression Benchmark",
+      "regression_pcie_dma_sample.log": "PCIe DMA Regression Benchmark",
+      "regression_audio_dsp_sample.log": "Audio DSP Regression Benchmark",
+	      "regression_secure_boot_sample.log": "Secure Boot Regression Benchmark"
+    };
+    const BENCHMARK_PRESETS = {
+      "coverage_vcs_sample.log": {
+        mode: "coverage",
+        designName: "USB Controller v2.3",
+        projectId: "usb-controller-revA",
+        context: "USB 3.0 controller verification focused on transfer modes, arbitration, and interrupt interactions"
+      },
+      "coverage_xcelium_sample.log": {
+        mode: "coverage",
+        designName: "Power Mode Controller r2.1",
+        projectId: "pmu-controller-revB",
+        context: "Power-mode controller verification focused on brownout recovery, sleep transitions, and interrupt handling"
+      },
+      "coverage_pcie_dma_sample.log": {
+        mode: "coverage",
+        designName: "PCIe DMA Engine r1.8",
+        projectId: "pcie-dma-revC",
+        context: "PCIe DMA verification focused on posted writes, completion recovery, tag handling, and MSI backpressure"
+      },
+      "coverage_lpddr_refresh_sample.log": {
+        mode: "coverage",
+        designName: "LPDDR Refresh Manager r4.0",
+        projectId: "lpddr-refresh-revD",
+        context: "LPDDR controller verification focused on self-refresh exit, bank recovery, and refresh behavior under throttling"
+      },
+      "coverage_noc_qos_sample.log": {
+        mode: "coverage",
+        designName: "NoC QoS Fabric v5.1",
+        projectId: "noc-qos-revF",
+        context: "NoC scheduler verification focused on starvation prevention, QoS demotion, and credit backoff behavior"
+      },
+      "coverage_secure_boot_sample.log": {
+        mode: "coverage",
+        designName: "Secure Boot ROM v3.2",
+        projectId: "secure-boot-revE",
+        context: "Secure boot verification focused on rollback protection, key revocation, and lifecycle lockdown behavior"
+      },
+      "regression_sample.log": {
+        mode: "triage",
+        designName: "USB Controller v2.4 Nightly",
+        projectId: "usb-controller-nightly",
+        context: "Nightly regression triage for USB DMA handshake and arbitration changes"
+      },
+      "regression_pcie_dma_sample.log": {
+        mode: "triage",
+        designName: "PCIe DMA Engine r1.9 Nightly",
+        projectId: "pcie-dma-nightly",
+        context: "Nightly regression triage for posted-write recovery and tag credit regressions"
+      },
+      "regression_audio_dsp_sample.log": {
+        mode: "triage",
+        designName: "Audio DSP v4.3 Nightly",
+        projectId: "audio-dsp-nightly",
+        context: "Nightly regression triage for live rate switch stability and coefficient update behavior"
+      },
+      "regression_secure_boot_sample.log": {
+        mode: "triage",
+        designName: "Secure Boot ROM v3.3 Nightly",
+        projectId: "secure-boot-nightly",
+        context: "Nightly regression triage for retry-auth hash flow and rollback counter hardening changes"
+      }
+    };
+    const state = {
+      steps: 0,
+      decisions: 0,
+      high: 0,
+      artifactName: "",
+      artifactType: "Awaiting artifact",
+      benchmarkId: null,
+      benchmarkTitle: "",
+      benchmarkScore: "",
+      scorecardMode: "live",
+      decisionsData: [],
+      analysisLog: [],
+      provider: "mock/local",
+      orchestration: null,
+      runProfileId: "",
+      runId: null
+	    };
+	    let activeStepNode = null;
+	    let activeStepBody = null;
+	    let activeStepState = null;
+	    let activeStepSpinner = null;
+	    let isRunning = false;
+      let runProfiles = [];
+
+    function syncStats(status) {
+      document.getElementById("statusValue").textContent = status;
+      document.getElementById("stepsValue").textContent = state.steps;
+      document.getElementById("decisionsValue").textContent = state.decisions;
+      document.getElementById("highValue").textContent = state.high;
+    }
+
+    function setStatus(text, provider = "mock/local") {
+      state.provider = provider;
+      document.getElementById("statusText").textContent = text;
+      document.getElementById("providerText").textContent = `Model source: ${provider}`;
+    }
+
+	    function setRunControls(running) {
+	      isRunning = running;
+	      submitBtnEl.disabled = running;
+	      loadSampleBtnEl.disabled = running;
+	      clearRunBtnEl.disabled = running;
+	      modeEl.disabled = running;
+	      runProfileEl.disabled = running;
+	      sampleSelectEl.disabled = running;
+	      artifactFileEl.disabled = running;
+	      reportTextEl.disabled = running;
+	      document.getElementById("projectId").disabled = running;
+	      document.getElementById("designName").disabled = running;
+	      document.getElementById("contextText").disabled = running;
+	      artifactLabelEl.classList.toggle("disabled", running);
+        openConfigBtnEl.disabled = running;
+	      submitBtnEl.textContent = running ? "Analysing..." : "Analyse Verification Artifact";
+	    }
+
+	    function completeActiveStep(stateLabel = "Complete") {
+	      if (!activeStepNode) return;
+	      activeStepNode.classList.remove("is-running");
+	      activeStepNode.classList.add("is-complete");
+	      if (activeStepState) activeStepState.textContent = stateLabel;
+	      if (activeStepSpinner) activeStepSpinner.classList.add("hidden");
+	      activeStepNode = null;
+	      activeStepBody = null;
+	      activeStepState = null;
+	      activeStepSpinner = null;
+	    }
+
+	    function startStep(title) {
+	      completeActiveStep();
+	      state.analysisLog.push(title);
+	      const node = document.createElement("div");
+	      node.className = "step is-running";
+	      const header = document.createElement("div");
+	      header.className = "step-header";
+	      const label = document.createElement("div");
+	      label.className = "step-label";
+	      const spinner = document.createElement("div");
+	      spinner.className = "spinner";
+	      const titleEl = document.createElement("div");
+	      titleEl.className = "step-title";
+	      titleEl.textContent = title;
+	      label.appendChild(spinner);
+	      label.appendChild(titleEl);
+	      const stateEl = document.createElement("div");
+	      stateEl.className = "step-state";
+	      stateEl.textContent = "Running";
+	      header.appendChild(label);
+	      header.appendChild(stateEl);
+	      const body = document.createElement("div");
+	      body.className = "muted";
+	      body.textContent = "Waiting for reasoning output...";
+	      node.appendChild(header);
+	      node.appendChild(body);
+	      analysisEventsEl.appendChild(node);
+	      node.scrollIntoView({ behavior: "smooth", block: "end" });
+	      activeStepNode = node;
+	      activeStepBody = body;
+	      activeStepState = stateEl;
+	      activeStepSpinner = spinner;
+	    }
+
+	    function appendStepReasoning(text) {
+	      state.analysisLog.push(`Reasoning: ${text}`);
+	      if (!activeStepBody) {
+	        startStep("Reasoning");
+	      }
+	      const line = document.createElement("div");
+	      line.textContent = text;
+	      if (activeStepBody.textContent === "Waiting for reasoning output...") {
+	        activeStepBody.textContent = "";
+	      }
+	      activeStepBody.appendChild(line);
+	      activeStepNode?.scrollIntoView({ behavior: "smooth", block: "end" });
+	    }
+
+    function setOrchestrationList(elementId, items, fallbackText) {
+      const node = document.getElementById(elementId);
+      node.innerHTML = "";
+      const source = items && items.length ? items : [fallbackText];
+      source.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        node.appendChild(li);
+      });
+    }
+
+	    function renderOrchestrationIdle() {
+	      document.getElementById("orchChipFocus").textContent = "Awaiting run profile or artifact analysis.";
+	      document.getElementById("orchOutputEmphasis").textContent = "No run plan yet.";
+	      setOrchestrationList("orchInstructions", [], "Run an analysis to preview the active run plan.");
+	      setOrchestrationList("orchReferences", [], "Reference weighting for this run will appear here.");
+	      state.orchestration = null;
+	    }
+
+    function renderOrchestrationPreview(payload) {
+      state.orchestration = payload;
+      document.getElementById("orchChipFocus").textContent = `${payload.chip_focus || "General chip workflow"} · Plan source: ${payload.provider || "mock"}`;
+      document.getElementById("orchOutputEmphasis").textContent = payload.output_emphasis || payload.prompt_addendum || "No explicit emphasis supplied.";
+      setOrchestrationList("orchInstructions", payload.instruction_overrides || [], "No instruction overrides supplied.");
+      setOrchestrationList("orchReferences", payload.reference_priorities || [], "No reference priorities supplied.");
+    }
+
+    function inferArtifactType(text, filename = "") {
+      const joined = `${filename}\n${text}`.toLowerCase();
+      if (joined.includes("total:") && joined.includes("failed:")) return "Regression log";
+      if (joined.includes("cover group")) return "Coverage report";
+      return "Verification artifact";
+    }
+
+    function inferArtifactWorkspace(text, fallbackName = "Custom verification artifact") {
+      const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+      const projectLine = lines.find((line) => line.toLowerCase().startsWith("project:"));
+      const blockLine = lines.find((line) => line.toLowerCase().startsWith("block:"));
+      const runLine = lines.find((line) => line.toLowerCase().startsWith("run:"));
+      const regressionLine = lines.find((line) => line.toLowerCase().startsWith("regression:"));
+      const titleLine = lines.find((line) => line.toLowerCase().startsWith("coverage report -"))
+        || lines.find((line) => line.toLowerCase().startsWith("xcelium coverage summary"));
+      const designName = titleLine
+        ? titleLine.replace(/^coverage report -/i, "").trim() || fallbackName
+        : (blockLine ? blockLine.split(":").slice(1).join(":").trim().replace(/_/g, " ") : fallbackName);
+      const projectId = projectLine
+        ? projectLine.split(":").slice(1).join(":").trim()
+        : (runLine ? runLine.split(":").slice(1).join(":").trim() : fallbackName.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+      const contextParts = [];
+      if (blockLine) contextParts.push(blockLine.split(":").slice(1).join(":").trim().replace(/_/g, " "));
+      if (regressionLine) contextParts.push(regressionLine.split(":").slice(1).join(":").trim());
+      if (runLine && !regressionLine) contextParts.push(runLine.split(":").slice(1).join(":").trim());
+      return {
+        designName,
+        projectId,
+        context: contextParts.join(" · ") || "Custom verification artifact review"
+      };
+    }
+
+    function populateRunProfiles(profiles) {
+      runProfileEl.innerHTML = "";
+      profiles.forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = `${profile.label} · ${profile.mode === "triage" ? "Regression" : "Coverage"}`;
+        runProfileEl.appendChild(option);
+      });
+      const customOption = document.createElement("option");
+      customOption.value = "";
+      customOption.textContent = "Custom Run Profile";
+      runProfileEl.appendChild(customOption);
+    }
+
+    function getRunProfile(profileId) {
+      return runProfiles.find((profile) => profile.id === profileId) || null;
+    }
+
+    function findRunProfileBySample(sampleName, mode) {
+      return runProfiles.find((profile) => profile.sample === sampleName && (!mode || profile.mode === mode)) || null;
+    }
+
+    function updateConfigSummary(config, profile = null) {
+      const policyText = `${config.org_name || "enterprise policy"} · ${config.review_board || "review board not set"}`;
+      if (profile) {
+        document.getElementById("configStatus").textContent =
+          `Using top-level policy for ${policyText}. Active run profile: ${profile.label}.`;
+        return;
+      }
+      document.getElementById("configStatus").textContent =
+        `Using top-level policy for ${policyText}. Active run profile: Custom workspace run.`;
+    }
+
+    function updateArtifactMeta(name, type, benchmarkId = null) {
+      state.artifactName = name;
+      state.artifactType = type;
+      state.benchmarkId = benchmarkId;
+      artifactMetaEl.textContent = name ? `${name} · ${type}` : "No uploaded artifact yet.";
+      document.getElementById("impactWorkflow").textContent = type;
+      renderBenchmarkIdle();
+    }
+
+    function updateImpactSummary(decisions = []) {
+      const top = decisions[0];
+      const highCount = decisions.filter((item) => item.priority === "HIGH").length;
+      const savingsMinutes = modeEl.value === "triage"
+        ? Math.min(150, 35 + decisions.length * 14 + highCount * 10)
+        : Math.min(120, 20 + decisions.length * 10 + highCount * 8);
+      document.getElementById("impactSavings").textContent = decisions.length ? `~${savingsMinutes} min of first-pass review effort` : "Not available yet";
+      document.getElementById("impactPriority").textContent = highCount >= 2 ? "Immediate engineering review" : highCount === 1 ? "High-value follow-up" : decisions.length ? "Routine review candidate" : "Pending analysis";
+      document.getElementById("impactTarget").textContent = top ? top.target : "No findings yet";
+      document.getElementById("impactReason").textContent = top
+        ? (top.metadata?.rank_basis || top.rationale)
+        : "Run an analysis to generate a ranked review queue.";
+    }
+
+    async function loadArtifactFile(file) {
+      const text = await file.text();
+      reportTextEl.value = text;
+      const inferred = inferArtifactType(text, file.name);
+      const workspace = inferArtifactWorkspace(text, file.name.replace(/\.[^.]+$/, ""));
+      document.getElementById("designName").value = workspace.designName;
+      document.getElementById("projectId").value = workspace.projectId;
+      document.getElementById("contextText").value = workspace.context;
+      state.runProfileId = "";
+      runProfileEl.value = "";
+      sampleSelectEl.value = "";
+      updateArtifactMeta(file.name, inferred, null);
+      if (inferred === "Regression log") {
+        modeEl.value = "triage";
+      } else if (inferred === "Coverage report") {
+        modeEl.value = "coverage";
+      }
+      updateConfigSummary(loadAgent01Config(), null);
+      setStatus(`Loaded ${file.name}. Ready for analysis.`);
+      syncStats("Ready");
+    }
+
+    function applyBenchmarkPreset(benchmarkId) {
+      const preset = BENCHMARK_PRESETS[benchmarkId];
+      if (!preset) return;
+      modeEl.value = preset.mode;
+      document.getElementById("designName").value = preset.designName;
+      document.getElementById("projectId").value = preset.projectId;
+      document.getElementById("contextText").value = preset.context;
+    }
+
+    async function loadRunProfiles() {
+      const response = await apiFetch("/sample-data/client_profiles.json");
+      if (!response.ok) return;
+      const library = await response.json();
+      runProfiles = library.agent01 || [];
+      populateRunProfiles(runProfiles);
+    }
+
+    async function applyRunProfile(profileId) {
+      const profile = getRunProfile(profileId);
+      if (!profile) {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        updateConfigSummary(loadAgent01Config(), null);
+        if (reportTextEl.value.trim()) {
+          updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null);
+        }
+        return;
+      }
+      state.runProfileId = profile.id;
+      runProfileEl.value = profile.id;
+      modeEl.value = profile.mode;
+      sampleSelectEl.value = profile.sample;
+      document.getElementById("designName").value = profile.design_name || profile.label;
+      document.getElementById("projectId").value = profile.project_id || profile.id;
+      document.getElementById("contextText").value = profile.context || "";
+      updateConfigSummary(loadAgent01Config(), profile);
+      await loadSample();
+    }
+
+    async function apiFetch(path, options = {}) {
+      return fetch(`${apiBase}${path}`, options);
+    }
+
+      function defaultAgent01Config() {
+        return {
+          org_name: "Fabless Semiconductor Division",
+          review_board: "Verification Signoff Council",
+          output_style: "Evidence-first engineering review",
+          escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
+          evidence_policy: "Every recommendation must cite precise report evidence.",
+          instruction_addendum: "Prefer standard organizational workflows and avoid unnecessary churn."
+        };
+      }
+
+      let enterpriseConfig = defaultAgent01Config();
+
+      function loadAgent01Config() {
+        return enterpriseConfig;
+      }
+
+      async function refreshAgent01Config() {
+        try {
+          const response = await apiFetch("/api/v1/config/agent01");
+          if (!response.ok) {
+            enterpriseConfig = defaultAgent01Config();
+            return enterpriseConfig;
+          }
+          const payload = await response.json();
+          enterpriseConfig = { ...defaultAgent01Config(), ...(payload.config || {}) };
+          return enterpriseConfig;
+        } catch (error) {
+          enterpriseConfig = defaultAgent01Config();
+          return enterpriseConfig;
+        }
+      }
+
+      function applyAgent01Config(config) {
+        updateConfigSummary(config, getRunProfile(state.runProfileId));
+      }
+
+    async function sendFeedback(decisionId, accepted, note, node) {
+      const payload = {
+        decision_id: decisionId,
+        accepted,
+        notes: note,
+        project_id: document.getElementById("projectId").value,
+        engineer_id: "frontend-user",
+        run_id: state.runId
+      };
+      const response = await apiFetch("/api/v1/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const tag = document.createElement("div");
+        tag.className = "muted";
+        tag.textContent = "Feedback request failed. Check that the local API server is running.";
+        node.appendChild(tag);
+        return;
+      }
+      const tag = document.createElement("div");
+      tag.className = "muted";
+      tag.textContent = accepted ? "Feedback saved: accepted" : "Feedback saved: rejected";
+      node.appendChild(tag);
+    }
+
+    function appendDecision(decision) {
+      state.decisionsData.push(decision);
+      const node = document.createElement("div");
+      node.className = "decision";
+      const evidence = decision.metadata?.evidence ? `<div class="muted"><strong>Evidence:</strong> ${decision.metadata.evidence}</div>` : "";
+      const sourceGroup = decision.metadata?.group ? `<div class="muted"><strong>Covergroup:</strong> ${decision.metadata.group}</div>` : "";
+      const rankBasis = decision.metadata?.rank_basis ? `<div class="muted"><strong>Why ranked here:</strong> ${decision.metadata.rank_basis}</div>` : "";
+      const samples = decision.metadata?.sample_tests?.length ? `<div class="muted"><strong>Representative tests:</strong> ${decision.metadata.sample_tests.join(", ")}</div>` : "";
+      node.innerHTML = `
+        <div class="badge ${decision.priority}">${decision.priority}</div>
+        <h4>${decision.target}</h4>
+        <div>${decision.action}</div>
+        <p class="muted">${decision.rationale}</p>
+        ${sourceGroup}
+        ${evidence}
+        ${samples}
+        ${rankBasis}
+        <div class="muted">Confidence ${Math.round(decision.confidence * 100)}% · Effort ${decision.effort}</div>
+      `;
+      const row = document.createElement("div");
+      row.className = "feedback-row";
+      const acceptButton = document.createElement("button");
+      acceptButton.className = "accept";
+      acceptButton.textContent = "Accept";
+      acceptButton.onclick = () => sendFeedback(decision.id, true, "Accepted from verification review UI", node);
+      const rejectButton = document.createElement("button");
+      rejectButton.className = "reject";
+      rejectButton.textContent = "Reject";
+      rejectButton.onclick = () => sendFeedback(decision.id, false, "Rejected from verification review UI", node);
+      row.appendChild(acceptButton);
+      row.appendChild(rejectButton);
+      node.appendChild(row);
+      decisionEventsEl.appendChild(node);
+      node.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    function setBenchmarkNotes(notes) {
+      const notesEl = document.getElementById("benchmarkNotes");
+      notesEl.innerHTML = "";
+      notes.forEach((note) => {
+        const item = document.createElement("li");
+        item.textContent = note;
+        notesEl.appendChild(item);
+      });
+    }
+
+    function renderBenchmarkIdle() {
+      const benchmarkName = document.getElementById("benchmarkName");
+      state.benchmarkTitle = "";
+      state.benchmarkScore = "";
+      if (!state.benchmarkId) {
+        state.scorecardMode = "live";
+        benchmarkName.textContent = "Live artifact scorecard is armed for this custom run.";
+        document.getElementById("benchmarkScore").textContent = "--";
+        document.getElementById("benchmarkCoverage").textContent = "Awaiting run output";
+        document.getElementById("benchmarkFirst").textContent = "Live artifact mode";
+        document.getElementById("benchmarkSavings").textContent = "Awaiting run output";
+        setBenchmarkNotes([
+          "Custom artifacts use live run scoring based on decision quality, evidence coverage, and actionability.",
+        ]);
+        return;
+      }
+      state.scorecardMode = "benchmark";
+      benchmarkName.textContent = `${KNOWN_BENCHMARKS[state.benchmarkId]} is armed for evaluation.`;
+      document.getElementById("benchmarkScore").textContent = "--";
+      document.getElementById("benchmarkCoverage").textContent = "Awaiting run output";
+      document.getElementById("benchmarkFirst").textContent = "Awaiting run output";
+      document.getElementById("benchmarkSavings").textContent = "Awaiting run output";
+      setBenchmarkNotes([
+        "This run will be compared against the benchmark's expected findings and ranking order.",
+      ]);
+    }
+
+    function renderBenchmarkScorecard(result) {
+      state.benchmarkTitle = result.title;
+      state.benchmarkScore = `${result.metrics.overall_score}/100`;
+      document.getElementById("benchmarkName").textContent = result.title;
+      document.getElementById("benchmarkScore").textContent = state.benchmarkScore;
+      document.getElementById("benchmarkCoverage").textContent =
+        `${result.metrics.matched_expected_findings}/${result.metrics.expected_findings} expected findings`;
+      document.getElementById("benchmarkFirst").textContent =
+        result.metrics.first_action_alignment === 1 ? "Top action aligned" : "Top action diverged";
+      document.getElementById("benchmarkSavings").textContent =
+        `~${result.review_time_saved_minutes} min vs manual first-pass review`;
+      const notes = [...result.notes];
+      if (result.matched_findings.length) {
+        notes.unshift(
+          `Matched findings: ${result.matched_findings.map((item) => item.expected).join(", ")}.`
+        );
+      }
+      setBenchmarkNotes(notes);
+    }
+
+    function renderLiveScorecard(decisions) {
+      const evidenceBacked = decisions.filter((item) => item.metadata?.evidence).length;
+      const highCount = decisions.filter((item) => item.priority === "HIGH").length;
+      const actionable = decisions.filter((item) => item.action && item.rationale).length;
+      const evidenceCoverage = decisions.length ? evidenceBacked / decisions.length : 0;
+      const actionability = decisions.length ? actionable / decisions.length : 0;
+      const queueDepth = Math.min(1, decisions.length / 4);
+      const prioritySignal = Math.min(1, (highCount + decisions.length) / 6);
+      const overallScore = Math.round(
+        (
+          evidenceCoverage * 0.35 +
+          actionability * 0.3 +
+          queueDepth * 0.2 +
+          prioritySignal * 0.15
+        ) * 100
+      );
+      state.benchmarkTitle = "Live Artifact Scorecard";
+      state.benchmarkScore = `${overallScore}/100`;
+      document.getElementById("benchmarkName").textContent = `Live Artifact Scorecard · ${state.artifactName || "Custom verification artifact"}`;
+      document.getElementById("benchmarkScore").textContent = state.benchmarkScore;
+      document.getElementById("benchmarkCoverage").textContent = `${evidenceBacked}/${decisions.length || 0} evidence-backed actions`;
+      document.getElementById("benchmarkFirst").textContent = decisions.length ? "Runtime-ranked action queue" : "No ranked actions";
+      document.getElementById("benchmarkSavings").textContent = document.getElementById("impactSavings").textContent;
+      setBenchmarkNotes([
+        "Live artifact score is computed from actionability, evidence coverage, and queue strength instead of a fixed benchmark.",
+        decisions.length
+          ? `Generated ${decisions.length} reviewable actions with ${highCount} high-priority findings.`
+          : "No reviewable actions were generated from the current artifact shape.",
+      ]);
+    }
+
+    async function evaluateBenchmark(decisions) {
+      if (!decisions.length) {
+        renderBenchmarkIdle();
+        return;
+      }
+      if (!state.benchmarkId) {
+        renderLiveScorecard(decisions);
+        return;
+      }
+      const response = await apiFetch("/api/v1/benchmarks/agent01/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          benchmark_id: state.benchmarkId,
+          decisions
+        })
+      });
+      if (!response.ok) {
+        setBenchmarkNotes(["Benchmark scoring is currently unavailable. Check that the API server is running the latest build."]);
+        return;
+      }
+      renderBenchmarkScorecard(await response.json());
+    }
+
+    function appendSummary(done) {
+      const node = document.createElement("div");
+      node.className = "summary";
+      node.innerHTML = `
+        <div class="step-title">Run Summary</div>
+        <div>Total decisions: ${done.total_decisions}</div>
+        <div class="muted">High: ${done.high} · Medium: ${done.medium} · Low: ${done.low}</div>
+      `;
+      decisionEventsEl.appendChild(node);
+    }
+
+    async function exportVerificationBrief() {
+      if (!state.decisionsData.length) return;
+      const response = await apiFetch("/api/v1/verify/export/html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: document.getElementById("projectId").value,
+          design_name: document.getElementById("designName").value,
+          mode: modeEl.value,
+          context: document.getElementById("contextText").value,
+          provider: state.provider,
+          artifact_name: state.artifactName || "Verification artifact",
+          workflow_label: document.getElementById("impactWorkflow").textContent,
+          review_time_saved: document.getElementById("impactSavings").textContent,
+          benchmark_title: state.benchmarkTitle,
+          benchmark_score: state.benchmarkScore,
+          benchmark_notes: Array.from(document.querySelectorAll("#benchmarkNotes li")).map((item) => item.textContent || ""),
+          decisions: state.decisionsData,
+          analysis_log: state.analysisLog
+        })
+      });
+      if (!response.ok) {
+        setStatus("Export failed. Check that the local API server is running.", state.provider);
+        return;
+      }
+      const html = await response.text();
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${document.getElementById("projectId").value}-verification-brief.html`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportStructuredRun(target) {
+      if (!state.runId) return;
+      const response = await apiFetch(`/api/v1/runs/${state.runId}/export/${target}`);
+      if (!response.ok) {
+        setStatus(`Export failed for ${target}. Check that the local API server is running.`, state.provider);
+        return;
+      }
+      const payload = await response.json();
+      const blob = new Blob([JSON.stringify(payload.payload, null, 2)], { type: payload.mime_type || "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = payload.filename || `${state.runId}-${target}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+	    function resetRun() {
+	      completeActiveStep();
+	      decisionEventsEl.innerHTML = "";
+	      analysisEventsEl.innerHTML = "";
+      state.steps = 0;
+      state.decisions = 0;
+      state.high = 0;
+      state.decisionsData = [];
+      state.analysisLog = [];
+      state.orchestration = null;
+      state.runId = null;
+      syncStats("Ready");
+      setStatus("Awaiting a verification artifact for analysis.");
+      updateImpactSummary([]);
+	      renderBenchmarkIdle();
+	      renderOrchestrationIdle();
+	      exportBriefEl.disabled = true;
+        exportJiraEl.disabled = true;
+        exportEmailEl.disabled = true;
+        openHistoryEl.disabled = true;
+	      setRunControls(false);
+	    }
+
+    async function loadSample() {
+      const selected = sampleSelectEl.value;
+      if (!selected) {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null);
+        updateConfigSummary(loadAgent01Config(), null);
+        return;
+      }
+      const response = await apiFetch(`/sample-data/${selected}`);
+      const text = await response.text();
+      reportTextEl.value = text;
+      applyBenchmarkPreset(selected);
+      const matchedProfile = findRunProfileBySample(selected, modeEl.value);
+      if (matchedProfile) {
+        state.runProfileId = matchedProfile.id;
+        runProfileEl.value = matchedProfile.id;
+        document.getElementById("designName").value = matchedProfile.design_name || BENCHMARK_PRESETS[selected]?.designName || matchedProfile.label;
+        document.getElementById("projectId").value = matchedProfile.project_id || BENCHMARK_PRESETS[selected]?.projectId || matchedProfile.id;
+        document.getElementById("contextText").value = matchedProfile.context || BENCHMARK_PRESETS[selected]?.context || "";
+        updateConfigSummary(loadAgent01Config(), matchedProfile);
+      } else {
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        updateConfigSummary(loadAgent01Config(), null);
+      }
+      updateArtifactMeta(selected, inferArtifactType(text, selected), selected);
+      setStatus(`${KNOWN_BENCHMARKS[selected]} loaded and armed for benchmark scoring.`, state.provider);
+    }
+
+	    async function runAgent() {
+	      if (isRunning) return;
+	      resetRun();
+	      setRunControls(true);
+	      syncStats("Running");
+	      setStatus("Analysing the verification artifact and ranking the next engineering actions...");
+	      try {
+          const config = loadAgent01Config();
+          const activeProfile = getRunProfile(state.runProfileId);
+          const enterpriseInstructionBlocks = [
+            config.review_board ? `Review board: ${config.review_board}.` : "",
+            config.output_style ? `Output style: ${config.output_style}.` : "",
+            config.escalation_policy ? `Escalation policy: ${config.escalation_policy}` : "",
+            config.evidence_policy ? `Evidence policy: ${config.evidence_policy}` : "",
+            config.instruction_addendum ? `Enterprise addendum: ${config.instruction_addendum}` : ""
+          ].filter(Boolean).join(" ");
+	        const payload = {
+	          report_text: reportTextEl.value,
+	          format: "auto",
+	          mode: modeEl.value,
+	          design_name: document.getElementById("designName").value,
+	          project_id: document.getElementById("projectId").value,
+	          context: document.getElementById("contextText").value,
+	          artifact_name: state.artifactName || sampleSelectEl.value || "Custom verification artifact",
+	          run_profile_id: activeProfile?.id || null,
+	          run_profile_name: activeProfile?.label || null,
+	          chip_type: activeProfile?.chip_type || document.getElementById("designName").value,
+	          client_profile: activeProfile?.client_profile || `${config.org_name || "Enterprise"} verification workflow`,
+	          custom_instructions: [activeProfile?.custom_instructions, enterpriseInstructionBlocks].filter(Boolean).join("\n\n"),
+	          reference_data: activeProfile?.reference_data || "",
+	          reference_data_label: activeProfile?.reference_data_label || "Run profile reference pack"
+	        };
+	        const response = await apiFetch("/api/v1/verify", {
+	          method: "POST",
+	          headers: { "Content-Type": "application/json" },
+	          body: JSON.stringify(payload)
+	        });
+	        if (!response.ok || !response.body) {
+	          setStatus("Could not reach the API. If you opened this page directly, start the FastAPI server on http://127.0.0.1:8000.");
+	          syncStats("Error");
+	          return;
+	        }
+	        const reader = response.body.getReader();
+	        const decoder = new TextDecoder();
+	        let buffer = "";
+	        const seenDecisions = [];
+	        while (true) {
+	          const { value, done } = await reader.read();
+	          if (done) break;
+	          buffer += decoder.decode(value, { stream: true });
+	          const parts = buffer.split("\n\n");
+	          buffer = parts.pop() || "";
+	          for (const part of parts) {
+	            if (!part.startsWith("data: ")) continue;
+	            const event = JSON.parse(part.slice(6));
+	            if (event.type === "orchestration") {
+	              renderOrchestrationPreview(event.payload);
+	            }
+	            if (event.type === "step") {
+	              state.steps += 1;
+	              syncStats("Running");
+	              startStep(`Step ${event.payload.num} · ${event.payload.label}`);
+	            }
+	            if (event.type === "chunk") appendStepReasoning(event.payload.text);
+	            if (event.type === "decision") {
+	              state.decisions += 1;
+	              if (event.payload.priority === "HIGH") state.high += 1;
+	              syncStats("Running");
+	              seenDecisions.push(event.payload);
+	              updateImpactSummary(seenDecisions);
+	              appendDecision(event.payload);
+	            }
+	            if (event.type === "done") {
+	              completeActiveStep("Complete");
+	              syncStats("Done");
+	              setStatus("Analysis completed. Review the evidence and approve or reject findings.", event.payload.provider || "mock/local");
+                state.runId = event.payload.run_id || null;
+	              updateImpactSummary(seenDecisions);
+	              appendSummary(event.payload);
+	              await evaluateBenchmark(seenDecisions);
+	              exportBriefEl.disabled = seenDecisions.length === 0;
+                exportJiraEl.disabled = !state.runId;
+                exportEmailEl.disabled = !state.runId;
+                openHistoryEl.disabled = !state.runId;
+	            }
+	          }
+	        }
+	        completeActiveStep("Complete");
+	      } catch (error) {
+	        completeActiveStep("Error");
+	      setStatus("Analysis failed before completion. Check the API server and try again.");
+	        syncStats("Error");
+	      } finally {
+	        setRunControls(false);
+	      }
+	    }
+
+    artifactFileEl.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      await loadArtifactFile(file);
+    });
+    dropzoneEl.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropzoneEl.classList.add("dragover");
+    });
+    dropzoneEl.addEventListener("dragleave", () => {
+      dropzoneEl.classList.remove("dragover");
+    });
+    dropzoneEl.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      dropzoneEl.classList.remove("dragover");
+      const file = event.dataTransfer.files?.[0];
+      if (!file) return;
+      await loadArtifactFile(file);
+    });
+	    document.getElementById("loadSample").addEventListener("click", loadSample);
+      sampleSelectEl.addEventListener("change", loadSample);
+	    document.getElementById("clearRun").addEventListener("click", resetRun);
+	    document.getElementById("submitBtn").addEventListener("click", runAgent);
+	    exportBriefEl.addEventListener("click", exportVerificationBrief);
+      exportJiraEl.addEventListener("click", () => exportStructuredRun("jira"));
+      exportEmailEl.addEventListener("click", () => exportStructuredRun("email"));
+      openHistoryEl.addEventListener("click", () => {
+        const base = window.location.protocol === "file:" ? "./history.html" : "/history";
+        const suffix = state.runId ? `?run_id=${encodeURIComponent(state.runId)}` : "";
+        window.location.href = `${base}${suffix}`;
+      });
+      reportTextEl.addEventListener("input", () => {
+        const inferred = inferArtifactType(reportTextEl.value, state.artifactName || "custom-artifact");
+        const workspace = inferArtifactWorkspace(reportTextEl.value, "custom-artifact");
+        document.getElementById("designName").value = workspace.designName;
+        document.getElementById("projectId").value = workspace.projectId;
+        document.getElementById("contextText").value = workspace.context;
+        state.runProfileId = "";
+        runProfileEl.value = "";
+        sampleSelectEl.value = "";
+        updateArtifactMeta("Custom artifact", inferred, null);
+        updateConfigSummary(loadAgent01Config(), null);
+        if (reportTextEl.value.trim()) {
+          setStatus("Custom artifact detected. Live artifact scorecard mode is armed for this run.", state.provider);
+        }
+      });
+      runProfileEl.addEventListener("change", async () => {
+        if (!runProfileEl.value) {
+          state.runProfileId = "";
+          updateConfigSummary(loadAgent01Config(), null);
+          return;
+        }
+        await applyRunProfile(runProfileEl.value);
+      });
+	    modeEl.addEventListener("change", async () => {
+        const activeProfile = getRunProfile(runProfileEl.value);
+        if (activeProfile && activeProfile.mode === modeEl.value) {
+          return;
+        }
+        const modeMatch = findRunProfileBySample(sampleSelectEl.value, modeEl.value) || runProfiles.find((profile) => profile.mode === modeEl.value);
+        if (modeMatch) {
+          await applyRunProfile(modeMatch.id);
+          return;
+        }
+	      if (modeEl.value === "triage" && !sampleSelectEl.value.startsWith("regression_")) sampleSelectEl.value = "regression_sample.log";
+        if (modeEl.value === "coverage" && !sampleSelectEl.value.startsWith("coverage_")) sampleSelectEl.value = "coverage_vcs_sample.log";
+        await loadSample();
+	    });
+	    async function initializePage() {
+        await loadRunProfiles();
+        await refreshAgent01Config();
+        applyAgent01Config(loadAgent01Config());
+	      await applyRunProfile("usb_dv_coverage");
+	      syncStats("Ready");
+      updateImpactSummary([]);
+      renderBenchmarkIdle();
+      renderOrchestrationIdle();
+    }
+
+    initializePage();
+  </script>
+</body>
+</html>

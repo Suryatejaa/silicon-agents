@@ -1,0 +1,11 @@
+XCELIUM COVERAGE SUMMARY
+Tool: Cadence Xcelium xrun 24.03-s004
+Project: pmu_controller_revB
+Block: power_mode_controller
+Regression: nightly_power_modes_2026_05_02
+Testbench: tb_power_mode_uvm
+Cover Group: power_mode_transition [Coverage: 50.0%]
+bins sleep_to_active: 124 hits PASS
+bins active_to_sleep: 88 hits PASS
+bins brownout_recovery: 0 hits FAIL gap
+bins low_voltage_interrupt: 2 hits FAIL below threshold

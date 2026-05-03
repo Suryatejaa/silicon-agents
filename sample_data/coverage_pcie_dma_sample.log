@@ -1,0 +1,17 @@
+COVERAGE REPORT - PCIe DMA Engine r1.8
+Tool: Synopsys VCS O-2024.03
+Project: pcie_dma_revC
+Block: pcie_dma_top
+Regression: nightly_pcie_dma_2026_05_02
+Testbench: tb_pcie_dma_uvm
+Coverage model owner: pcie_dma_verification
+Cover Group: posted_write_recovery [Coverage: 50.0%]
+bins nominal_posted_write: 512 hits PASS
+bins posted_write_boundary: 0 hits FAIL gap
+bins completion_timeout_recovery: 0 hits FAIL gap
+bins poison_tlp_replay: 27 hits PASS
+
+Cover Group: tag_management [Coverage: 41.7%]
+bins single_tag_issue: 902 hits PASS
+bins concurrent_tag_reuse: 0 hits FAIL gap
+bins msi_backpressure: 4 hits FAIL below threshold

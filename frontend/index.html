@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #fffdf9;
+      --panel-2: #f8f3ea;
+      --ink: #1b1a16;
+      --muted: #655f54;
+      --line: #ddd4c1;
+      --accent: #0f6d69;
+      --accent-2: #d8efe8;
+      --ok: #116149;
+      --high: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Iowan Old Style", serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 6px 16px rgba(32, 27, 18, 0.05);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1b8d88 0%, #0f6d69 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+    }
+    .app-brand-title {
+      color: var(--ink);
+      font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+      font-size: 0.96rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+      font-size: 0.82rem;
+    }
+    .app-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #eef7f4;
+      border-color: #d9eae3;
+    }
+    .runtime-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      white-space: nowrap;
+      font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--high);
+    }
+    .dot.ok {
+      background: var(--ok);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 28px;
+    }
+    .card, .rail {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 18px 40px rgba(32, 27, 18, 0.06);
+    }
+    .card {
+      padding: 28px;
+    }
+    .hero-card {
+      display: grid;
+      gap: 18px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+    p {
+      margin: 0 0 14px;
+      line-height: 1.65;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .hero-kpi {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff, var(--panel-2));
+    }
+    .hero-kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .hero-kpi-value {
+      font-size: 1.7rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .hero-kpi-copy {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 0.95rem;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+    .button:hover {
+      transform: translateY(-1px);
+    }
+    .button.primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 10px 24px rgba(15, 109, 105, 0.22);
+    }
+    .button.secondary {
+      background: white;
+      border-color: var(--line);
+    }
+    .rail {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+    .mini {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #ffffff);
+      border: 1px solid #e6decd;
+    }
+    .mini h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+    .mini p {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .wide-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .score-chip {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #ffffff);
+      border: 1px solid #e6decd;
+    }
+    .score-chip .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+    .score-chip .value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .score-chip .copy {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.92rem;
+    }
+    .pilot-steps {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .pilot-step {
+      border-left: 3px solid var(--accent);
+      padding: 10px 0 10px 14px;
+    }
+    .pilot-step strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.98rem;
+    }
+    .notice {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid #e6decd;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--muted);
+      line-height: 1.6;
+      display: none;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      background: var(--accent-2);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .metric-inline {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    @media (max-width: 860px) {
+      .hero, .grid, .wide-grid, .hero-grid, .scoreboard {
+        grid-template-columns: 1fr;
+      }
+      .app-header {
+        display: block;
+        position: static;
+      }
+      .app-brand {
+        margin-bottom: 12px;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+      .runtime-badge {
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+  <body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">Executive Brief for verification-first semiconductor AI</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" class="is-current" id="navHome">Home</a>
+        <a href="/agent01" id="navAgent01">Agent 01</a>
+        <a href="/agent02" id="navAgent02">Agent 02</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="/configuration" id="navConfig">Enterprise Config</a>
+      </nav>
+      <div class="runtime-badge"><span class="dot" id="runtimeDot"></span><span id="runtimeLabel">Checking demo readiness</span></div>
+    </header>
+
+    <section class="hero">
+      <div class="card hero-card">
+        <div class="eyebrow">Agentic AI for chip workflows</div>
+        <h1>Silicon Agents</h1>
+        <p>
+          A verification workflow copilot that converts raw coverage reports and regression logs into ranked,
+          evidence-grounded next actions. The product wedge is designed for the most expensive bottleneck in
+          fabless engineering organizations: deciding what to investigate next under schedule pressure.
+        </p>
+        <p>
+          Silicon Agents sits above existing EDA flows. It does not replace VCS, Xcelium, or human review.
+          It reduces the manual cognitive effort between “report generated” and “engineering action chosen.”
+        </p>
+        <div class="hero-grid">
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Initial wedge</div>
+            <div class="hero-kpi-value">Agent 01</div>
+            <div class="hero-kpi-copy">Coverage closure and regression triage for verification teams approaching tapeout.</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Buyer story</div>
+            <div class="hero-kpi-value">Faster review</div>
+            <div class="hero-kpi-copy">Shorten first-pass report analysis without changing simulator, testbench, or approval flow.</div>
+          </div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Trust posture</div>
+            <div class="hero-kpi-value">Human in loop</div>
+            <div class="hero-kpi-copy">Every recommendation remains evidence-grounded, ranked, and explicitly approved by engineers.</div>
+          </div>
+        </div>
+        <div class="cta-row">
+          <a class="button primary" href="/agent01">Open Verification Workflow</a>
+          <a class="button secondary" href="/agent02">Open Yield Workflow Preview</a>
+        </div>
+      </div>
+      <aside class="rail">
+        <div class="mini">
+          <h3>Executive Thesis</h3>
+          <p>The product does not need to replace EDA tools. It only needs to reduce the time senior engineers spend interpreting outputs and prioritizing action.</p>
+        </div>
+        <div class="mini">
+          <h3>Why Infosys Can Win</h3>
+          <p>This fits Infosys as a semiconductor AI services wedge: workflow augmentation, client-specific integration, and managed delivery on top of existing toolchains.</p>
+        </div>
+        <div class="mini">
+          <h3>Expansion Path</h3>
+          <p>Once verification trust is established, the same orchestration pattern extends into ATE anomaly detection, binning validation, and SPC monitoring.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="eyebrow">Problem</div>
+        <span class="pill">Verification bottleneck</span>
+        <span class="pill">Human review preserved</span>
+        <span class="pill">Tool-agnostic wedge</span>
+        <ul>
+          <li>Verification teams spend disproportionate time reading reports before they can act on them.</li>
+          <li>Most schedule pain is not lack of raw data. It is the delay between artifact generation and confident prioritization.</li>
+          <li>What teams need is not more AI prose, but a defensible next-action queue with evidence and review control.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Product Proof</div>
+        <ul>
+          <li>Coverage report parsing with explicit finding traceability</li>
+          <li>Regression triage clustered into engineering investigation paths</li>
+          <li>Ranked actions with evidence, confidence, and human approval controls</li>
+          <li>Benchmark scorecard built into Agent 01 for repeatable sponsor demos</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Adoption Path</div>
+        <ul>
+          <li>Sanitized real-world verification artifacts from partner teams</li>
+          <li>Measured time saved in coverage review and regression triage</li>
+          <li>Workflow export into Jira, Confluence, or engineering review systems</li>
+          <li>Feedback loop that captures what engineers actually accept or reject</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wide-grid">
+      <div class="card">
+        <div class="eyebrow">Executive Scoreboard</div>
+        <p>
+          This prototype now includes measurable proof signals instead of a purely visual demo. The benchmark
+          suite evaluates whether Agent 01 surfaces the expected findings, ranks the first action correctly,
+          and includes artifact evidence in each recommendation.
+        </p>
+        <div class="scoreboard">
+          <div class="score-chip">
+            <div class="label">Benchmark artifacts</div>
+            <div class="value" id="scoreBenchmarks">--</div>
+            <div class="copy">Repeatable verification artifacts bundled for sponsor-safe evaluation.</div>
+          </div>
+          <div class="score-chip">
+            <div class="label">Workflow modes</div>
+            <div class="value">2</div>
+            <div class="copy">Coverage closure and regression triage in the current Agent 01 wedge.</div>
+          </div>
+          <div class="score-chip">
+            <div class="label">Trust controls</div>
+            <div class="value">Evidence + approval</div>
+            <div class="copy">Recommendations are visible, ranked, cited, and accepted or rejected by humans.</div>
+          </div>
+          <div class="score-chip">
+            <div class="label">Demo state</div>
+            <div class="value" id="scoreRuntime">Checking</div>
+            <div class="copy" id="scoreRuntimeCopy">Verifying API availability and benchmark route readiness.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Pilot Path</div>
+        <p>
+          The strongest next proof is a limited verification pilot with sanitized artifacts and a measured review-time study.
+        </p>
+        <div class="pilot-steps">
+          <div class="pilot-step">
+            <strong>1. Ingest partner artifacts</strong>
+            Use sanitized VCS/Xcelium coverage reports and regression logs from a real project slice.
+          </div>
+          <div class="pilot-step">
+            <strong>2. Score assisted vs manual review</strong>
+            Measure time to first ranked action and compare against baseline first-pass review effort.
+          </div>
+          <div class="pilot-step">
+            <strong>3. Capture accept and reject outcomes</strong>
+            Build a data-backed case around correctness, actionability, and trustworthiness.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wide-grid">
+      <div class="card">
+        <div class="eyebrow">Business Framing</div>
+        <ul>
+          <li><span class="metric-inline">For engineering leaders:</span> reduce expensive senior-review time spent scanning raw outputs before action can begin.</li>
+          <li><span class="metric-inline">For delivery partners:</span> position a semiconductor AI layer that augments existing flows instead of requiring workflow replacement.</li>
+          <li><span class="metric-inline">For sponsors:</span> create a realistic wedge into fabless design programs where verification consumes the most schedule pressure.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Roadmap Boundary</div>
+        <ul>
+          <li><span class="metric-inline">Now:</span> verification workflow copilot with benchmark-backed demo proof.</li>
+          <li><span class="metric-inline">Next:</span> export, auth, and pilot instrumentation for sponsor and client teams.</li>
+          <li><span class="metric-inline">Later:</span> Agent 02 yield intelligence as a second workflow family built on the same orchestration core.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top: 18px;">
+      <div class="eyebrow">Latest Runs</div>
+      <p>
+        A quick leadership view of recent activity across Agent 01 and Agent 02. This shows live traction from persisted runs,
+        scorecards, feedback, and workflow exports rather than only UI screenshots.
+      </p>
+      <div class="scoreboard" id="latestRunsBoard">
+        <div class="score-chip">
+          <div class="label">Loading</div>
+          <div class="value">--</div>
+          <div class="copy">Fetching recent run telemetry from the local audit store.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="notice" id="runtimeNotice"></div>
+  </main>
+  <script>
+    const isFileMode = window.location.protocol === "file:";
+    const agent01Link = document.getElementById("navAgent01");
+    const agent02Link = document.getElementById("navAgent02");
+    const navHistoryLink = document.getElementById("navHistory");
+    const navHomeLink = document.getElementById("navHome");
+    const navConfigLink = document.getElementById("navConfig");
+    const notice = document.getElementById("runtimeNotice");
+    const runtimeDot = document.getElementById("runtimeDot");
+    const runtimeLabel = document.getElementById("runtimeLabel");
+    const scoreRuntime = document.getElementById("scoreRuntime");
+    const scoreRuntimeCopy = document.getElementById("scoreRuntimeCopy");
+    const scoreBenchmarks = document.getElementById("scoreBenchmarks");
+    const latestRunsBoard = document.getElementById("latestRunsBoard");
+    const apiBase = isFileMode ? "http://127.0.0.1:8000" : "";
+
+    if (isFileMode) {
+      navHomeLink.href = "./index.html";
+      agent01Link.href = "./agent01.html";
+      agent02Link.href = "./agent02.html";
+      navHistoryLink.href = "./history.html";
+      navConfigLink.href = "./configuration.html";
+      notice.style.display = "block";
+      notice.innerHTML = `
+        File mode detected. Navigation is switched to local HTML pages so the links work from Finder/Downloads too.
+        For full API-backed analysis, run the FastAPI server and the agent pages will call <code>http://127.0.0.1:8000</code> by default.
+      `;
+    }
+
+    async function loadExecutiveReadout() {
+      try {
+        const [healthResponse, benchmarkResponse] = await Promise.all([
+          fetch(`${apiBase}/health`),
+          fetch(`${apiBase}/api/v1/benchmarks/agent01`)
+        ]);
+
+        if (!healthResponse.ok || !benchmarkResponse.ok) {
+          throw new Error("Could not load runtime status");
+        }
+
+        const health = await healthResponse.json();
+        const benchmarks = await benchmarkResponse.json();
+        runtimeDot.classList.add("ok");
+        runtimeLabel.textContent = `Demo ready · API ${health.version}`;
+        scoreRuntime.textContent = "Ready";
+        scoreRuntimeCopy.textContent = "API and benchmark routes are reachable for sponsor walkthroughs.";
+        scoreBenchmarks.textContent = String(benchmarks.length);
+      } catch (error) {
+        runtimeLabel.textContent = isFileMode ? "Static mode" : "API offline";
+        scoreRuntime.textContent = isFileMode ? "Static mode" : "Offline";
+        scoreRuntimeCopy.textContent = isFileMode
+          ? "Landing page is viewable, but live benchmark signals require the local API server."
+          : "Start the local API server to enable live benchmark and workflow signals.";
+        scoreBenchmarks.textContent = "--";
+      }
+    }
+
+    async function loadLatestRuns() {
+      try {
+        const response = await fetch(`${apiBase}/api/v1/runs?limit=4`);
+        if (!response.ok) throw new Error("Latest runs unavailable");
+        const payload = await response.json();
+        const runs = payload.runs || [];
+        if (!runs.length) {
+          latestRunsBoard.innerHTML = `
+            <div class="score-chip">
+              <div class="label">No runs yet</div>
+              <div class="value">0</div>
+              <div class="copy">Run Agent 01 or Agent 02 once and the latest activity board will appear here.</div>
+            </div>
+          `;
+          return;
+        }
+        latestRunsBoard.innerHTML = runs.map((run) => `
+          <div class="score-chip">
+            <div class="label">${run.agent} · ${run.mode}</div>
+            <div class="value">${run.benchmark_score || "Pending"}</div>
+            <div class="copy">
+              ${run.runtime_label || run.project_id}<br />
+              ${run.total_decisions} decisions · ${(run.feedback_summary && run.feedback_summary.accepted) || 0} accept · ${run.export_count || 0} exports
+            </div>
+          </div>
+        `).join("");
+      } catch (error) {
+        latestRunsBoard.innerHTML = `
+          <div class="score-chip">
+            <div class="label">Offline</div>
+            <div class="value">--</div>
+            <div class="copy">Latest run telemetry is available when the local API server is running.</div>
+          </div>
+        `;
+      }
+    }
+
+    loadExecutiveReadout();
+    loadLatestRuns();
+  </script>
+</body>
+</html>
