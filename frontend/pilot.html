@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Pilot Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --line: #dfe1e6;
+      --text: #10233e;
+      --muted: #53657f;
+      --accent: #155eef;
+      --accent-2: #0f7a73;
+      --ok: #216e4e;
+      --warn: #ae2a19;
+      --chip: #edf4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(21, 94, 239, 0.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(15, 122, 115, 0.08), transparent 24%),
+        linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    main {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .app-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .shell {
+      padding: 18px;
+      display: grid;
+      gap: 18px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 18px;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(14, 30, 54, 0.06);
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .status-strip {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .status-pill.ok {
+      background: #e9f9ef;
+      color: var(--ok);
+    }
+    .status-pill.warn {
+      background: #fdecea;
+      color: var(--warn);
+    }
+    .summary-grid,
+    .evidence-grid,
+    .utility-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .summary-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .evidence-grid,
+    .utility-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, var(--panel-2) 100%);
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .metric-copy {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .section-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin-top: 4px;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #ffffff;
+    }
+    .mini-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+    .list-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      font-size: 0.94rem;
+    }
+    .bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #edf2f7;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+    .recent-runs {
+      display: grid;
+      gap: 10px;
+    }
+    .run-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+    }
+    .run-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .run-title {
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .run-sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: var(--chip);
+      color: var(--accent);
+    }
+    .pill.ok {
+      background: #e9f9ef;
+      color: var(--ok);
+    }
+    .pill.warn {
+      background: #fdecea;
+      color: var(--warn);
+    }
+    .utility-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    button {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      padding: 11px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.primary {
+      border: none;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: white;
+      box-shadow: 0 6px 14px rgba(12, 102, 228, 0.22);
+    }
+    textarea, pre {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fbfcff;
+      padding: 14px;
+      color: var(--text);
+      font: inherit;
+      overflow: auto;
+    }
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+    @media (max-width: 1200px) {
+      .summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 980px) {
+      .hero,
+      .evidence-grid,
+      .utility-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 760px) {
+      .app-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">Pilot evidence and controlled-sharing dashboard</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/">Home</a>
+        <a href="/agent01">Agent 01</a>
+        <a href="/agent02">Agent 02</a>
+        <a href="/history">Run History</a>
+        <a href="/pilot" class="is-current">Pilot Dashboard</a>
+        <a href="/configuration">Enterprise Config</a>
+        <a href="/product-docs">Docs</a>
+      </nav>
+    </header>
+
+    <div class="shell">
+      <section class="hero">
+        <div class="panel">
+          <div class="eyebrow">Pilot evidence</div>
+          <h1>Make pilot traction visible, auditable, and sponsor-ready.</h1>
+          <p>
+            This dashboard turns the run-history backbone into pilot proof: usage, review outcomes, parser trust,
+            export activity, and recent engineering actions across Agent 01 and Agent 02.
+          </p>
+          <div class="status-strip" id="statusStrip">
+            <span class="status-pill">Loading pilot metrics...</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Pilot access utility</h2>
+              <div class="section-copy">Generate a fresh pilot access code suggestion for controlled sharing, then set it as <code>PILOT_ACCESS_TOKEN</code> in deployment.</div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="mini-card">
+              <div class="mini-title">Suggested code</div>
+              <textarea id="generatedCode" readonly placeholder="Generate a suggested pilot access code."></textarea>
+              <div class="utility-actions">
+                <button id="generateCodeBtn" class="primary" type="button">Generate pilot access code</button>
+                <button id="copyCodeBtn" type="button">Copy code</button>
+              </div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Integration examples</div>
+              <pre id="codeExample">Awaiting generated code...</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-grid" id="summaryGrid">
+        <div class="metric"><div class="metric-label">Total runs</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+        <div class="metric"><div class="metric-label">Completed</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+        <div class="metric"><div class="metric-label">Decisions reviewed</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+        <div class="metric"><div class="metric-label">Acceptance rate</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+        <div class="metric"><div class="metric-label">Avg parser confidence</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+        <div class="metric"><div class="metric-label">Exports generated</div><div class="metric-value">--</div><div class="metric-copy">Awaiting metrics</div></div>
+      </section>
+
+      <section class="evidence-grid">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Pilot evidence mix</h2>
+              <div class="section-copy">This is the sponsor view of platform adoption across workflows, artifact sources, and providers.</div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="mini-card">
+              <div class="mini-title">Agent breakdown</div>
+              <div class="list" id="agentBreakdown"></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Artifact source breakdown</div>
+              <div class="list" id="artifactBreakdown"></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Provider breakdown</div>
+              <div class="list" id="providerBreakdown"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Pilot reliability signals</h2>
+              <div class="section-copy">Track scorecard mode mix, parser trust, and warning concentration before expanding the pilot footprint.</div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="mini-card">
+              <div class="mini-title">Scorecard coverage</div>
+              <div class="list" id="scorecardBreakdown"></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Top run profiles</div>
+              <div class="list" id="profileBreakdown"></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Parser warnings</div>
+              <div class="list" id="warningBreakdown"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="utility-grid">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Recent pilot runs</h2>
+              <div class="section-copy">The latest workflow evidence, ready for leadership review or client follow-up.</div>
+            </div>
+          </div>
+          <div class="recent-runs" id="recentRuns"></div>
+        </div>
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Operator notes</h2>
+              <div class="section-copy">Use this view during the pilot to answer the questions sponsors and delivery leads will ask first.</div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="mini-card">
+              <div class="mini-title">What this page proves</div>
+              <div class="empty">
+                It shows that the product is being used, that reviewers are accepting or rejecting actions, that parser trust is visible,
+                and that results are leaving the product through workflow exports instead of staying trapped in a demo UI.
+              </div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">How to use this in a pilot review</div>
+              <div class="empty">
+                Start with total runs and acceptance rate, move to parser confidence and warning patterns, then open recent runs in Run History
+                to show raw artifacts, decisions, exports, and feedback loops end to end.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+
+    function safeText(value, fallback = "Not available") {
+      const text = String(value ?? "").trim();
+      return text || fallback;
+    }
+
+    function percentBar(count, total) {
+      if (!total) return 0;
+      return Math.max(6, Math.round((count / total) * 100));
+    }
+
+    async function apiFetch(path, options = {}) {
+      const response = await fetch(`${apiBase}${path}`, {
+        credentials: "include",
+        ...options,
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail || `Request failed with status ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function renderSummary(metrics) {
+      const cards = [
+        ["Total runs", metrics.total_runs, `${metrics.completed_runs} completed · ${metrics.failed_runs} failed`],
+        ["Completed", metrics.completed_runs, `${metrics.benchmark_runs} benchmark-backed · ${metrics.live_runs} live scorecard`],
+        ["Decisions reviewed", metrics.accepted_decisions + metrics.rejected_decisions, `${metrics.total_decisions} total generated decisions`],
+        ["Acceptance rate", `${metrics.acceptance_rate}%`, `${metrics.accepted_decisions} accepted · ${metrics.rejected_decisions} rejected`],
+        ["Avg parser confidence", `${Math.round(metrics.avg_parser_confidence * 100)}%`, "Cross-run parse trust for saved artifacts"],
+        ["Exports generated", metrics.total_exports, `${metrics.avg_benchmark_score ? `${metrics.avg_benchmark_score}/100 avg score` : "Awaiting benchmark-backed runs"}`],
+      ];
+      document.getElementById("summaryGrid").innerHTML = cards.map(([label, value, copy]) => `
+        <div class="metric">
+          <div class="metric-label">${label}</div>
+          <div class="metric-value">${value}</div>
+          <div class="metric-copy">${copy}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderBreakdown(containerId, items, total, emptyCopy) {
+      const container = document.getElementById(containerId);
+      if (!items.length) {
+        container.innerHTML = `<div class="empty">${emptyCopy}</div>`;
+        return;
+      }
+      container.innerHTML = items.map((item) => `
+        <div class="list-row">
+          <div style="flex:1;">
+            <div>${safeText(item.label || item.warning)}</div>
+            <div class="bar"><span style="width:${percentBar(item.count, total)}%"></span></div>
+          </div>
+          <strong>${item.count}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderRecentRuns(runs) {
+      const container = document.getElementById("recentRuns");
+      if (!runs.length) {
+        container.innerHTML = `<div class="empty">No pilot runs are stored yet. Run Agent 01 or Agent 02 to start capturing pilot evidence.</div>`;
+        return;
+      }
+      container.innerHTML = runs.map((run) => `
+        <div class="run-card">
+          <div class="run-top">
+            <div>
+              <div class="run-title">${safeText(run.runtime_label || run.project_id)}</div>
+              <div class="run-sub">${safeText(run.agent)} · ${safeText(run.mode)} · ${safeText(run.artifact_name, "Unnamed artifact")}</div>
+            </div>
+            <a href="/history?run=${encodeURIComponent(run.run_id)}" style="color:var(--accent); font-weight:700; text-decoration:none;">Open</a>
+          </div>
+          <div class="run-sub">Provider: ${safeText(run.provider)} · Source: ${safeText(run.artifact_source)} · Parser: ${run.parser_confidence != null ? `${Math.round(run.parser_confidence * 100)}%` : "n/a"}</div>
+          <div class="pill-row">
+            <span class="pill ${run.status === "completed" ? "ok" : "warn"}">${safeText(run.status)}</span>
+            <span class="pill">${run.total_decisions} decisions</span>
+            <span class="pill">${safeText(run.benchmark_score, "Live scorecard")}</span>
+            <span class="pill">${run.feedback_summary ? `${run.feedback_summary.accepted}/${run.feedback_summary.total} accepted` : "No feedback yet"}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderStatus(metrics) {
+      const strip = document.getElementById("statusStrip");
+      strip.innerHTML = `
+        <span class="status-pill ${metrics.pilot_access_enabled ? "ok" : "warn"}">${metrics.pilot_access_enabled ? "Pilot access protection enabled" : "Pilot access protection disabled"}</span>
+        <span class="status-pill">${metrics.total_runs} stored runs</span>
+        <span class="status-pill">${metrics.benchmark_runs} benchmark-backed runs</span>
+        <span class="status-pill">${metrics.total_exports} workflow exports</span>
+      `;
+    }
+
+    async function loadMetrics() {
+      const metrics = await apiFetch("/api/v1/pilot/metrics");
+      renderStatus(metrics);
+      renderSummary(metrics);
+      renderBreakdown("agentBreakdown", metrics.agent_breakdown, metrics.total_runs, "No agent activity recorded yet.");
+      renderBreakdown("artifactBreakdown", metrics.artifact_source_breakdown, metrics.total_runs, "No artifact provenance recorded yet.");
+      renderBreakdown("providerBreakdown", metrics.provider_breakdown, metrics.total_runs, "No provider activity recorded yet.");
+      renderBreakdown(
+        "scorecardBreakdown",
+        [
+          { label: "Benchmark-backed runs", count: metrics.benchmark_runs },
+          { label: "Live scorecard runs", count: metrics.live_runs },
+        ],
+        Math.max(metrics.total_runs, 1),
+        "No scorecard data available yet."
+      );
+      renderBreakdown("profileBreakdown", metrics.run_profile_breakdown, metrics.total_runs, "No run profiles used yet.");
+      renderBreakdown("warningBreakdown", metrics.parser_warning_breakdown, Math.max(metrics.total_runs, 1), "No parser warnings recorded so far.");
+      renderRecentRuns(metrics.recent_runs);
+    }
+
+    async function generateCode() {
+      const payload = await apiFetch("/api/v1/pilot/access-code/generate", { method: "POST" });
+      document.getElementById("generatedCode").value = payload.code;
+      document.getElementById("codeExample").textContent = [
+        payload.bearer_example,
+        "",
+        payload.curl_example,
+        "",
+        payload.note,
+      ].join("\n");
+    }
+
+    async function copyCode() {
+      const text = document.getElementById("generatedCode").value.trim();
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      document.getElementById("codeExample").textContent = `Copied pilot access code:\n\n${text}`;
+    }
+
+    document.getElementById("generateCodeBtn").addEventListener("click", generateCode);
+    document.getElementById("copyCodeBtn").addEventListener("click", copyCode);
+
+    loadMetrics().catch((error) => {
+      document.getElementById("statusStrip").innerHTML = `<span class="status-pill warn">${safeText(error.message, "Unable to load pilot metrics.")}</span>`;
+    });
+  </script>
+</body>
+</html>

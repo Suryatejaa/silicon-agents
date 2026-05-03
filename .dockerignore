@@ -1,0 +1,10 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+silicon_agents.db
+devlog

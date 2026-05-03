@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: silicon-agents-mvp
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: SA_LOG_LEVEL
+        value: INFO
+      - key: SA_DB_PATH
+        value: /data/silicon_agents.db
+      - key: PILOT_ACCESS_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false

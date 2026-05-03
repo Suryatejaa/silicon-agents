@@ -223,6 +223,11 @@
       background: white;
       border-color: var(--line);
     }
+    .button.tertiary {
+      background: rgba(21, 94, 239, 0.08);
+      color: #155eef;
+      border-color: rgba(21, 94, 239, 0.14);
+    }
     .rail {
       padding: 22px;
       display: grid;
@@ -361,7 +366,9 @@
         <a href="/agent01" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="/configuration" id="navConfig">Enterprise Config</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
       <div class="runtime-badge"><span class="dot" id="runtimeDot"></span><span id="runtimeLabel">Checking demo readiness</span></div>
     </header>
@@ -399,6 +406,9 @@
         <div class="cta-row">
           <a class="button primary" href="/agent01">Open Verification Workflow</a>
           <a class="button secondary" href="/agent02">Open Yield Workflow Preview</a>
+          <a class="button tertiary" href="/pitch" id="pitchDeckLink">Open Pitch Deck</a>
+          <a class="button secondary" href="/pilot">Open Pilot Dashboard</a>
+          <a class="button secondary" href="/product-docs">Open Product Docs</a>
         </div>
       </div>
       <aside class="rail">
@@ -546,6 +556,7 @@
     const navHistoryLink = document.getElementById("navHistory");
     const navHomeLink = document.getElementById("navHome");
     const navConfigLink = document.getElementById("navConfig");
+    const pitchDeckLink = document.getElementById("pitchDeckLink");
     const notice = document.getElementById("runtimeNotice");
     const runtimeDot = document.getElementById("runtimeDot");
     const runtimeLabel = document.getElementById("runtimeLabel");
@@ -561,6 +572,7 @@
       agent02Link.href = "./agent02.html";
       navHistoryLink.href = "./history.html";
       navConfigLink.href = "./configuration.html";
+      pitchDeckLink.href = "./pitch.html";
       notice.style.display = "block";
       notice.innerHTML = `
         File mode detected. Navigation is switched to local HTML pages so the links work from Finder/Downloads too.

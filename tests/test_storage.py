@@ -87,6 +87,7 @@ class FeedbackStoreTests(unittest.TestCase):
                     provider="mock",
                     model=None,
                     artifact_name="coverage_vcs_sample.log",
+                    artifact_source="bundled_sample",
                     runtime_label="USB Controller v2.3",
                     run_profile_id="usb_dv_coverage",
                     run_profile_name="USB Controller Benchmark",
@@ -137,6 +138,7 @@ class FeedbackStoreTests(unittest.TestCase):
                 self.assertIsNotNone(fetched)
                 assert fetched is not None
                 self.assertEqual(fetched.artifact_name, "coverage_vcs_sample.log")
+                self.assertEqual(fetched.artifact_source, "bundled_sample")
                 self.assertEqual(fetched.decisions[0].target, "isochronous_transfer")
                 self.assertEqual(len(fetched.feedback), 1)
                 self.assertEqual(len(fetched.export_history), 1)

@@ -356,7 +356,9 @@
         <a href="/agent01" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" class="is-current" id="navHistory">Run History</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="/configuration" id="navConfig">Enterprise Config</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
     </header>
 
@@ -440,6 +442,22 @@
       return `${(durationMs / 1000).toFixed(1)} s`;
     }
 
+    function formatArtifactSource(value) {
+      return ({
+        bundled_sample: "Bundled sample",
+        uploaded_file: "Uploaded file",
+        pasted_text: "Pasted text",
+        unknown: "Unknown source"
+      })[value] || "Unknown source";
+    }
+
+    function formatParserConfidence(value) {
+      if (typeof value !== "number") return "Not recorded";
+      const pct = `${Math.round(value * 100)}%`;
+      if (value < 0.75) return `${pct} · Review format`;
+      return `${pct} · Stable parse`;
+    }
+
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -473,6 +491,8 @@
               <span class="pill">${escapeHtml(formatDuration(run.duration_ms))}</span>
               <span class="pill">${escapeHtml(`${run.total_decisions} decisions`)}</span>
               <span class="pill">${escapeHtml(run.benchmark_score || "Score pending")}</span>
+              <span class="pill">${escapeHtml(formatArtifactSource(run.artifact_source))}</span>
+              <span class="pill ${typeof run.parser_confidence === "number" && run.parser_confidence < 0.75 ? "warn" : "ok"}">${escapeHtml(formatParserConfidence(run.parser_confidence))}</span>
             </div>
             <div class="run-sub" style="margin-top: 10px;">${escapeHtml(formatWhen(run.started_at))}</div>
           </button>
@@ -561,6 +581,7 @@
         <div class="detail-grid">
           <div class="metric"><div class="metric-label">Project</div><div class="metric-value">${escapeHtml(run.project_id)}</div></div>
           <div class="metric"><div class="metric-label">Artifact</div><div class="metric-value">${escapeHtml(run.artifact_name || "Not provided")}</div></div>
+          <div class="metric"><div class="metric-label">Artifact source</div><div class="metric-value">${escapeHtml(formatArtifactSource(run.artifact_source))}</div></div>
           <div class="metric"><div class="metric-label">Run profile</div><div class="metric-value">${escapeHtml(run.run_profile_name || "Custom run")}</div></div>
           <div class="metric"><div class="metric-label">Latency</div><div class="metric-value">${escapeHtml(formatDuration(run.duration_ms))}</div></div>
           <div class="metric"><div class="metric-label">Provider</div><div class="metric-value">${escapeHtml(run.provider)}</div></div>
@@ -568,6 +589,8 @@
           <div class="metric"><div class="metric-label">Decisions</div><div class="metric-value">${escapeHtml(String(run.total_decisions))}</div></div>
           <div class="metric"><div class="metric-label">Started</div><div class="metric-value">${escapeHtml(formatWhen(run.started_at))}</div></div>
           <div class="metric"><div class="metric-label">Scorecard</div><div class="metric-value">${escapeHtml(run.benchmark_score || "Not scored")}</div></div>
+          <div class="metric"><div class="metric-label">Parser format</div><div class="metric-value">${escapeHtml(run.parser_format || "Not recorded")}</div></div>
+          <div class="metric"><div class="metric-label">Parser confidence</div><div class="metric-value">${escapeHtml(formatParserConfidence(run.parser_confidence))}</div></div>
           <div class="metric"><div class="metric-label">Feedback</div><div class="metric-value">${escapeHtml(`${run.feedback_summary.accepted} accept · ${run.feedback_summary.rejected} reject`)}</div></div>
           <div class="metric"><div class="metric-label">Exports</div><div class="metric-value">${escapeHtml(String((run.export_history || []).length))}</div></div>
           <div class="metric"><div class="metric-label">Completed</div><div class="metric-value">${escapeHtml(formatWhen(run.completed_at))}</div></div>
@@ -590,6 +613,16 @@
         <div class="split">
           <div class="stack">
             <div class="box">
+              <div class="box-title">Parser Trust</div>
+              <div><strong>Format:</strong> ${escapeHtml(run.parser_format || "Not recorded")}</div>
+              <div style="margin-top: 8px;"><strong>Confidence:</strong> ${escapeHtml(formatParserConfidence(run.parser_confidence))}</div>
+              ${
+                (run.parser_warnings || []).length
+                  ? `<ul class="analysis-list" style="margin-top: 10px;">${run.parser_warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("")}</ul>`
+                  : `<div class="section-copy" style="margin: 10px 0 0;">No parser warnings were stored for this run.</div>`
+              }
+            </div>
+            <div class="box">
               <div class="box-title">Orchestration Preview</div>
               <div><strong>Chip focus:</strong> ${escapeHtml(run.orchestration.chip_focus || "Not captured")}</div>
               <div style="margin-top: 8px;"><strong>Output emphasis:</strong> ${escapeHtml(run.orchestration.output_emphasis || "Not captured")}</div>
@@ -610,6 +643,10 @@
             <div class="box">
               <div class="box-title">Request Snapshot</div>
               <div class="mono">${escapeHtml(JSON.stringify(run.request_payload, null, 2))}</div>
+            </div>
+            <div class="box">
+              <div class="box-title">Raw Artifact Replay</div>
+              <div class="mono">${escapeHtml(run.raw_artifact || "Raw artifact was not recorded for this run.")}</div>
             </div>
           </div>
           <div class="stack">

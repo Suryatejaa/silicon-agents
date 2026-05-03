@@ -30,6 +30,21 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
+    def test_pitch_page_route(self) -> None:
+        response = self.client.get("/pitch")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Silicon Agents", response.text)
+        self.assertIn("Pitch Deck", response.text)
+
+    def test_pilot_and_docs_routes(self) -> None:
+        pilot = self.client.get("/pilot")
+        self.assertEqual(pilot.status_code, 200)
+        self.assertIn("Pilot Dashboard", pilot.text)
+
+        docs = self.client.get("/product-docs")
+        self.assertEqual(docs.status_code, 200)
+        self.assertIn("Silicon Agents documentation", docs.text)
+
     def test_enterprise_config_defaults_and_update(self) -> None:
         default_agent01 = self.client.get("/api/v1/config/agent01")
         self.assertEqual(default_agent01.status_code, 200)
@@ -62,6 +77,7 @@ class ApiTests(unittest.TestCase):
                 "mode": "coverage",
                 "project_id": "api-test",
                 "artifact_name": "demo_coverage.log",
+                "artifact_source": "pasted_text",
                 "run_profile_id": "usb_dv_coverage",
                 "run_profile_name": "USB Controller Benchmark",
                 "chip_type": "USB controller",
@@ -82,10 +98,18 @@ class ApiTests(unittest.TestCase):
         detail = self.client.get(f"/api/v1/runs/{run_id}")
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json()["artifact_name"], "demo_coverage.log")
+        self.assertEqual(detail.json()["artifact_source"], "pasted_text")
+        self.assertEqual(
+            detail.json()["raw_artifact"],
+            "Cover Group: demo [Coverage: 50.0%]\nbins gap_case: 0 hits FAIL gap",
+        )
         self.assertEqual(detail.json()["run_profile_id"], "usb_dv_coverage")
         self.assertGreaterEqual(detail.json()["duration_ms"], 0)
         self.assertIn("decision_count", detail.json()["observability"])
         self.assertTrue(detail.json()["benchmark_score"])
+        self.assertIn(detail.json()["parser_format"], {"vcs", "xcelium", "unknown"})
+        self.assertGreater(detail.json()["parser_confidence"], 0)
+        self.assertIsInstance(detail.json()["parser_warnings"], list)
 
         jira_export = self.client.get(f"/api/v1/runs/{run_id}/export/jira")
         self.assertEqual(jira_export.status_code, 200)
@@ -110,6 +134,7 @@ class ApiTests(unittest.TestCase):
                 "mode": "ate",
                 "project_id": "yield-api-test",
                 "artifact_name": "ate_parametric_sample.csv",
+                "artifact_source": "bundled_sample",
                 "run_profile_id": "mobile_soc_yield",
                 "run_profile_name": "Mobile SoC Yield Review",
                 "chip_type": "Mobile SoC",
@@ -130,8 +155,12 @@ class ApiTests(unittest.TestCase):
         detail = self.client.get(f"/api/v1/runs/{run_id}")
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json()["artifact_name"], "ate_parametric_sample.csv")
+        self.assertEqual(detail.json()["artifact_source"], "bundled_sample")
+        self.assertIn("chip_id,max_freq_ghz", detail.json()["raw_artifact"])
         self.assertEqual(detail.json()["run_profile_name"], "Mobile SoC Yield Review")
         self.assertIn("analysis_events", detail.json()["observability"])
+        self.assertEqual(detail.json()["parser_format"], "ate_csv")
+        self.assertGreater(detail.json()["parser_confidence"], 0)
 
     def test_feedback_round_trip(self) -> None:
         self.client.post(
@@ -165,6 +194,42 @@ class ApiTests(unittest.TestCase):
         run_detail = self.client.get(f"/api/v1/runs/{run_id}")
         self.assertEqual(run_detail.status_code, 200)
         self.assertEqual(run_detail.json()["feedback_summary"]["accepted"], 1)
+
+    def test_pilot_metrics_endpoint(self) -> None:
+        self.client.post(
+            "/api/v1/verify",
+            json={
+                "report_text": "Cover Group: demo [Coverage: 50.0%]\nbins gap_case: 0 hits FAIL gap",
+                "mode": "coverage",
+                "project_id": "pilot-metrics-test",
+                "artifact_name": "pilot_metrics.log",
+                "artifact_source": "uploaded_file",
+                "run_profile_id": "pilot_profile",
+                "run_profile_name": "Pilot Profile",
+            },
+        )
+        runs = self.client.get("/api/v1/runs", params={"project_id": "pilot-metrics-test", "agent": "agent01"})
+        run_id = runs.json()["runs"][0]["run_id"]
+        self.client.post(
+            "/api/v1/feedback",
+            json={
+                "decision_id": "D001",
+                "accepted": True,
+                "project_id": "pilot-metrics-test",
+                "engineer_id": "pilot-reviewer",
+                "run_id": run_id,
+            },
+        )
+        self.client.get(f"/api/v1/runs/{run_id}/export/jira")
+        metrics = self.client.get("/api/v1/pilot/metrics")
+        self.assertEqual(metrics.status_code, 200)
+        payload = metrics.json()
+        self.assertGreaterEqual(payload["total_runs"], 1)
+        self.assertGreaterEqual(payload["completed_runs"], 1)
+        self.assertGreaterEqual(payload["accepted_decisions"], 1)
+        self.assertGreaterEqual(payload["total_exports"], 1)
+        self.assertTrue(any(item["label"] == "agent01" for item in payload["agent_breakdown"]))
+        self.assertTrue(any(item["label"] == "uploaded_file" for item in payload["artifact_source_breakdown"]))
 
     def test_agent01_benchmark_evaluation_endpoint(self) -> None:
         response = self.client.post(
@@ -306,3 +371,60 @@ class ApiTests(unittest.TestCase):
         self.assertIn("Yield brief", response.text)
         self.assertIn("Executive summary", response.text)
         self.assertIn("Recommended next pilot step", response.text)
+
+
+class PilotAccessTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        os.environ["SA_DB_PATH"] = os.path.join(cls.temp_dir.name, "pilot_test.db")
+        os.environ["PILOT_ACCESS_TOKEN"] = "pilot-secret"
+        get_settings.cache_clear()
+        import main
+
+        importlib.reload(main)
+        cls.client = TestClient(main.create_app())
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.temp_dir.cleanup()
+        os.environ.pop("SA_DB_PATH", None)
+        os.environ.pop("PILOT_ACCESS_TOKEN", None)
+        get_settings.cache_clear()
+
+    def test_health_is_not_protected(self) -> None:
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "ok")
+
+    def test_api_requires_token(self) -> None:
+        response = self.client.get("/api/v1/runs")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json()["detail"], "Pilot access token required.")
+
+    def test_browser_redirects_to_pilot_login(self) -> None:
+        response = self.client.get("/", follow_redirects=False, headers={"accept": "text/html"})
+        self.assertEqual(response.status_code, 307)
+        self.assertIn("/pilot-login", response.headers["location"])
+
+    def test_unlock_flow_sets_cookie_and_grants_access(self) -> None:
+        unlock = self.client.post("/pilot/unlock", headers={"X-Pilot-Access-Token": "pilot-secret"})
+        self.assertEqual(unlock.status_code, 200)
+        self.assertTrue(unlock.json()["unlocked"])
+
+        page = self.client.get("/")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Silicon Agents", page.text)
+
+    def test_pilot_access_code_generation_requires_and_accepts_token(self) -> None:
+        unauthorized = self.client.post("/api/v1/pilot/access-code/generate")
+        self.assertEqual(unauthorized.status_code, 401)
+
+        authorized = self.client.post(
+            "/api/v1/pilot/access-code/generate",
+            headers={"X-Pilot-Access-Token": "pilot-secret"},
+        )
+        self.assertEqual(authorized.status_code, 200)
+        payload = authorized.json()
+        self.assertIn("code", payload)
+        self.assertIn("X-Pilot-Access-Token", payload["bearer_example"])

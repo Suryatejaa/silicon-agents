@@ -32,6 +32,7 @@ The repo is intentionally local-first but structured like a serious workflow pro
 - Saved client profile templates for one-click demo switching across chip programs and workflow styles
 - SQLite-backed enterprise policy, run history, feedback, and export audit trail
 - Run history console with Jira-ready and email-ready exports
+- Pilot access gate with a shared header token and browser unlock flow
 - Deterministic offline reasoning fallback so the demo works without live API keys
 - Optional Gemini/OpenAI provider hooks for later activation
 
@@ -72,9 +73,36 @@ uvicorn main:app --reload
 
 Then open `http://127.0.0.1:8000/`.
 
+If `PILOT_ACCESS_TOKEN` is set, the app will redirect browsers to `/pilot-login` until the token is unlocked for that session. API clients can call protected routes with the `X-Pilot-Access-Token` header.
+
+## Docker / Pilot Deployment
+
+Build and run locally with Docker:
+
+```bash
+docker compose up --build
+```
+
+Deployment artifacts now included:
+
+- [Dockerfile](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/Dockerfile)
+- [docker-compose.yml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/docker-compose.yml)
+- [render.yaml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/render.yaml)
+
+Recommended pilot env values:
+
+```env
+PILOT_ACCESS_TOKEN=replace-with-shared-pilot-token
+GEMINI_API_KEY=...
+OPENAI_API_KEY=
+SA_DB_PATH=/data/silicon_agents.db
+SA_LOG_LEVEL=INFO
+```
+
 ## Core Endpoints
 
 - `GET /health`
+- `GET /pitch`
 - `POST /api/v1/verify`
 - `POST /api/v1/yield`
 - `POST /api/v1/feedback`

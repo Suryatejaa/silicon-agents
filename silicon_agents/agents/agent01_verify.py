@@ -23,8 +23,14 @@ class VerificationAgent:
         self.settings = get_settings()
         self.llm = LLMProvider()
         self.orchestrator = PromptOrchestrator()
+        self.last_parser_format: str | None = None
+        self.last_parser_confidence: float | None = None
+        self.last_parser_warnings: list[str] = []
 
     async def stream(self, request: VerifyRequest) -> AsyncIterator[tuple[str, dict]]:
+        self.last_parser_format = None
+        self.last_parser_confidence = None
+        self.last_parser_warnings = []
         if request.mode == "triage":
             async for event in self._stream_triage(request):
                 yield event
@@ -34,6 +40,7 @@ class VerificationAgent:
 
     async def _stream_coverage(self, request: VerifyRequest) -> AsyncIterator[tuple[str, dict]]:
         parsed = parse_coverage_report(request.report_text, request.format)
+        self._capture_parser_signals(parsed)
         gaps = [item for item in parsed.items if item.status != "covered"]
         fallback_decisions = self._build_coverage_decisions(gaps, request.project_id)
         llm_result = await self._run_coverage_llm(parsed, request, fallback_decisions)
@@ -69,6 +76,7 @@ class VerificationAgent:
 
     async def _stream_triage(self, request: VerifyRequest) -> AsyncIterator[tuple[str, dict]]:
         parsed = parse_regression_log(request.report_text)
+        self._capture_parser_signals(parsed)
         failures = [item for item in parsed.items if item.status == "failed"]
         clusters = self._cluster_failures(failures)
         fallback_decisions = self._build_triage_decisions(clusters, request.project_id)
@@ -246,8 +254,20 @@ class VerificationAgent:
             "reference_priorities": prompt_plan.get("reference_priorities", []),
             "analysis_directives": prompt_plan.get("analysis_directives", []),
             "prompt_addendum": prompt_plan.get("prompt_addendum", ""),
+            "parser_format": self.last_parser_format,
+            "parser_confidence": self.last_parser_confidence,
+            "parser_warnings": list(self.last_parser_warnings),
             "provider": self.orchestrator.last_provider,
         }
+
+    def _capture_parser_signals(self, parsed) -> None:
+        metadata = getattr(parsed, "metadata", {}) or {}
+        parser_format = metadata.get("parser_format") or metadata.get("tool") or getattr(parsed, "type", None)
+        parser_confidence = metadata.get("parser_confidence")
+        parser_warnings = metadata.get("parser_warnings") or []
+        self.last_parser_format = str(parser_format) if parser_format else None
+        self.last_parser_confidence = float(parser_confidence) if parser_confidence is not None else None
+        self.last_parser_warnings = [str(item) for item in parser_warnings]
 
     def _extract_json(self, raw: str) -> dict:
         stripped = raw.strip()

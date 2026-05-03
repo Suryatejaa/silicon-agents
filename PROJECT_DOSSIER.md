@@ -24,13 +24,16 @@ The platform is designed as an orchestration layer above existing semiconductor 
 
 ### Product pages delivered
 
-The frontend currently includes 5 product pages:
+The frontend currently includes 8 product pages:
 
 1. `Home / Executive Brief`
 2. `Agent 01`
 3. `Agent 02`
 4. `Enterprise Configuration`
 5. `Run History`
+6. `Pitch Deck`
+7. `Pilot Dashboard`
+8. `Product Docs`
 
 ### Active workflow scope
 
@@ -72,12 +75,27 @@ The frontend currently includes 5 product pages:
 ### Run governance and observability delivered
 
 - Persisted run history in SQLite
+- Raw artifact persistence per saved run
+- Artifact provenance persistence per saved run
+- Parser format, confidence, and warning persistence
 - Per-run provider and model tracking
 - Per-run latency and status tracking
 - Stored orchestration preview payload
 - Stored analysis trace and decision payload
 - Export history per run
 - Feedback visibility per saved run
+- Pilot metrics aggregation across saved runs
+- Pilot access-code generation utility
+
+### Pilot access and deployment delivered
+
+- Dockerfile
+- docker-compose deployment packaging
+- Render deployment manifest
+- Pilot access login page
+- Header-based pilot token enforcement
+- Browser-session cookie unlock flow
+- Request logging middleware for pilot usage visibility
 
 ## 3. High-Level Architecture
 
@@ -151,6 +169,10 @@ Files:
 - [frontend/agent02.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/agent02.html)
 - [frontend/configuration.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/configuration.html)
 - [frontend/history.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/history.html)
+- [frontend/pitch.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pitch.html)
+- [frontend/pilot.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pilot.html)
+- [frontend/docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/docs.html)
+- [frontend/pilot_access.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pilot_access.html)
 
 Responsibilities:
 
@@ -161,6 +183,9 @@ Responsibilities:
 - benchmark and impact visibility
 - configuration management
 - run-history review and workflow exports
+- pilot evidence visualization
+- pilot access unlock flow
+- long-form product documentation
 
 ### Layer 2. API / App Shell Layer
 
@@ -183,6 +208,9 @@ Responsibilities:
 - benchmark and feedback endpoints
 - configuration endpoints
 - run-history and structured-export endpoints
+- pilot metrics endpoint
+- pilot access-code generation endpoint
+- browser pilot-gate enforcement
 
 ### Layer 3. Schema / Contract Layer
 
@@ -212,6 +240,7 @@ Responsibilities:
 - convert raw text / CSV into `ParsedReport`
 - extract coverpoints, failures, anomalies, trend points
 - normalize report metadata and summaries
+- emit parser confidence and parser warnings
 
 ### Layer 5. Enterprise Orchestration Layer
 
@@ -283,6 +312,7 @@ Responsibilities:
 - benchmark evaluation
 - per-run scorecard persistence
 - export audit persistence
+- pilot metrics aggregation over stored runs
 
 ## 5. Low-Level Design
 
@@ -303,8 +333,14 @@ Current FastAPI responsibilities:
   - `/agent02`
   - `/configuration`
   - `/history`
+  - `/pitch`
+  - `/pilot`
+  - `/product-docs`
+  - `/pilot-login`
 - expose API routes
 - expose `/health`
+- enforce optional pilot token protection
+- expose `/pilot/unlock`
 
 ### 5.2 Request models
 
@@ -318,6 +354,7 @@ Current FastAPI responsibilities:
 - `design_name`
 - `project_id`
 - `artifact_name`
+- `artifact_source`
 - `run_profile_id`
 - `run_profile_name`
 - `context`
@@ -336,6 +373,7 @@ Current FastAPI responsibilities:
 - `mode`
 - `project_id`
 - `artifact_name`
+- `artifact_source`
 - `run_profile_id`
 - `run_profile_name`
 - `context`
@@ -456,7 +494,7 @@ Current UX elements:
 - adoption path
 - runtime status
 - latest-runs widget
-- links into Agent 01, Agent 02, configuration, and run history
+- links into Agent 01, Agent 02, pitch, pilot dashboard, configuration, docs, and run history
 
 ### Agent 01 UX
 
@@ -468,11 +506,14 @@ Current UX features:
 
 - artifact upload and drag-drop
 - benchmark sample loader
+- artifact source visibility
+- artifact analysis summary card
 - runtime status cards
 - impact snapshot
 - first recommended action summary
 - benchmark scorecard
 - orchestration preview
+- parser trust visibility
 - separate decision review queue
 - separate analysis trace
 - loading spinners with step-wise progression
@@ -492,6 +533,7 @@ Current UX features:
 
 - ATE/SPC mode selector
 - sample data loading
+- artifact source visibility
 - status metrics
 - impact snapshot
 - benchmark scorecard
@@ -524,6 +566,38 @@ Current UX features:
 - organization / review / evidence policy fields
 - backend SQLite persistence
 - saved configuration summary
+
+### Pilot Dashboard UX
+
+Purpose:
+
+- turn saved runs into sponsor-grade pilot evidence
+- expose operational sharing utilities for protected pilot deployments
+
+Current UX features:
+
+- pilot evidence summary metrics
+- agent/provider/artifact-source breakdowns
+- parser warning visibility
+- recent pilot runs
+- pilot access-code generation utility
+- direct navigation into run history and docs
+
+### Product Docs UX
+
+Purpose:
+
+- provide detailed product, workflow, and field-level documentation for sponsors, delivery teams, and pilot users
+
+Current UX features:
+
+- left navigation index
+- architecture overview
+- agent workflow explanation
+- enterprise policy explanation
+- field-by-field request and run-history reference
+- pilot operations guidance
+- current API surface summary
 
 ### Run History UX
 
@@ -580,6 +654,7 @@ Current tables:
 - `feedback`
 - `enterprise_config`
 - `run_history`
+- `export_history`
 
 Stored decision fields:
 
@@ -622,7 +697,10 @@ Stored run-history fields:
 - mode
 - project ID
 - artifact name
+- artifact source
+- raw artifact
 - run profile ID and name
+- parser format, confidence, and warnings
 - provider and model
 - latency
 - benchmark / live scorecard summary
@@ -927,7 +1005,34 @@ Current export contents:
 - Jira-ready ticket payloads with summary, description, severity, and metadata
 - email-ready payloads with subject, recipients placeholder, executive summary, and action list
 
-## 13. Persistence and Feedback
+## 13. Pilot Access and Deployment Readiness
+
+### Pilot sharing model
+
+The MVP now supports a lightweight pilot-protection model intended for controlled sharing before full enterprise auth exists.
+
+Current behavior:
+
+- if `PILOT_ACCESS_TOKEN` is empty, the app behaves like an open pilot build
+- if `PILOT_ACCESS_TOKEN` is set:
+  - browser users are redirected to `/pilot-login`
+  - API clients must send `X-Pilot-Access-Token`
+  - a successful browser unlock sets a session cookie for continued access
+
+### Deployment artifacts
+
+Current deployment packaging includes:
+
+- [Dockerfile](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/Dockerfile)
+- [docker-compose.yml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/docker-compose.yml)
+- [render.yaml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/render.yaml)
+- [.dockerignore](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/.dockerignore)
+
+### Why this matters
+
+This is the transition point from a laptop-only demo to a pilot that can be shared with an Infosys or client reviewer via URL without asking them to run Python locally.
+
+## 14. Persistence and Feedback
 
 ### What is persisted
 
@@ -936,6 +1041,7 @@ Current export contents:
 - enterprise policy per agent
 - full run history with observability and scorecards
 - export audit history
+- pilot evidence aggregates derived from persisted runs
 
 ### Feedback semantics
 
@@ -955,7 +1061,42 @@ This establishes the foundation for:
 - outcome-based evaluation
 - auditable engineering run replay
 
-## 14. File and Module Inventory
+## 15. Pilot Metrics and Documentation Layer
+
+### Pilot dashboard
+
+The product now includes a dedicated pilot dashboard at:
+
+- [frontend/pilot.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pilot.html)
+
+Its purpose is to expose measurable proof signals such as:
+
+- total runs
+- completed vs failed runs
+- accepted vs rejected decisions
+- parser confidence trends
+- benchmark vs live scorecard mix
+- export counts
+- recent pilot activity
+
+### Product documentation site
+
+The product now includes a dedicated product docs experience at:
+
+- [frontend/docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/docs.html)
+
+Its purpose is to explain:
+
+- architecture
+- workflow lifecycle
+- Agent 01 and Agent 02 use cases
+- enterprise config importance
+- field-by-field semantics
+- pilot operations
+- current API surface
+- next-phase EDA/API integration direction
+
+## 16. File and Module Inventory
 
 ### Core backend directories
 
@@ -981,6 +1122,10 @@ frontend/
   agent02.html
   configuration.html
   history.html
+  pitch.html
+  pilot.html
+  docs.html
+  pilot_access.html
 ```
 
 ### Support areas
@@ -992,7 +1137,7 @@ tests/
 devlog/
 ```
 
-## 15. Automated Testing Status
+## 17. Automated Testing Status
 
 The repo includes automated tests from the beginning.
 
@@ -1008,14 +1153,14 @@ Current test coverage areas include:
 
 Current observed suite status in this workspace:
 
-- `26/26` tests passing
+- `38/38` tests passing
 
 Notes:
 
 - Python 3.9 environment warnings are currently visible from dependency stack
 - Gemini network calls fail in sandboxed test runs and correctly fall back to mock mode
 
-## 16. Current Technical Constraints
+## 18. Current Technical Constraints
 
 ### Implemented constraints
 
@@ -1031,10 +1176,12 @@ Notes:
 
 - UI is still vanilla HTML rather than componentized frontend architecture
 - sample data is still synthetic / benchmark-oriented
-- there is no production deployment packaging yet
-- no tenant isolation or auth-protected run access
+- pilot access is still token-based rather than full auth / RBAC
+- no tenant isolation or per-client workspace isolation
+- no direct EDA/API integration layer yet
+- no Confluence export yet
 
-## 17. Current Product Readiness Assessment
+## 19. Current Product Readiness Assessment
 
 ### Strongest areas
 
@@ -1048,33 +1195,35 @@ Notes:
 
 ### Areas still considered MVP / pre-pilot
 
-- production deployment model
-- auth and enterprise tenancy
+- enterprise API integration for EDA workflows
+- richer auth and enterprise tenancy
 - richer benchmark corpus
 - real customer artifact integration
 - stronger parser coverage for heterogeneous client report formats
+- pilot dashboard trend depth and downstream analytics
 
-## 18. Recommended Next Engineering Steps
+## 20. Recommended Next Engineering Steps
 
-1. Add auth, role boundaries, and workspace-level project separation.
+1. Expose enterprise integration APIs so EDA and review tools can submit artifacts and consume structured outcomes.
 2. Expand benchmark corpus further with richer sanitized client-style artifacts.
-3. Add file upload persistence and artifact-object history beyond inline payloads.
+3. Add deeper pilot dashboard trends and sponsor reporting views.
 4. Improve parser tolerance for heterogeneous client report formats.
 5. Add tenant-aware enterprise policy management and versioning.
 6. Add Confluence-ready export and workflow integrations beyond Jira/email.
-7. Add pilot-grade dashboards over persisted run history and outcomes.
+7. Introduce fuller auth, role boundaries, and workspace-level project separation.
 
-## 19. One-Line Summary
+## 21. One-Line Summary
 
 Silicon Agents today is a verification-first semiconductor AI workflow platform with:
 
 - 2 agents
-- 5 frontend pages
+- 8 frontend pages
 - 8 implemented functional layers
 - 5 prompt families
 - 2-stage orchestration + analysis LLM flow
 - SSE-based step streaming
 - benchmark scoring
 - HTML + Jira + email exportable reporting
-- SQLite-backed runs, decisions, feedback, exports, and enterprise policy
+- pilot dashboard, pilot access protection, and long-form product docs
+- SQLite-backed runs, decisions, feedback, exports, parser trust, and enterprise policy
 - centralized enterprise configuration plus workspace run profiles

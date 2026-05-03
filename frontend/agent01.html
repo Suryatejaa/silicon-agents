@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,7 +23,11 @@
       --ok: #1f845a;
       --bad: #c9372c;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       background:
@@ -30,12 +35,14 @@
       color: var(--text);
       font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     }
+
     main {
       width: 100%;
       max-width: none;
       margin: 0;
       padding: 0;
     }
+
     .app-header {
       display: flex;
       align-items: center;
@@ -52,12 +59,14 @@
       z-index: 10;
       backdrop-filter: blur(10px);
     }
+
     .app-brand {
       display: flex;
       align-items: center;
       gap: 12px;
       min-width: 0;
     }
+
     .app-mark {
       width: 38px;
       height: 38px;
@@ -70,19 +79,23 @@
       font-weight: 800;
       letter-spacing: 0.08em;
     }
+
     .app-brand-copy {
       min-width: 0;
     }
+
     .app-brand-title {
       font-size: 0.95rem;
       font-weight: 700;
       color: var(--text);
     }
+
     .app-brand-sub {
       color: var(--muted);
       font-size: 0.82rem;
       white-space: nowrap;
     }
+
     .app-nav {
       display: flex;
       align-items: center;
@@ -90,6 +103,7 @@
       flex-wrap: wrap;
       justify-content: flex-end;
     }
+
     .app-nav a {
       text-decoration: none;
       color: var(--muted);
@@ -100,16 +114,19 @@
       border: 1px solid transparent;
       transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
     }
+
     .app-nav a:hover {
       color: var(--accent);
       background: #edf4ff;
       border-color: #cfe0fb;
     }
+
     .app-nav a.is-current {
       color: var(--accent);
       background: #edf4ff;
       border-color: #cfe0fb;
     }
+
     .top {
       display: flex;
       justify-content: space-between;
@@ -123,27 +140,32 @@
       background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
       box-shadow: 0 8px 24px rgba(9, 30, 66, 0.06);
     }
+
     h1 {
       margin: 6px 0;
       font-size: clamp(2rem, 4vw, 2.75rem);
       letter-spacing: -0.02em;
     }
+
     .sub {
       color: var(--muted);
       max-width: 820px;
       line-height: 1.55;
     }
+
     .grid {
       display: grid;
       grid-template-columns: 1.04fr 0.96fr;
       gap: 0;
       margin-bottom: 0;
     }
+
     .column-stack {
       display: grid;
       gap: 0;
       align-content: start;
     }
+
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -153,18 +175,22 @@
       padding: 20px 22px;
       box-shadow: 0 10px 28px rgba(9, 30, 66, 0.06);
     }
-    .grid > section.panel:first-child {
+
+    .grid>section.panel:first-child {
       border-left: 1px solid var(--line);
     }
-    .grid > .column-stack > .panel:first-child {
+
+    .grid>.column-stack>.panel:first-child {
       border-left: 0;
     }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 14px;
     }
+
     .stat {
       background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
       border: 1px solid var(--line);
@@ -172,6 +198,7 @@
       padding: 12px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
+
     .stat-label {
       font-size: 0.74rem;
       color: var(--muted);
@@ -179,11 +206,16 @@
       letter-spacing: 0.12em;
       margin-bottom: 4px;
     }
+
     .stat-value {
       font-size: 1.4rem;
       font-weight: 700;
     }
-    textarea, select, input, button {
+
+    textarea,
+    select,
+    input,
+    button {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--line);
@@ -192,32 +224,38 @@
       padding: 12px 14px;
       font: inherit;
     }
+
     textarea {
       min-height: 280px;
       resize: vertical;
       line-height: 1.5;
     }
+
     .compact-textarea {
       min-height: 110px;
     }
+
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 12px;
     }
+
     .row-profile {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 12px;
     }
+
     .row-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 12px;
       margin-bottom: 12px;
     }
+
     .dropzone {
       border: 1px dashed #8fb8f7;
       border-radius: 16px;
@@ -226,21 +264,25 @@
       background: #f7fbff;
       transition: border-color 140ms ease, background 140ms ease;
     }
+
     .dropzone.dragover {
       border-color: var(--accent-2);
       background: #edf4ff;
     }
+
     .dropzone-title {
       font-size: 0.92rem;
       color: var(--text);
       margin-bottom: 4px;
       font-weight: 600;
     }
+
     .dropzone-sub {
       color: var(--muted);
       font-size: 0.88rem;
       line-height: 1.5;
     }
+
     .dropzone-actions {
       display: flex;
       gap: 10px;
@@ -248,6 +290,7 @@
       flex-wrap: wrap;
       align-items: center;
     }
+
     .upload-pill {
       display: inline-flex;
       align-items: center;
@@ -261,35 +304,42 @@
       cursor: pointer;
       font-size: 0.9rem;
     }
+
     .upload-pill.disabled {
       opacity: 0.5;
       cursor: not-allowed;
       pointer-events: none;
     }
+
     .config-card {
       padding: 14px;
       border-radius: 16px;
       border: 1px solid var(--line);
       background: var(--panel-3);
     }
+
     .config-copy {
       color: var(--muted);
       font-size: 0.88rem;
       line-height: 1.5;
       margin-bottom: 12px;
     }
+
     .summary-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 14px;
     }
+
     .summary-kv {
       margin-bottom: 10px;
     }
+
     .summary-kv:last-child {
       margin-bottom: 0;
     }
+
     .summary-k {
       font-size: 0.72rem;
       color: var(--muted);
@@ -297,49 +347,94 @@
       letter-spacing: 0.12em;
       margin-bottom: 4px;
     }
+
     .summary-v {
       line-height: 1.5;
     }
+
     .benchmark-kpis {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 12px;
     }
+
     .benchmark-kpi {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
       background: #fbfcfe;
     }
+
     .benchmark-score {
       font-size: 1.6rem;
       font-weight: 700;
     }
+
     .benchmark-list {
       margin: 0;
       padding-left: 18px;
       color: var(--muted);
       line-height: 1.5;
     }
+
     .orchestration-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-top: 10px;
     }
+
     .orchestration-box {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
       background: #fbfcfe;
     }
+
     .orchestration-list {
       margin: 6px 0 0;
       padding-left: 18px;
       color: var(--muted);
       line-height: 1.5;
     }
+
+    .signal-summary {
+      border: 1px solid #b9d3fb;
+      background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
+      box-shadow: inset 0 0 0 1px rgba(29, 122, 252, 0.08);
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .signal-card {
+      border: 1px solid #cfe0fb;
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .signal-label {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .signal-value {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
     button {
       background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
       color: #ffffff;
@@ -348,6 +443,7 @@
       border: none;
       box-shadow: 0 4px 10px rgba(12, 102, 228, 0.22);
     }
+
     button:disabled,
     select:disabled,
     input:disabled,
@@ -355,23 +451,27 @@
       opacity: 0.58;
       cursor: not-allowed;
     }
+
     .toolbar {
       display: flex;
       gap: 10px;
       margin-top: 10px;
       flex-wrap: wrap;
     }
+
     .toolbar button {
       margin-top: 0;
       width: auto;
       min-width: 140px;
     }
+
     .ghost {
       background: #ffffff;
       color: var(--muted);
       border: 1px solid var(--line);
       box-shadow: none;
     }
+
     .section-head {
       display: flex;
       justify-content: space-between;
@@ -379,22 +479,26 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+
     .section-copy {
       color: var(--muted);
       font-size: 0.92rem;
       line-height: 1.5;
       max-width: 760px;
     }
+
     .results-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 12px;
     }
+
     .results-actions button {
       width: auto;
       min-width: 160px;
     }
+
     .stack {
       display: grid;
       gap: 12px;
@@ -402,19 +506,25 @@
       overflow: auto;
       padding-right: 4px;
     }
-    .step, .decision, .summary {
+
+    .step,
+    .decision,
+    .summary {
       border: 1px solid var(--line);
       background: #ffffff;
       border-radius: 14px;
       padding: 14px;
     }
+
     .step.is-running {
       border-color: #8fb8f7;
       box-shadow: 0 0 0 1px rgba(12, 102, 228, 0.12) inset;
     }
+
     .step.is-complete {
       border-color: var(--line);
     }
+
     .step-header {
       display: flex;
       justify-content: space-between;
@@ -422,12 +532,14 @@
       align-items: center;
       margin-bottom: 8px;
     }
+
     .step-label {
       display: flex;
       align-items: center;
       gap: 10px;
       min-width: 0;
     }
+
     .step-title {
       color: var(--accent);
       font-size: 0.82rem;
@@ -436,6 +548,7 @@
       margin-bottom: 0;
       font-weight: 700;
     }
+
     .step-state {
       font-size: 0.76rem;
       text-transform: uppercase;
@@ -443,6 +556,7 @@
       color: var(--muted);
       white-space: nowrap;
     }
+
     .spinner {
       width: 14px;
       height: 14px;
@@ -452,16 +566,22 @@
       animation: spin 0.8s linear infinite;
       flex: 0 0 auto;
     }
+
     .spinner.hidden {
       display: none;
     }
+
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
+
     .decision h4 {
       margin: 0 0 8px;
       font-size: 1rem;
     }
+
     .badge {
       display: inline-block;
       padding: 3px 9px;
@@ -470,10 +590,26 @@
       font-weight: 700;
       margin-bottom: 8px;
     }
-    .HIGH { background: #fdecea; color: var(--high); }
-    .MEDIUM { background: #fff3db; color: var(--med); }
-    .LOW { background: #dcfff1; color: var(--low); }
-    .muted { color: var(--muted); }
+
+    .HIGH {
+      background: #fdecea;
+      color: var(--high);
+    }
+
+    .MEDIUM {
+      background: #fff3db;
+      color: var(--med);
+    }
+
+    .LOW {
+      background: #dcfff1;
+      color: var(--low);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
     .status-line {
       display: flex;
       justify-content: space-between;
@@ -483,43 +619,73 @@
       color: var(--muted);
       font-size: 0.92rem;
     }
+
     .feedback-row {
       display: flex;
       gap: 10px;
       margin-top: 12px;
       flex-wrap: wrap;
     }
+
     .feedback-row button {
       width: auto;
       min-width: 120px;
       padding: 10px 14px;
       font-size: 0.92rem;
     }
-    .accept { background: linear-gradient(135deg, #56be70, #00ad0f); }
-    .reject { background: linear-gradient(135deg, #cb0000, #de350b); color: #ffffff; }
+
+    .accept {
+      background: linear-gradient(135deg, #56be70, #00ad0f);
+    }
+
+    .reject {
+      background: linear-gradient(135deg, #cb0000, #de350b);
+      color: #ffffff;
+    }
+
     #decisionSection,
     #analysisSection {
       margin: 0;
       border-top: 0;
       border-left: 1px solid var(--line);
     }
+
     @media (max-width: 980px) {
-      .grid, .row, .row-3, .stats, .summary-grid, .benchmark-kpis { grid-template-columns: 1fr; }
-      .top { display: block; }
-      .section-head { display: block; }
+
+      .grid,
+      .row,
+      .row-3,
+      .stats,
+      .summary-grid,
+      .benchmark-kpis,
+      .signal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top {
+        display: block;
+      }
+
+      .section-head {
+        display: block;
+      }
+
       .app-header {
         display: block;
         position: static;
       }
+
       .app-brand {
         margin-bottom: 12px;
       }
+
       .app-nav {
         justify-content: flex-start;
       }
     }
   </style>
 </head>
+
 <body>
   <main>
     <header class="app-header">
@@ -535,7 +701,9 @@
         <a href="/agent01" class="is-current" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="./configuration.html" id="navConfig">Enterprise Config</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
     </header>
     <div class="top">
@@ -551,81 +719,98 @@
       <a href="/" class="muted" id="homeLink">Back to home</a>
     </div>
 
-	    <div class="grid">
-        <div class="column-stack">
-	      <section class="panel" id="artifactWorkspace">
-	        <div class="stats">
-	          <div class="stat"><div class="stat-label">Status</div><div class="stat-value" id="statusValue">Standby</div></div>
-	          <div class="stat"><div class="stat-label">Steps</div><div class="stat-value" id="stepsValue">0</div></div>
-          <div class="stat"><div class="stat-label">Findings</div><div class="stat-value" id="decisionsValue">0</div></div>
-          <div class="stat"><div class="stat-label">P1</div><div class="stat-value" id="highValue">0</div></div>
-        </div>
-
-        <div class="summary" style="margin-bottom: 14px;">
-          <div class="step-title">Review Guardrail</div>
-          <div class="muted">Human approval required. Recommendations are evidence-grounded hypotheses for verification teams, not automatic testbench or RTL edits.</div>
-        </div>
-
-        <div class="dropzone" id="dropzone">
-            <div class="dropzone-title">Upload verification artifact</div>
-            <div class="dropzone-sub">Drop a coverage report or regression log here, or choose a local file. Supported demo inputs are `.log`, `.rpt`, and `.txt` artifacts.</div>
-            <div class="dropzone-actions">
-            <label class="upload-pill" id="artifactLabel" for="artifactFile">Choose Artifact</label>
-            <input id="artifactFile" type="file" accept=".log,.rpt,.txt,.text" hidden />
-            <div class="muted" id="artifactMeta">No uploaded artifact yet.</div>
+    <div class="grid">
+      <div class="column-stack">
+        <section class="panel" id="artifactWorkspace">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Status</div>
+              <div class="stat-value" id="statusValue">Standby</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Steps</div>
+              <div class="stat-value" id="stepsValue">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Findings</div>
+              <div class="stat-value" id="decisionsValue">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">P1</div>
+              <div class="stat-value" id="highValue">0</div>
+            </div>
           </div>
-        </div>
 
-        <div class="row-profile">
-          <select id="runProfileSelect">
-            <option value="" selected>Loading run profiles...</option>
-          </select>
-          <select id="mode">
-            <option value="coverage">Coverage Closure</option>
-            <option value="triage">Regression Triage</option>
-          </select>
-        </div>
-        <div class="row-3">
-          <select id="sampleSelect">
-            <optgroup label="Coverage Benchmarks">
-              <option value="coverage_vcs_sample.log">USB Controller Benchmark · VCS Coverage</option>
-              <option value="coverage_xcelium_sample.log">Power Mode Benchmark · Xcelium Coverage</option>
-              <option value="coverage_pcie_dma_sample.log">PCIe DMA Benchmark · VCS Coverage</option>
-              <option value="coverage_lpddr_refresh_sample.log">LPDDR Controller Benchmark · Xcelium Coverage</option>
-              <option value="coverage_noc_qos_sample.log">NoC QoS Benchmark · VCS Coverage</option>
-              <option value="coverage_secure_boot_sample.log">Secure Boot Benchmark · VCS Coverage</option>
-            </optgroup>
-            <optgroup label="Regression Benchmarks">
-              <option value="regression_sample.log">Nightly Regression Benchmark</option>
-              <option value="regression_pcie_dma_sample.log">PCIe DMA Regression Benchmark</option>
-              <option value="regression_audio_dsp_sample.log">Audio DSP Regression Benchmark</option>
-              <option value="regression_secure_boot_sample.log">Secure Boot Regression Benchmark</option>
-            </optgroup>
-            <option value="">Custom Artifact · Live Scorecard Mode</option>
-          </select>
-          <input id="projectId" value="usb-controller-revA" />
-        </div>
-	        <div class="row">
-	          <input id="designName" value="USB Controller v2.3" />
-	          <input id="contextText" value="USB 3.0 controller verification focused on transfer modes, arbitration, and interrupt interactions" />
-	        </div>
+          <div class="summary" style="margin-bottom: 14px;">
+            <div class="step-title">Review Guardrail</div>
+            <div class="muted">Human approval required. Recommendations are evidence-grounded hypotheses for
+              verification teams, not automatic testbench or RTL edits.</div>
+          </div>
+
+          <div class="dropzone" id="dropzone">
+            <div class="dropzone-title">Upload verification artifact</div>
+            <div class="dropzone-sub">Drop a coverage report or regression log here, or choose a local file. Supported
+              demo inputs are `.log`, `.rpt`, and `.txt` artifacts.</div>
+            <div class="dropzone-actions">
+              <label class="upload-pill" id="artifactLabel" for="artifactFile">Choose Artifact</label>
+              <input id="artifactFile" type="file" accept=".log,.rpt,.txt,.text" hidden />
+              <div class="muted" id="artifactMeta">No uploaded artifact yet.</div>
+            </div>
+          </div>
+
+          <div class="row-profile">
+            <select id="runProfileSelect">
+              <option value="" selected>Loading run profiles...</option>
+            </select>
+            <select id="mode">
+              <option value="coverage">Coverage Closure</option>
+              <option value="triage">Regression Triage</option>
+            </select>
+          </div>
+          <div class="row-3">
+            <select id="sampleSelect">
+              <optgroup label="Coverage Benchmarks">
+                <option value="coverage_vcs_sample.log">USB Controller Benchmark · VCS Coverage</option>
+                <option value="coverage_xcelium_sample.log">Power Mode Benchmark · Xcelium Coverage</option>
+                <option value="coverage_pcie_dma_sample.log">PCIe DMA Benchmark · VCS Coverage</option>
+                <option value="coverage_lpddr_refresh_sample.log">LPDDR Controller Benchmark · Xcelium Coverage</option>
+                <option value="coverage_noc_qos_sample.log">NoC QoS Benchmark · VCS Coverage</option>
+                <option value="coverage_secure_boot_sample.log">Secure Boot Benchmark · VCS Coverage</option>
+              </optgroup>
+              <optgroup label="Regression Benchmarks">
+                <option value="regression_sample.log">Nightly Regression Benchmark</option>
+                <option value="regression_pcie_dma_sample.log">PCIe DMA Regression Benchmark</option>
+                <option value="regression_audio_dsp_sample.log">Audio DSP Regression Benchmark</option>
+                <option value="regression_secure_boot_sample.log">Secure Boot Regression Benchmark</option>
+              </optgroup>
+              <option value="">Custom Artifact · Live Scorecard Mode</option>
+            </select>
+            <input id="projectId" value="usb-controller-revA" />
+          </div>
+          <div class="row">
+            <input id="designName" value="USB Controller v2.3" />
+            <input id="contextText"
+              value="USB 3.0 controller verification focused on transfer modes, arbitration, and interrupt interactions" />
+          </div>
           <div class="summary" style="margin-bottom: 14px;">
             <div class="step-title">Configuration Source</div>
-            <div class="section-copy" id="configStatus">This workspace reads top-level policy from the dedicated configuration page and combines it with the active run artifact.</div>
+            <div class="section-copy" id="configStatus">This workspace reads top-level policy from the dedicated
+              configuration page and combines it with the active run artifact.</div>
             <div class="results-actions" style="margin-bottom: 0;">
               <button id="openConfig" class="ghost" type="button">Open Enterprise Configuration</button>
             </div>
           </div>
-	        <textarea id="reportText" placeholder="Paste a coverage report or regression log from the verification flow"></textarea>
-	        <div class="toolbar">
-	          <button id="loadSample" class="ghost" type="button">Use Benchmark Artifact</button>
-	          <button id="clearRun" class="ghost" type="button">Clear</button>
-	          <button id="submitBtn" type="button">Analyse Verification Artifact</button>
-	        </div>
-	      </section>
-        </div>
+          <textarea id="reportText"
+            placeholder="Paste a coverage report or regression log from the verification flow"></textarea>
+          <div class="toolbar">
+            <button id="loadSample" class="ghost" type="button">Use Benchmark Artifact</button>
+            <button id="clearRun" class="ghost" type="button">Clear</button>
+            <button id="submitBtn" type="button">Analyse Verification Artifact</button>
+          </div>
+        </section>
+      </div>
 
-	      <section class="panel">
+      <section class="panel">
         <div class="summary-grid">
           <div class="summary">
             <div class="step-title">Impact Snapshot</div>
@@ -654,11 +839,42 @@
             </div>
           </div>
         </div>
+        <div class="summary signal-summary" style="margin-bottom: 14px;">
+          <div class="step-title">Artifact Analysis Summary</div>
+          <div class="section-copy">These signals highlight exactly what was analyzed, where it came from, how reliably it was parsed, and what the run produced.</div>
+          <div class="signal-grid">
+            <div class="signal-card">
+              <div class="signal-label">Artifact Analyzed</div>
+              <div class="signal-value" id="signalArtifactName">Awaiting artifact</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Artifact Source</div>
+              <div class="signal-value" id="signalArtifactSource">Not selected</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Parser Format</div>
+              <div class="signal-value" id="signalParserFormat">Not available yet</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Parser Confidence</div>
+              <div class="signal-value" id="signalParserConfidence">Not available yet</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Top Result Generated</div>
+              <div class="signal-value" id="signalTopResult">No ranked finding yet</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Run Result</div>
+              <div class="signal-value" id="signalRunResult">Awaiting analysis</div>
+            </div>
+          </div>
+        </div>
         <div class="summary" style="margin-bottom: 14px;">
           <div class="step-title">Run Scorecard</div>
           <div class="summary-kv">
             <div class="summary-k">Scorecard Mode</div>
-            <div class="summary-v" id="benchmarkName">Benchmark mode arms when a bundled artifact is loaded. Custom artifacts use live run scoring.</div>
+            <div class="summary-v" id="benchmarkName">Benchmark mode arms when a bundled artifact is loaded. Custom
+              artifacts use live run scoring.</div>
           </div>
           <div class="benchmark-kpis">
             <div class="benchmark-kpi">
@@ -695,6 +911,22 @@
             <div class="summary-k">Output emphasis</div>
             <div class="summary-v" id="orchOutputEmphasis">No orchestrated plan yet.</div>
           </div>
+          <div class="orchestration-grid" style="margin-bottom: 12px;">
+            <div class="orchestration-box">
+              <div class="summary-k">Parser format</div>
+              <div class="summary-v" id="parserFormat">Awaiting artifact analysis.</div>
+            </div>
+            <div class="orchestration-box">
+              <div class="summary-k">Parser confidence</div>
+              <div class="summary-v" id="parserConfidence">Not available yet.</div>
+            </div>
+          </div>
+          <div class="summary-kv" style="margin-bottom: 12px;">
+            <div class="summary-k">Parser warnings</div>
+            <ul class="orchestration-list" id="parserWarnings">
+              <li>Any format warnings for the active artifact will appear here.</li>
+            </ul>
+          </div>
           <div class="orchestration-grid">
             <div class="orchestration-box">
               <div class="summary-k">Instruction priorities</div>
@@ -722,26 +954,29 @@
         </div>
         <div class="summary">
           <div class="step-title">Review Workspace</div>
-          <div class="section-copy">Use the separate sections below to review ranked findings and then inspect the supporting reasoning trace.</div>
+          <div class="section-copy">Use the separate sections below to review ranked findings and then inspect the
+            supporting reasoning trace.</div>
         </div>
       </section>
     </div>
 
-	    <section class="panel" id="decisionSection">
+    <section class="panel" id="decisionSection">
       <div class="section-head">
         <div>
           <div class="step-title">Decision Review Queue</div>
-          <div class="section-copy">Ranked findings are separated here so reviewers can focus on actions, evidence, and accept or reject choices without the reasoning stream in the way.</div>
+          <div class="section-copy">Ranked findings are separated here so reviewers can focus on actions, evidence, and
+            accept or reject choices without the reasoning stream in the way.</div>
         </div>
       </div>
       <div class="stack" id="decisionEvents"></div>
     </section>
 
-	    <section class="panel" id="analysisSection">
+    <section class="panel" id="analysisSection">
       <div class="section-head">
         <div>
           <div class="step-title">Analysis Trace</div>
-          <div class="section-copy">The five-step reasoning stream lives here so reviewers can inspect the ranked findings first and then audit the supporting analysis separately.</div>
+          <div class="section-copy">The five-step reasoning stream lives here so reviewers can inspect the ranked
+            findings first and then audit the supporting analysis separately.</div>
         </div>
       </div>
       <div class="stack" id="analysisEvents"></div>
@@ -755,29 +990,29 @@
     const modeEl = document.getElementById("mode");
     const sampleSelectEl = document.getElementById("sampleSelect");
     const runProfileEl = document.getElementById("runProfileSelect");
-	    const artifactFileEl = document.getElementById("artifactFile");
-	    const artifactLabelEl = document.getElementById("artifactLabel");
-	    const artifactMetaEl = document.getElementById("artifactMeta");
-	    const dropzoneEl = document.getElementById("dropzone");
-	    const exportBriefEl = document.getElementById("exportBrief");
-      const exportJiraEl = document.getElementById("exportJira");
-      const exportEmailEl = document.getElementById("exportEmail");
-      const openHistoryEl = document.getElementById("openHistory");
-	    const submitBtnEl = document.getElementById("submitBtn");
-	    const loadSampleBtnEl = document.getElementById("loadSample");
-	    const clearRunBtnEl = document.getElementById("clearRun");
-      const openConfigBtnEl = document.getElementById("openConfig");
-	    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
-      document.getElementById("homeLink").href = window.location.protocol === "file:" ? "./index.html" : "/";
-      document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
-      document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
-      document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
-      document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
-      document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
-      openConfigBtnEl.onclick = () => {
-        window.location.href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
-      };
-	    const KNOWN_BENCHMARKS = {
+    const artifactFileEl = document.getElementById("artifactFile");
+    const artifactLabelEl = document.getElementById("artifactLabel");
+    const artifactMetaEl = document.getElementById("artifactMeta");
+    const dropzoneEl = document.getElementById("dropzone");
+    const exportBriefEl = document.getElementById("exportBrief");
+    const exportJiraEl = document.getElementById("exportJira");
+    const exportEmailEl = document.getElementById("exportEmail");
+    const openHistoryEl = document.getElementById("openHistory");
+    const submitBtnEl = document.getElementById("submitBtn");
+    const loadSampleBtnEl = document.getElementById("loadSample");
+    const clearRunBtnEl = document.getElementById("clearRun");
+    const openConfigBtnEl = document.getElementById("openConfig");
+    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+    document.getElementById("homeLink").href = window.location.protocol === "file:" ? "./index.html" : "/";
+    document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
+    document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
+    document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
+    document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+    document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+    openConfigBtnEl.onclick = () => {
+      window.location.href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
+    };
+    const KNOWN_BENCHMARKS = {
       "coverage_vcs_sample.log": "USB Controller Benchmark · VCS Coverage",
       "coverage_xcelium_sample.log": "Power Mode Benchmark · Xcelium Coverage",
       "coverage_pcie_dma_sample.log": "PCIe DMA Benchmark · VCS Coverage",
@@ -787,7 +1022,7 @@
       "regression_sample.log": "Nightly Regression Benchmark",
       "regression_pcie_dma_sample.log": "PCIe DMA Regression Benchmark",
       "regression_audio_dsp_sample.log": "Audio DSP Regression Benchmark",
-	      "regression_secure_boot_sample.log": "Secure Boot Regression Benchmark"
+      "regression_secure_boot_sample.log": "Secure Boot Regression Benchmark"
     };
     const BENCHMARK_PRESETS = {
       "coverage_vcs_sample.log": {
@@ -866,14 +1101,17 @@
       provider: "mock/local",
       orchestration: null,
       runProfileId: "",
-      runId: null
-	    };
-	    let activeStepNode = null;
-	    let activeStepBody = null;
-	    let activeStepState = null;
-	    let activeStepSpinner = null;
-	    let isRunning = false;
-      let runProfiles = [];
+      runId: null,
+      artifactSource: "bundled_sample",
+      parserFormat: "",
+      parserConfidenceText: ""
+    };
+    let activeStepNode = null;
+    let activeStepBody = null;
+    let activeStepState = null;
+    let activeStepSpinner = null;
+    let isRunning = false;
+    let runProfiles = [];
 
     function syncStats(status) {
       document.getElementById("statusValue").textContent = status;
@@ -888,83 +1126,100 @@
       document.getElementById("providerText").textContent = `Model source: ${provider}`;
     }
 
-	    function setRunControls(running) {
-	      isRunning = running;
-	      submitBtnEl.disabled = running;
-	      loadSampleBtnEl.disabled = running;
-	      clearRunBtnEl.disabled = running;
-	      modeEl.disabled = running;
-	      runProfileEl.disabled = running;
-	      sampleSelectEl.disabled = running;
-	      artifactFileEl.disabled = running;
-	      reportTextEl.disabled = running;
-	      document.getElementById("projectId").disabled = running;
-	      document.getElementById("designName").disabled = running;
-	      document.getElementById("contextText").disabled = running;
-	      artifactLabelEl.classList.toggle("disabled", running);
-        openConfigBtnEl.disabled = running;
-	      submitBtnEl.textContent = running ? "Analysing..." : "Analyse Verification Artifact";
-	    }
+    function updateSignalSummary() {
+      document.getElementById("signalArtifactName").textContent =
+        state.artifactName || "Awaiting artifact";
+      document.getElementById("signalArtifactSource").textContent =
+        formatArtifactSourceLabel(state.artifactSource || "unknown");
+      document.getElementById("signalParserFormat").textContent =
+        state.parserFormat || "Not available yet";
+      document.getElementById("signalParserConfidence").textContent =
+        state.parserConfidenceText || "Not available yet";
+      document.getElementById("signalTopResult").textContent =
+        state.decisionsData[0]?.target || "No ranked finding yet";
+      document.getElementById("signalRunResult").textContent =
+        state.decisionsData.length
+          ? `${state.decisionsData.length} ranked findings generated`
+          : "Awaiting analysis";
+    }
 
-	    function completeActiveStep(stateLabel = "Complete") {
-	      if (!activeStepNode) return;
-	      activeStepNode.classList.remove("is-running");
-	      activeStepNode.classList.add("is-complete");
-	      if (activeStepState) activeStepState.textContent = stateLabel;
-	      if (activeStepSpinner) activeStepSpinner.classList.add("hidden");
-	      activeStepNode = null;
-	      activeStepBody = null;
-	      activeStepState = null;
-	      activeStepSpinner = null;
-	    }
+    function setRunControls(running) {
+      isRunning = running;
+      submitBtnEl.disabled = running;
+      loadSampleBtnEl.disabled = running;
+      clearRunBtnEl.disabled = running;
+      modeEl.disabled = running;
+      runProfileEl.disabled = running;
+      sampleSelectEl.disabled = running;
+      artifactFileEl.disabled = running;
+      reportTextEl.disabled = running;
+      document.getElementById("projectId").disabled = running;
+      document.getElementById("designName").disabled = running;
+      document.getElementById("contextText").disabled = running;
+      artifactLabelEl.classList.toggle("disabled", running);
+      openConfigBtnEl.disabled = running;
+      submitBtnEl.textContent = running ? "Analysing..." : "Analyse Verification Artifact";
+    }
 
-	    function startStep(title) {
-	      completeActiveStep();
-	      state.analysisLog.push(title);
-	      const node = document.createElement("div");
-	      node.className = "step is-running";
-	      const header = document.createElement("div");
-	      header.className = "step-header";
-	      const label = document.createElement("div");
-	      label.className = "step-label";
-	      const spinner = document.createElement("div");
-	      spinner.className = "spinner";
-	      const titleEl = document.createElement("div");
-	      titleEl.className = "step-title";
-	      titleEl.textContent = title;
-	      label.appendChild(spinner);
-	      label.appendChild(titleEl);
-	      const stateEl = document.createElement("div");
-	      stateEl.className = "step-state";
-	      stateEl.textContent = "Running";
-	      header.appendChild(label);
-	      header.appendChild(stateEl);
-	      const body = document.createElement("div");
-	      body.className = "muted";
-	      body.textContent = "Waiting for reasoning output...";
-	      node.appendChild(header);
-	      node.appendChild(body);
-	      analysisEventsEl.appendChild(node);
-	      node.scrollIntoView({ behavior: "smooth", block: "end" });
-	      activeStepNode = node;
-	      activeStepBody = body;
-	      activeStepState = stateEl;
-	      activeStepSpinner = spinner;
-	    }
+    function completeActiveStep(stateLabel = "Complete") {
+      if (!activeStepNode) return;
+      activeStepNode.classList.remove("is-running");
+      activeStepNode.classList.add("is-complete");
+      if (activeStepState) activeStepState.textContent = stateLabel;
+      if (activeStepSpinner) activeStepSpinner.classList.add("hidden");
+      activeStepNode = null;
+      activeStepBody = null;
+      activeStepState = null;
+      activeStepSpinner = null;
+    }
 
-	    function appendStepReasoning(text) {
-	      state.analysisLog.push(`Reasoning: ${text}`);
-	      if (!activeStepBody) {
-	        startStep("Reasoning");
-	      }
-	      const line = document.createElement("div");
-	      line.textContent = text;
-	      if (activeStepBody.textContent === "Waiting for reasoning output...") {
-	        activeStepBody.textContent = "";
-	      }
-	      activeStepBody.appendChild(line);
-	      activeStepNode?.scrollIntoView({ behavior: "smooth", block: "end" });
-	    }
+    function startStep(title) {
+      completeActiveStep();
+      state.analysisLog.push(title);
+      const node = document.createElement("div");
+      node.className = "step is-running";
+      const header = document.createElement("div");
+      header.className = "step-header";
+      const label = document.createElement("div");
+      label.className = "step-label";
+      const spinner = document.createElement("div");
+      spinner.className = "spinner";
+      const titleEl = document.createElement("div");
+      titleEl.className = "step-title";
+      titleEl.textContent = title;
+      label.appendChild(spinner);
+      label.appendChild(titleEl);
+      const stateEl = document.createElement("div");
+      stateEl.className = "step-state";
+      stateEl.textContent = "Running";
+      header.appendChild(label);
+      header.appendChild(stateEl);
+      const body = document.createElement("div");
+      body.className = "muted";
+      body.textContent = "Waiting for reasoning output...";
+      node.appendChild(header);
+      node.appendChild(body);
+      analysisEventsEl.appendChild(node);
+      node.scrollIntoView({ behavior: "smooth", block: "end" });
+      activeStepNode = node;
+      activeStepBody = body;
+      activeStepState = stateEl;
+      activeStepSpinner = spinner;
+    }
+
+    function appendStepReasoning(text) {
+      state.analysisLog.push(`Reasoning: ${text}`);
+      if (!activeStepBody) {
+        startStep("Reasoning");
+      }
+      const line = document.createElement("div");
+      line.textContent = text;
+      if (activeStepBody.textContent === "Waiting for reasoning output...") {
+        activeStepBody.textContent = "";
+      }
+      activeStepBody.appendChild(line);
+      activeStepNode?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
 
     function setOrchestrationList(elementId, items, fallbackText) {
       const node = document.getElementById(elementId);
@@ -977,20 +1232,35 @@
       });
     }
 
-	    function renderOrchestrationIdle() {
-	      document.getElementById("orchChipFocus").textContent = "Awaiting run profile or artifact analysis.";
-	      document.getElementById("orchOutputEmphasis").textContent = "No run plan yet.";
-	      setOrchestrationList("orchInstructions", [], "Run an analysis to preview the active run plan.");
-	      setOrchestrationList("orchReferences", [], "Reference weighting for this run will appear here.");
-	      state.orchestration = null;
-	    }
+    function renderOrchestrationIdle() {
+      document.getElementById("orchChipFocus").textContent = "Awaiting run profile or artifact analysis.";
+      document.getElementById("orchOutputEmphasis").textContent = "No run plan yet.";
+      document.getElementById("parserFormat").textContent = "Awaiting artifact analysis.";
+      document.getElementById("parserConfidence").textContent = "Not available yet.";
+      state.parserFormat = "";
+      state.parserConfidenceText = "";
+      setOrchestrationList("parserWarnings", [], "Any format warnings for the active artifact will appear here.");
+      setOrchestrationList("orchInstructions", [], "Run an analysis to preview the active run plan.");
+      setOrchestrationList("orchReferences", [], "Reference weighting for this run will appear here.");
+      state.orchestration = null;
+      updateSignalSummary();
+    }
 
     function renderOrchestrationPreview(payload) {
       state.orchestration = payload;
       document.getElementById("orchChipFocus").textContent = `${payload.chip_focus || "General chip workflow"} · Plan source: ${payload.provider || "mock"}`;
       document.getElementById("orchOutputEmphasis").textContent = payload.output_emphasis || payload.prompt_addendum || "No explicit emphasis supplied.";
+      state.parserFormat = payload.parser_format || "Unknown parser format";
+      document.getElementById("parserFormat").textContent = state.parserFormat;
+      const confidence = typeof payload.parser_confidence === "number"
+        ? `${Math.round(payload.parser_confidence * 100)}%${payload.parser_confidence < 0.75 ? " · Review artifact format" : " · Stable parse"}`
+        : "Not available yet.";
+      state.parserConfidenceText = confidence;
+      document.getElementById("parserConfidence").textContent = confidence;
+      setOrchestrationList("parserWarnings", payload.parser_warnings || [], "No parser warnings for this artifact.");
       setOrchestrationList("orchInstructions", payload.instruction_overrides || [], "No instruction overrides supplied.");
       setOrchestrationList("orchReferences", payload.reference_priorities || [], "No reference priorities supplied.");
+      updateSignalSummary();
     }
 
     function inferArtifactType(text, filename = "") {
@@ -1058,13 +1328,24 @@
         `Using top-level policy for ${policyText}. Active run profile: Custom workspace run.`;
     }
 
-    function updateArtifactMeta(name, type, benchmarkId = null) {
+    function formatArtifactSourceLabel(source) {
+      return ({
+        bundled_sample: "Bundled sample",
+        uploaded_file: "Uploaded file",
+        pasted_text: "Pasted text",
+        unknown: "Unknown source"
+      })[source] || "Unknown source";
+    }
+
+    function updateArtifactMeta(name, type, benchmarkId = null, source = "unknown") {
       state.artifactName = name;
       state.artifactType = type;
       state.benchmarkId = benchmarkId;
-      artifactMetaEl.textContent = name ? `${name} · ${type}` : "No uploaded artifact yet.";
+      state.artifactSource = source;
+      artifactMetaEl.textContent = name ? `${name} · ${type} · ${formatArtifactSourceLabel(source)}` : "No uploaded artifact yet.";
       document.getElementById("impactWorkflow").textContent = type;
       renderBenchmarkIdle();
+      updateSignalSummary();
     }
 
     function updateImpactSummary(decisions = []) {
@@ -1079,6 +1360,7 @@
       document.getElementById("impactReason").textContent = top
         ? (top.metadata?.rank_basis || top.rationale)
         : "Run an analysis to generate a ranked review queue.";
+      updateSignalSummary();
     }
 
     async function loadArtifactFile(file) {
@@ -1092,7 +1374,7 @@
       state.runProfileId = "";
       runProfileEl.value = "";
       sampleSelectEl.value = "";
-      updateArtifactMeta(file.name, inferred, null);
+      updateArtifactMeta(file.name, inferred, null, "uploaded_file");
       if (inferred === "Regression log") {
         modeEl.value = "triage";
       } else if (inferred === "Coverage report") {
@@ -1127,7 +1409,7 @@
         runProfileEl.value = "";
         updateConfigSummary(loadAgent01Config(), null);
         if (reportTextEl.value.trim()) {
-          updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null);
+          updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null, "pasted_text");
         }
         return;
       }
@@ -1146,42 +1428,42 @@
       return fetch(`${apiBase}${path}`, options);
     }
 
-      function defaultAgent01Config() {
-        return {
-          org_name: "Fabless Semiconductor Division",
-          review_board: "Verification Signoff Council",
-          output_style: "Evidence-first engineering review",
-          escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
-          evidence_policy: "Every recommendation must cite precise report evidence.",
-          instruction_addendum: "Prefer standard organizational workflows and avoid unnecessary churn."
-        };
-      }
+    function defaultAgent01Config() {
+      return {
+        org_name: "Fabless Semiconductor Division",
+        review_board: "Verification Signoff Council",
+        output_style: "Evidence-first engineering review",
+        escalation_policy: "Escalate highest escape-risk items before routine optimization work.",
+        evidence_policy: "Every recommendation must cite precise report evidence.",
+        instruction_addendum: "Prefer standard organizational workflows and avoid unnecessary churn."
+      };
+    }
 
-      let enterpriseConfig = defaultAgent01Config();
+    let enterpriseConfig = defaultAgent01Config();
 
-      function loadAgent01Config() {
-        return enterpriseConfig;
-      }
+    function loadAgent01Config() {
+      return enterpriseConfig;
+    }
 
-      async function refreshAgent01Config() {
-        try {
-          const response = await apiFetch("/api/v1/config/agent01");
-          if (!response.ok) {
-            enterpriseConfig = defaultAgent01Config();
-            return enterpriseConfig;
-          }
-          const payload = await response.json();
-          enterpriseConfig = { ...defaultAgent01Config(), ...(payload.config || {}) };
-          return enterpriseConfig;
-        } catch (error) {
+    async function refreshAgent01Config() {
+      try {
+        const response = await apiFetch("/api/v1/config/agent01");
+        if (!response.ok) {
           enterpriseConfig = defaultAgent01Config();
           return enterpriseConfig;
         }
+        const payload = await response.json();
+        enterpriseConfig = { ...defaultAgent01Config(), ...(payload.config || {}) };
+        return enterpriseConfig;
+      } catch (error) {
+        enterpriseConfig = defaultAgent01Config();
+        return enterpriseConfig;
       }
+    }
 
-      function applyAgent01Config(config) {
-        updateConfigSummary(config, getRunProfile(state.runProfileId));
-      }
+    function applyAgent01Config(config) {
+      updateConfigSummary(config, getRunProfile(state.runProfileId));
+    }
 
     async function sendFeedback(decisionId, accepted, note, node) {
       const payload = {
@@ -1421,10 +1703,10 @@
       URL.revokeObjectURL(url);
     }
 
-	    function resetRun() {
-	      completeActiveStep();
-	      decisionEventsEl.innerHTML = "";
-	      analysisEventsEl.innerHTML = "";
+    function resetRun() {
+      completeActiveStep();
+      decisionEventsEl.innerHTML = "";
+      analysisEventsEl.innerHTML = "";
       state.steps = 0;
       state.decisions = 0;
       state.high = 0;
@@ -1432,24 +1714,26 @@
       state.analysisLog = [];
       state.orchestration = null;
       state.runId = null;
+      state.parserFormat = "";
+      state.parserConfidenceText = "";
       syncStats("Ready");
       setStatus("Awaiting a verification artifact for analysis.");
       updateImpactSummary([]);
-	      renderBenchmarkIdle();
-	      renderOrchestrationIdle();
-	      exportBriefEl.disabled = true;
-        exportJiraEl.disabled = true;
-        exportEmailEl.disabled = true;
-        openHistoryEl.disabled = true;
-	      setRunControls(false);
-	    }
+      renderBenchmarkIdle();
+      renderOrchestrationIdle();
+      exportBriefEl.disabled = true;
+      exportJiraEl.disabled = true;
+      exportEmailEl.disabled = true;
+      openHistoryEl.disabled = true;
+      setRunControls(false);
+    }
 
     async function loadSample() {
       const selected = sampleSelectEl.value;
       if (!selected) {
         state.runProfileId = "";
         runProfileEl.value = "";
-        updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null);
+        updateArtifactMeta("Custom artifact", inferArtifactType(reportTextEl.value, "custom-artifact"), null, "pasted_text");
         updateConfigSummary(loadAgent01Config(), null);
         return;
       }
@@ -1470,106 +1754,107 @@
         runProfileEl.value = "";
         updateConfigSummary(loadAgent01Config(), null);
       }
-      updateArtifactMeta(selected, inferArtifactType(text, selected), selected);
+      updateArtifactMeta(selected, inferArtifactType(text, selected), selected, "bundled_sample");
       setStatus(`${KNOWN_BENCHMARKS[selected]} loaded and armed for benchmark scoring.`, state.provider);
     }
 
-	    async function runAgent() {
-	      if (isRunning) return;
-	      resetRun();
-	      setRunControls(true);
-	      syncStats("Running");
-	      setStatus("Analysing the verification artifact and ranking the next engineering actions...");
-	      try {
-          const config = loadAgent01Config();
-          const activeProfile = getRunProfile(state.runProfileId);
-          const enterpriseInstructionBlocks = [
-            config.review_board ? `Review board: ${config.review_board}.` : "",
-            config.output_style ? `Output style: ${config.output_style}.` : "",
-            config.escalation_policy ? `Escalation policy: ${config.escalation_policy}` : "",
-            config.evidence_policy ? `Evidence policy: ${config.evidence_policy}` : "",
-            config.instruction_addendum ? `Enterprise addendum: ${config.instruction_addendum}` : ""
-          ].filter(Boolean).join(" ");
-	        const payload = {
-	          report_text: reportTextEl.value,
-	          format: "auto",
-	          mode: modeEl.value,
-	          design_name: document.getElementById("designName").value,
-	          project_id: document.getElementById("projectId").value,
-	          context: document.getElementById("contextText").value,
-	          artifact_name: state.artifactName || sampleSelectEl.value || "Custom verification artifact",
-	          run_profile_id: activeProfile?.id || null,
-	          run_profile_name: activeProfile?.label || null,
-	          chip_type: activeProfile?.chip_type || document.getElementById("designName").value,
-	          client_profile: activeProfile?.client_profile || `${config.org_name || "Enterprise"} verification workflow`,
-	          custom_instructions: [activeProfile?.custom_instructions, enterpriseInstructionBlocks].filter(Boolean).join("\n\n"),
-	          reference_data: activeProfile?.reference_data || "",
-	          reference_data_label: activeProfile?.reference_data_label || "Run profile reference pack"
-	        };
-	        const response = await apiFetch("/api/v1/verify", {
-	          method: "POST",
-	          headers: { "Content-Type": "application/json" },
-	          body: JSON.stringify(payload)
-	        });
-	        if (!response.ok || !response.body) {
-	          setStatus("Could not reach the API. If you opened this page directly, start the FastAPI server on http://127.0.0.1:8000.");
-	          syncStats("Error");
-	          return;
-	        }
-	        const reader = response.body.getReader();
-	        const decoder = new TextDecoder();
-	        let buffer = "";
-	        const seenDecisions = [];
-	        while (true) {
-	          const { value, done } = await reader.read();
-	          if (done) break;
-	          buffer += decoder.decode(value, { stream: true });
-	          const parts = buffer.split("\n\n");
-	          buffer = parts.pop() || "";
-	          for (const part of parts) {
-	            if (!part.startsWith("data: ")) continue;
-	            const event = JSON.parse(part.slice(6));
-	            if (event.type === "orchestration") {
-	              renderOrchestrationPreview(event.payload);
-	            }
-	            if (event.type === "step") {
-	              state.steps += 1;
-	              syncStats("Running");
-	              startStep(`Step ${event.payload.num} · ${event.payload.label}`);
-	            }
-	            if (event.type === "chunk") appendStepReasoning(event.payload.text);
-	            if (event.type === "decision") {
-	              state.decisions += 1;
-	              if (event.payload.priority === "HIGH") state.high += 1;
-	              syncStats("Running");
-	              seenDecisions.push(event.payload);
-	              updateImpactSummary(seenDecisions);
-	              appendDecision(event.payload);
-	            }
-	            if (event.type === "done") {
-	              completeActiveStep("Complete");
-	              syncStats("Done");
-	              setStatus("Analysis completed. Review the evidence and approve or reject findings.", event.payload.provider || "mock/local");
-                state.runId = event.payload.run_id || null;
-	              updateImpactSummary(seenDecisions);
-	              appendSummary(event.payload);
-	              await evaluateBenchmark(seenDecisions);
-	              exportBriefEl.disabled = seenDecisions.length === 0;
-                exportJiraEl.disabled = !state.runId;
-                exportEmailEl.disabled = !state.runId;
-                openHistoryEl.disabled = !state.runId;
-	            }
-	          }
-	        }
-	        completeActiveStep("Complete");
-	      } catch (error) {
-	        completeActiveStep("Error");
-	      setStatus("Analysis failed before completion. Check the API server and try again.");
-	        syncStats("Error");
-	      } finally {
-	        setRunControls(false);
-	      }
-	    }
+    async function runAgent() {
+      if (isRunning) return;
+      resetRun();
+      setRunControls(true);
+      syncStats("Running");
+      setStatus("Analysing the verification artifact and ranking the next engineering actions...");
+      try {
+        const config = loadAgent01Config();
+        const activeProfile = getRunProfile(state.runProfileId);
+        const enterpriseInstructionBlocks = [
+          config.review_board ? `Review board: ${config.review_board}.` : "",
+          config.output_style ? `Output style: ${config.output_style}.` : "",
+          config.escalation_policy ? `Escalation policy: ${config.escalation_policy}` : "",
+          config.evidence_policy ? `Evidence policy: ${config.evidence_policy}` : "",
+          config.instruction_addendum ? `Enterprise addendum: ${config.instruction_addendum}` : ""
+        ].filter(Boolean).join(" ");
+        const payload = {
+          report_text: reportTextEl.value,
+          format: "auto",
+          mode: modeEl.value,
+          design_name: document.getElementById("designName").value,
+          project_id: document.getElementById("projectId").value,
+          context: document.getElementById("contextText").value,
+          artifact_name: state.artifactName || sampleSelectEl.value || "Custom verification artifact",
+          artifact_source: state.artifactSource || "unknown",
+          run_profile_id: activeProfile?.id || null,
+          run_profile_name: activeProfile?.label || null,
+          chip_type: activeProfile?.chip_type || document.getElementById("designName").value,
+          client_profile: activeProfile?.client_profile || `${config.org_name || "Enterprise"} verification workflow`,
+          custom_instructions: [activeProfile?.custom_instructions, enterpriseInstructionBlocks].filter(Boolean).join("\n\n"),
+          reference_data: activeProfile?.reference_data || "",
+          reference_data_label: activeProfile?.reference_data_label || "Run profile reference pack"
+        };
+        const response = await apiFetch("/api/v1/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok || !response.body) {
+          setStatus("Could not reach the API. If you opened this page directly, start the FastAPI server on http://127.0.0.1:8000.");
+          syncStats("Error");
+          return;
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        const seenDecisions = [];
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() || "";
+          for (const part of parts) {
+            if (!part.startsWith("data: ")) continue;
+            const event = JSON.parse(part.slice(6));
+            if (event.type === "orchestration") {
+              renderOrchestrationPreview(event.payload);
+            }
+            if (event.type === "step") {
+              state.steps += 1;
+              syncStats("Running");
+              startStep(`Step ${event.payload.num} · ${event.payload.label}`);
+            }
+            if (event.type === "chunk") appendStepReasoning(event.payload.text);
+            if (event.type === "decision") {
+              state.decisions += 1;
+              if (event.payload.priority === "HIGH") state.high += 1;
+              syncStats("Running");
+              seenDecisions.push(event.payload);
+              updateImpactSummary(seenDecisions);
+              appendDecision(event.payload);
+            }
+            if (event.type === "done") {
+              completeActiveStep("Complete");
+              syncStats("Done");
+              setStatus("Analysis completed. Review the evidence and approve or reject findings.", event.payload.provider || "mock/local");
+              state.runId = event.payload.run_id || null;
+              updateImpactSummary(seenDecisions);
+              appendSummary(event.payload);
+              await evaluateBenchmark(seenDecisions);
+              exportBriefEl.disabled = seenDecisions.length === 0;
+              exportJiraEl.disabled = !state.runId;
+              exportEmailEl.disabled = !state.runId;
+              openHistoryEl.disabled = !state.runId;
+            }
+          }
+        }
+        completeActiveStep("Complete");
+      } catch (error) {
+        completeActiveStep("Error");
+        setStatus("Analysis failed before completion. Check the API server and try again.");
+        syncStats("Error");
+      } finally {
+        setRunControls(false);
+      }
+    }
 
     artifactFileEl.addEventListener("change", async (event) => {
       const file = event.target.files?.[0];
@@ -1590,67 +1875,69 @@
       if (!file) return;
       await loadArtifactFile(file);
     });
-	    document.getElementById("loadSample").addEventListener("click", loadSample);
-      sampleSelectEl.addEventListener("change", loadSample);
-	    document.getElementById("clearRun").addEventListener("click", resetRun);
-	    document.getElementById("submitBtn").addEventListener("click", runAgent);
-	    exportBriefEl.addEventListener("click", exportVerificationBrief);
-      exportJiraEl.addEventListener("click", () => exportStructuredRun("jira"));
-      exportEmailEl.addEventListener("click", () => exportStructuredRun("email"));
-      openHistoryEl.addEventListener("click", () => {
-        const base = window.location.protocol === "file:" ? "./history.html" : "/history";
-        const suffix = state.runId ? `?run_id=${encodeURIComponent(state.runId)}` : "";
-        window.location.href = `${base}${suffix}`;
-      });
-      reportTextEl.addEventListener("input", () => {
-        const inferred = inferArtifactType(reportTextEl.value, state.artifactName || "custom-artifact");
-        const workspace = inferArtifactWorkspace(reportTextEl.value, "custom-artifact");
-        document.getElementById("designName").value = workspace.designName;
-        document.getElementById("projectId").value = workspace.projectId;
-        document.getElementById("contextText").value = workspace.context;
+    document.getElementById("loadSample").addEventListener("click", loadSample);
+    sampleSelectEl.addEventListener("change", loadSample);
+    document.getElementById("clearRun").addEventListener("click", resetRun);
+    document.getElementById("submitBtn").addEventListener("click", runAgent);
+    exportBriefEl.addEventListener("click", exportVerificationBrief);
+    exportJiraEl.addEventListener("click", () => exportStructuredRun("jira"));
+    exportEmailEl.addEventListener("click", () => exportStructuredRun("email"));
+    openHistoryEl.addEventListener("click", () => {
+      const base = window.location.protocol === "file:" ? "./history.html" : "/history";
+      const suffix = state.runId ? `?run_id=${encodeURIComponent(state.runId)}` : "";
+      window.location.href = `${base}${suffix}`;
+    });
+    reportTextEl.addEventListener("input", () => {
+      const inferred = inferArtifactType(reportTextEl.value, state.artifactName || "custom-artifact");
+      const workspace = inferArtifactWorkspace(reportTextEl.value, "custom-artifact");
+      document.getElementById("designName").value = workspace.designName;
+      document.getElementById("projectId").value = workspace.projectId;
+      document.getElementById("contextText").value = workspace.context;
+      state.runProfileId = "";
+      runProfileEl.value = "";
+      sampleSelectEl.value = "";
+      updateArtifactMeta("Custom artifact", inferred, null, "pasted_text");
+      updateConfigSummary(loadAgent01Config(), null);
+      if (reportTextEl.value.trim()) {
+        setStatus("Custom artifact detected. Live artifact scorecard mode is armed for this run.", state.provider);
+      }
+    });
+    runProfileEl.addEventListener("change", async () => {
+      if (!runProfileEl.value) {
         state.runProfileId = "";
-        runProfileEl.value = "";
-        sampleSelectEl.value = "";
-        updateArtifactMeta("Custom artifact", inferred, null);
         updateConfigSummary(loadAgent01Config(), null);
-        if (reportTextEl.value.trim()) {
-          setStatus("Custom artifact detected. Live artifact scorecard mode is armed for this run.", state.provider);
-        }
-      });
-      runProfileEl.addEventListener("change", async () => {
-        if (!runProfileEl.value) {
-          state.runProfileId = "";
-          updateConfigSummary(loadAgent01Config(), null);
-          return;
-        }
-        await applyRunProfile(runProfileEl.value);
-      });
-	    modeEl.addEventListener("change", async () => {
-        const activeProfile = getRunProfile(runProfileEl.value);
-        if (activeProfile && activeProfile.mode === modeEl.value) {
-          return;
-        }
-        const modeMatch = findRunProfileBySample(sampleSelectEl.value, modeEl.value) || runProfiles.find((profile) => profile.mode === modeEl.value);
-        if (modeMatch) {
-          await applyRunProfile(modeMatch.id);
-          return;
-        }
-	      if (modeEl.value === "triage" && !sampleSelectEl.value.startsWith("regression_")) sampleSelectEl.value = "regression_sample.log";
-        if (modeEl.value === "coverage" && !sampleSelectEl.value.startsWith("coverage_")) sampleSelectEl.value = "coverage_vcs_sample.log";
-        await loadSample();
-	    });
-	    async function initializePage() {
-        await loadRunProfiles();
-        await refreshAgent01Config();
-        applyAgent01Config(loadAgent01Config());
-	      await applyRunProfile("usb_dv_coverage");
-	      syncStats("Ready");
+        return;
+      }
+      await applyRunProfile(runProfileEl.value);
+    });
+    modeEl.addEventListener("change", async () => {
+      const activeProfile = getRunProfile(runProfileEl.value);
+      if (activeProfile && activeProfile.mode === modeEl.value) {
+        return;
+      }
+      const modeMatch = findRunProfileBySample(sampleSelectEl.value, modeEl.value) || runProfiles.find((profile) => profile.mode === modeEl.value);
+      if (modeMatch) {
+        await applyRunProfile(modeMatch.id);
+        return;
+      }
+      if (modeEl.value === "triage" && !sampleSelectEl.value.startsWith("regression_")) sampleSelectEl.value = "regression_sample.log";
+      if (modeEl.value === "coverage" && !sampleSelectEl.value.startsWith("coverage_")) sampleSelectEl.value = "coverage_vcs_sample.log";
+      await loadSample();
+    });
+    async function initializePage() {
+      await loadRunProfiles();
+      await refreshAgent01Config();
+      applyAgent01Config(loadAgent01Config());
+      await applyRunProfile("usb_dv_coverage");
+      syncStats("Ready");
       updateImpactSummary([]);
       renderBenchmarkIdle();
       renderOrchestrationIdle();
+      updateSignalSummary();
     }
 
     initializePage();
   </script>
 </body>
+
 </html>

@@ -13,6 +13,9 @@ from silicon_agents.core.schemas import (
     ExportHistoryRecord,
     FeedbackRecord,
     FeedbackSummary,
+    PilotBreakdownItem,
+    PilotMetricsResponse,
+    PilotParserWarningItem,
     RunHistoryRecord,
     RunHistorySummary,
 )
@@ -82,11 +85,16 @@ class FeedbackStore:
                     provider TEXT NOT NULL,
                     model TEXT NOT NULL,
                     artifact_name TEXT NOT NULL,
+                    artifact_source TEXT NOT NULL DEFAULT 'unknown',
+                    raw_artifact TEXT NOT NULL DEFAULT '',
                     runtime_label TEXT NOT NULL,
                     run_profile_id TEXT NOT NULL,
                     run_profile_name TEXT NOT NULL,
                     chip_type TEXT NOT NULL,
                     client_profile TEXT NOT NULL,
+                    parser_format TEXT NOT NULL DEFAULT '',
+                    parser_confidence REAL NOT NULL DEFAULT 0,
+                    parser_warnings TEXT NOT NULL DEFAULT '[]',
                     started_at TEXT NOT NULL,
                     completed_at TEXT NOT NULL,
                     duration_ms INTEGER NOT NULL,
@@ -123,6 +131,11 @@ class FeedbackStore:
             await self._ensure_async_column(db, "run_history", "benchmark_score", "TEXT NOT NULL DEFAULT ''")
             await self._ensure_async_column(db, "run_history", "benchmark_notes", "TEXT NOT NULL DEFAULT '[]'")
             await self._ensure_async_column(db, "run_history", "scorecard_mode", "TEXT NOT NULL DEFAULT 'live'")
+            await self._ensure_async_column(db, "run_history", "raw_artifact", "TEXT NOT NULL DEFAULT ''")
+            await self._ensure_async_column(db, "run_history", "artifact_source", "TEXT NOT NULL DEFAULT 'unknown'")
+            await self._ensure_async_column(db, "run_history", "parser_format", "TEXT NOT NULL DEFAULT ''")
+            await self._ensure_async_column(db, "run_history", "parser_confidence", "REAL NOT NULL DEFAULT 0")
+            await self._ensure_async_column(db, "run_history", "parser_warnings", "TEXT NOT NULL DEFAULT '[]'")
             await db.commit()
 
     async def save_decisions(self, decisions: list[Decision]) -> None:
@@ -313,13 +326,13 @@ class FeedbackStore:
             await db.execute(
                 """
                 INSERT OR REPLACE INTO run_history (
-                    run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label,
-                    run_profile_id, run_profile_name, chip_type, client_profile, started_at, completed_at,
+                    run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                    run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
                     duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
                     analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
                     scorecard_mode, error_message
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self._run_history_params(record),
             )
@@ -335,8 +348,8 @@ class FeedbackStore:
             rows = self._get_run_history_sync(project_id, agent, limit)
         else:
             query = (
-                "SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label, "
-                "run_profile_id, run_profile_name, started_at, duration_ms, total_decisions, high, medium, low, benchmark_title, benchmark_score, error_message "
+                "SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, runtime_label, "
+                "run_profile_id, run_profile_name, parser_format, parser_confidence, started_at, duration_ms, total_decisions, high, medium, low, benchmark_title, benchmark_score, error_message "
                 "FROM run_history"
             )
             clauses = []
@@ -370,8 +383,8 @@ class FeedbackStore:
             async with aiosqlite.connect(self.db_path) as db:
                 cursor = await db.execute(
                     """
-                    SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label,
-                           run_profile_id, run_profile_name, chip_type, client_profile, started_at, completed_at,
+                    SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                           run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
                            duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
                            analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
                            scorecard_mode, error_message
@@ -430,6 +443,34 @@ class FeedbackStore:
             for row in rows
         ]
 
+    async def get_pilot_metrics(self, access_enabled: bool = False, recent_limit: int = 6) -> PilotMetricsResponse:
+        if aiosqlite is None:
+            return self._get_pilot_metrics_sync(access_enabled=access_enabled, recent_limit=recent_limit)
+
+        async with aiosqlite.connect(self.db_path) as db:
+            run_cursor = await db.execute(
+                """
+                SELECT run_id, project_id, agent, status, provider, artifact_source, run_profile_name,
+                       parser_confidence, parser_warnings, duration_ms, total_decisions, benchmark_score, scorecard_mode
+                FROM run_history
+                ORDER BY started_at DESC
+                """
+            )
+            run_rows = await run_cursor.fetchall()
+            feedback_cursor = await db.execute("SELECT accepted FROM feedback")
+            feedback_rows = await feedback_cursor.fetchall()
+            export_cursor = await db.execute("SELECT COUNT(*) FROM export_history")
+            export_count_row = await export_cursor.fetchone()
+
+        recent_runs = await self.get_run_history(limit=max(1, min(recent_limit, 12)))
+        return self._build_pilot_metrics(
+            run_rows=run_rows,
+            feedback_rows=feedback_rows,
+            export_count=int(export_count_row[0] or 0) if export_count_row else 0,
+            recent_runs=recent_runs,
+            access_enabled=access_enabled,
+        )
+
     def _connect_sync(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
@@ -485,11 +526,16 @@ class FeedbackStore:
                     provider TEXT NOT NULL,
                     model TEXT NOT NULL,
                     artifact_name TEXT NOT NULL,
+                    artifact_source TEXT NOT NULL DEFAULT 'unknown',
+                    raw_artifact TEXT NOT NULL DEFAULT '',
                     runtime_label TEXT NOT NULL,
                     run_profile_id TEXT NOT NULL,
                     run_profile_name TEXT NOT NULL,
                     chip_type TEXT NOT NULL,
                     client_profile TEXT NOT NULL,
+                    parser_format TEXT NOT NULL DEFAULT '',
+                    parser_confidence REAL NOT NULL DEFAULT 0,
+                    parser_warnings TEXT NOT NULL DEFAULT '[]',
                     started_at TEXT NOT NULL,
                     completed_at TEXT NOT NULL,
                     duration_ms INTEGER NOT NULL,
@@ -526,6 +572,11 @@ class FeedbackStore:
             self._ensure_sync_column(db, "run_history", "benchmark_score", "TEXT NOT NULL DEFAULT ''")
             self._ensure_sync_column(db, "run_history", "benchmark_notes", "TEXT NOT NULL DEFAULT '[]'")
             self._ensure_sync_column(db, "run_history", "scorecard_mode", "TEXT NOT NULL DEFAULT 'live'")
+            self._ensure_sync_column(db, "run_history", "raw_artifact", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_sync_column(db, "run_history", "artifact_source", "TEXT NOT NULL DEFAULT 'unknown'")
+            self._ensure_sync_column(db, "run_history", "parser_format", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_sync_column(db, "run_history", "parser_confidence", "REAL NOT NULL DEFAULT 0")
+            self._ensure_sync_column(db, "run_history", "parser_warnings", "TEXT NOT NULL DEFAULT '[]'")
             db.commit()
 
     def _save_decisions_sync(self, decisions: list[Decision]) -> None:
@@ -635,13 +686,13 @@ class FeedbackStore:
             db.execute(
                 """
                 INSERT OR REPLACE INTO run_history (
-                    run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label,
-                    run_profile_id, run_profile_name, chip_type, client_profile, started_at, completed_at,
+                    run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                    run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
                     duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
                     analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
                     scorecard_mode, error_message
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self._run_history_params(record),
             )
@@ -649,8 +700,8 @@ class FeedbackStore:
 
     def _get_run_history_sync(self, project_id: str | None, agent: str | None, limit: int):
         query = (
-            "SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label, "
-            "run_profile_id, run_profile_name, started_at, duration_ms, total_decisions, high, medium, low, benchmark_title, benchmark_score, error_message "
+            "SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, runtime_label, "
+            "run_profile_id, run_profile_name, parser_format, parser_confidence, started_at, duration_ms, total_decisions, high, medium, low, benchmark_title, benchmark_score, error_message "
             "FROM run_history"
         )
         clauses = []
@@ -673,8 +724,8 @@ class FeedbackStore:
         with self._connect_sync() as db:
             cursor = db.execute(
                 """
-                SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, runtime_label,
-                       run_profile_id, run_profile_name, chip_type, client_profile, started_at, completed_at,
+                SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                       run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
                        duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
                        analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
                        scorecard_mode, error_message
@@ -709,6 +760,28 @@ class FeedbackStore:
             )
             return cursor.fetchall()
 
+    def _get_pilot_metrics_sync(self, access_enabled: bool = False, recent_limit: int = 6) -> PilotMetricsResponse:
+        with self._connect_sync() as db:
+            run_rows = db.execute(
+                """
+                SELECT run_id, project_id, agent, status, provider, artifact_source, run_profile_name,
+                       parser_confidence, parser_warnings, duration_ms, total_decisions, benchmark_score, scorecard_mode
+                FROM run_history
+                ORDER BY started_at DESC
+                """
+            ).fetchall()
+            feedback_rows = db.execute("SELECT accepted FROM feedback").fetchall()
+            export_count = int(db.execute("SELECT COUNT(*) FROM export_history").fetchone()[0] or 0)
+        recent_rows = self._get_run_history_sync(None, None, max(1, min(recent_limit, 12)))
+        recent_runs = [self._run_history_summary_from_row(row) for row in recent_rows]
+        return self._build_pilot_metrics(
+            run_rows=run_rows,
+            feedback_rows=feedback_rows,
+            export_count=export_count,
+            recent_runs=recent_runs,
+            access_enabled=access_enabled,
+        )
+
     def _default_enterprise_config(self, agent: str) -> dict[str, object]:
         if agent == "agent01":
             return Agent01EnterpriseConfig().model_dump()
@@ -726,11 +799,16 @@ class FeedbackStore:
             record.provider,
             record.model or "",
             record.artifact_name or "",
+            record.artifact_source or "unknown",
+            record.raw_artifact or "",
             record.runtime_label or "",
             record.run_profile_id or "",
             record.run_profile_name or "",
             record.chip_type or "",
             record.client_profile or "",
+            record.parser_format or "",
+            record.parser_confidence or 0.0,
+            json.dumps(record.parser_warnings),
             record.started_at.isoformat(),
             record.completed_at.isoformat(),
             record.duration_ms,
@@ -760,20 +838,23 @@ class FeedbackStore:
             provider=row[5],
             model=row[6] or None,
             artifact_name=row[7] or None,
-            runtime_label=row[8] or None,
-            run_profile_id=row[9] or None,
-            run_profile_name=row[10] or None,
-            started_at=datetime.fromisoformat(row[11]),
-            duration_ms=row[12],
-            total_decisions=row[13],
-            high=row[14],
-            medium=row[15],
-            low=row[16],
-            benchmark_title=row[17] or None,
-            benchmark_score=row[18] or None,
+            artifact_source=row[8] or "unknown",
+            runtime_label=row[9] or None,
+            run_profile_id=row[10] or None,
+            run_profile_name=row[11] or None,
+            parser_format=row[12] or None,
+            parser_confidence=row[13],
+            started_at=datetime.fromisoformat(row[14]),
+            duration_ms=row[15],
+            total_decisions=row[16],
+            high=row[17],
+            medium=row[18],
+            low=row[19],
+            benchmark_title=row[20] or None,
+            benchmark_score=row[21] or None,
             feedback_summary=FeedbackSummary(),
             export_count=0,
-            error_message=row[19] or None,
+            error_message=row[22] or None,
         )
 
     def _run_history_record_from_row(self, row) -> RunHistoryRecord:
@@ -786,28 +867,33 @@ class FeedbackStore:
             provider=row[5],
             model=row[6] or None,
             artifact_name=row[7] or None,
-            runtime_label=row[8] or None,
-            run_profile_id=row[9] or None,
-            run_profile_name=row[10] or None,
-            chip_type=row[11] or None,
-            client_profile=row[12] or None,
-            started_at=datetime.fromisoformat(row[13]),
-            completed_at=datetime.fromisoformat(row[14]),
-            duration_ms=row[15],
-            total_decisions=row[16],
-            high=row[17],
-            medium=row[18],
-            low=row[19],
-            request_payload=json.loads(row[20]),
-            orchestration=json.loads(row[21]),
-            analysis_log=json.loads(row[22]),
-            decisions=[Decision(**item) for item in json.loads(row[23])],
-            observability=json.loads(row[24]),
-            benchmark_title=row[25] or None,
-            benchmark_score=row[26] or None,
-            benchmark_notes=json.loads(row[27]),
-            scorecard_mode=row[28] or "live",
-            error_message=row[29] or None,
+            artifact_source=row[8] or "unknown",
+            raw_artifact=row[9] or None,
+            runtime_label=row[10] or None,
+            run_profile_id=row[11] or None,
+            run_profile_name=row[12] or None,
+            chip_type=row[13] or None,
+            client_profile=row[14] or None,
+            parser_format=row[15] or None,
+            parser_confidence=row[16],
+            parser_warnings=json.loads(row[17] or "[]"),
+            started_at=datetime.fromisoformat(row[18]),
+            completed_at=datetime.fromisoformat(row[19]),
+            duration_ms=row[20],
+            total_decisions=row[21],
+            high=row[22],
+            medium=row[23],
+            low=row[24],
+            request_payload=json.loads(row[25]),
+            orchestration=json.loads(row[26]),
+            analysis_log=json.loads(row[27]),
+            decisions=[Decision(**item) for item in json.loads(row[28])],
+            observability=json.loads(row[29]),
+            benchmark_title=row[30] or None,
+            benchmark_score=row[31] or None,
+            benchmark_notes=json.loads(row[32]),
+            scorecard_mode=row[33] or "live",
+            error_message=row[34] or None,
         )
 
     async def _ensure_async_column(self, db, table: str, column: str, definition: str) -> None:
@@ -836,3 +922,95 @@ class FeedbackStore:
             rejected=rejected,
             latest_timestamp=latest,
         )
+
+    def _build_pilot_metrics(
+        self,
+        run_rows,
+        feedback_rows,
+        export_count: int,
+        recent_runs: list[RunHistorySummary],
+        access_enabled: bool,
+    ) -> PilotMetricsResponse:
+        total_runs = len(run_rows)
+        completed_runs = sum(1 for row in run_rows if row[3] == "completed")
+        failed_runs = sum(1 for row in run_rows if row[3] == "failed")
+        benchmark_runs = sum(1 for row in run_rows if (row[12] or "live") == "benchmark")
+        live_runs = sum(1 for row in run_rows if (row[12] or "live") != "benchmark")
+        total_decisions = sum(int(row[10] or 0) for row in run_rows)
+        accepted_decisions = sum(1 for row in feedback_rows if bool(row[0]))
+        rejected_decisions = sum(1 for row in feedback_rows if not bool(row[0]))
+        avg_duration_ms = round(sum(int(row[9] or 0) for row in run_rows) / total_runs) if total_runs else 0
+        parser_confidences = [float(row[7]) for row in run_rows if row[7] is not None]
+        avg_parser_confidence = round(sum(parser_confidences) / len(parser_confidences), 2) if parser_confidences else 0.0
+
+        benchmark_scores = []
+        artifact_source_counts: dict[str, int] = {}
+        agent_counts: dict[str, int] = {}
+        provider_counts: dict[str, int] = {}
+        profile_counts: dict[str, int] = {}
+        warning_counts: dict[str, int] = {}
+
+        for row in run_rows:
+            score_value = self._extract_score_value(row[11])
+            if score_value is not None and (row[12] or "live") == "benchmark":
+                benchmark_scores.append(score_value)
+            artifact_source_counts[row[5] or "unknown"] = artifact_source_counts.get(row[5] or "unknown", 0) + 1
+            agent_counts[row[2] or "unknown"] = agent_counts.get(row[2] or "unknown", 0) + 1
+            provider_key = row[4] or "unknown"
+            provider_counts[provider_key] = provider_counts.get(provider_key, 0) + 1
+            profile_key = row[6] or "Custom run"
+            profile_counts[profile_key] = profile_counts.get(profile_key, 0) + 1
+            for warning in json.loads(row[8] or "[]"):
+                text = str(warning).strip()
+                if text:
+                    warning_counts[text] = warning_counts.get(text, 0) + 1
+
+        avg_benchmark_score = round(sum(benchmark_scores) / len(benchmark_scores), 1) if benchmark_scores else 0.0
+        feedback_total = accepted_decisions + rejected_decisions
+        acceptance_rate = round((accepted_decisions / feedback_total) * 100, 1) if feedback_total else 0.0
+
+        return PilotMetricsResponse(
+            generated_at=datetime.now(timezone.utc),
+            pilot_access_enabled=access_enabled,
+            total_runs=total_runs,
+            completed_runs=completed_runs,
+            failed_runs=failed_runs,
+            benchmark_runs=benchmark_runs,
+            live_runs=live_runs,
+            total_decisions=total_decisions,
+            accepted_decisions=accepted_decisions,
+            rejected_decisions=rejected_decisions,
+            acceptance_rate=acceptance_rate,
+            avg_duration_ms=avg_duration_ms,
+            avg_parser_confidence=avg_parser_confidence,
+            avg_benchmark_score=avg_benchmark_score,
+            total_exports=export_count,
+            artifact_source_breakdown=self._breakdown_items(artifact_source_counts),
+            agent_breakdown=self._breakdown_items(agent_counts),
+            provider_breakdown=self._breakdown_items(provider_counts),
+            run_profile_breakdown=self._breakdown_items(profile_counts, limit=6),
+            parser_warning_breakdown=self._warning_items(warning_counts, limit=6),
+            recent_runs=recent_runs,
+        )
+
+    def _breakdown_items(self, counts: dict[str, int], limit: int | None = None) -> list[PilotBreakdownItem]:
+        items = sorted(counts.items(), key=lambda item: (-item[1], item[0].lower()))
+        if limit is not None:
+            items = items[:limit]
+        return [PilotBreakdownItem(label=label, count=count) for label, count in items]
+
+    def _warning_items(self, counts: dict[str, int], limit: int | None = None) -> list[PilotParserWarningItem]:
+        items = sorted(counts.items(), key=lambda item: (-item[1], item[0].lower()))
+        if limit is not None:
+            items = items[:limit]
+        return [PilotParserWarningItem(warning=warning, count=count) for warning, count in items]
+
+    def _extract_score_value(self, score_text: str | None) -> float | None:
+        text = str(score_text or "").strip()
+        if not text:
+            return None
+        head = text.split("/", 1)[0].strip()
+        try:
+            return float(head)
+        except ValueError:
+            return None

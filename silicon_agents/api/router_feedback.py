@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,8 @@ from silicon_agents.core.schemas import (
     DecisionListResponse,
     FeedbackListResponse,
     FeedbackRequest,
+    PilotAccessCodeResponse,
+    PilotMetricsResponse,
     RunHistoryListResponse,
     RunHistoryRecord,
     StructuredExportResponse,
@@ -72,6 +75,25 @@ async def get_run(run_id: str) -> RunHistoryRecord:
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found.")
     return run
+
+
+@router.get("/pilot/metrics", response_model=PilotMetricsResponse)
+async def get_pilot_metrics() -> PilotMetricsResponse:
+    settings = get_settings()
+    store = FeedbackStore(settings.db_path)
+    await store.init()
+    return await store.get_pilot_metrics(access_enabled=bool(settings.pilot_access_token))
+
+
+@router.post("/pilot/access-code/generate", response_model=PilotAccessCodeResponse)
+async def generate_pilot_access_code() -> PilotAccessCodeResponse:
+    code = secrets.token_urlsafe(18)
+    return PilotAccessCodeResponse(
+        code=code,
+        bearer_example=f"X-Pilot-Access-Token: {code}",
+        curl_example=f"curl -H 'X-Pilot-Access-Token: {code}' http://127.0.0.1:8000/api/v1/pilot/metrics",
+        note="Generated codes are suggestions for pilot sharing. Set PILOT_ACCESS_TOKEN in the deployment environment to activate one.",
+    )
 
 
 @router.get("/runs/{run_id}/export/{target}", response_model=StructuredExportResponse)

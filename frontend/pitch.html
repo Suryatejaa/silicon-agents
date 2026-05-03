@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Pitch Deck</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: #ffffff;
+      --line: rgba(128, 157, 193, 0.22);
+      --ink: #10233e;
+      --muted: #53657f;
+      --accent: #0f7a73;
+      --accent-2: #155eef;
+      --accent-3: #dff6ee;
+      --warm: #f59e0b;
+      --ok: #1f845a;
+      --shadow: 0 24px 60px rgba(14, 30, 54, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(21, 94, 239, 0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(15, 122, 115, 0.10), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+    }
+    main {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 251, 255, 0.86);
+      backdrop-filter: blur(12px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .app-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0f7a73 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    .app-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent-2);
+      background: rgba(21, 94, 239, 0.08);
+      border-color: rgba(21, 94, 239, 0.16);
+    }
+    .deck {
+      display: grid;
+      gap: 16px;
+      padding: 16px;
+    }
+    .slide {
+      min-height: auto;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(250,252,255,0.94) 100%);
+      box-shadow: var(--shadow);
+      border-radius: 26px;
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      scroll-margin-top: 90px;
+    }
+    .slide-hero {
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 800;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 6vw, 5.6rem);
+      line-height: 0.92;
+      letter-spacing: -0.05em;
+    }
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 3vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1.02rem;
+    }
+    .lede {
+      font-size: 1.16rem;
+      max-width: 900px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      padding: 16px 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+    }
+    .metric-k {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+    .metric-v {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .metric-copy {
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+    }
+    .callout {
+      padding: 18px 20px;
+      border-radius: 22px;
+      border: 1px solid rgba(15, 122, 115, 0.18);
+      background: linear-gradient(180deg, #f2fbf8 0%, #ffffff 100%);
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(21, 94, 239, 0.12);
+      background: rgba(21, 94, 239, 0.06);
+      color: var(--accent-2);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+    .big-quote {
+      font-size: 1.36rem;
+      line-height: 1.55;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+    .timeline-step {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-strong);
+    }
+    .timeline-phase {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      font-weight: 800;
+      padding-top: 2px;
+    }
+    .status-ok {
+      color: var(--ok);
+      font-weight: 800;
+    }
+    .status-next {
+      color: var(--warm);
+      font-weight: 800;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      padding: 13px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      font-weight: 800;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+    .button:hover {
+      transform: translateY(-1px);
+    }
+    .button.primary {
+      background: linear-gradient(135deg, #155eef, #0f7a73);
+      color: #ffffff;
+      box-shadow: 0 16px 30px rgba(21, 94, 239, 0.18);
+    }
+    .button.secondary {
+      background: #ffffff;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+    .truth {
+      border-left: 4px solid var(--warm);
+      padding-left: 14px;
+    }
+    @media (max-width: 1100px) {
+      .slide-hero,
+      .grid-2,
+      .grid-3,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 860px) {
+      .app-header {
+        display: block;
+      }
+      .app-brand {
+        margin-bottom: 12px;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+      .slide {
+        padding: 18px 16px;
+      }
+      .deck {
+        padding: 10px;
+      }
+      .timeline-step {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Pitch Deck</div>
+          <div class="app-brand-sub">Current MVP status · verification-first semiconductor AI platform</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" id="navHome">Home</a>
+        <a href="/agent01" id="navAgent01">Agent 01</a>
+        <a href="/agent02" id="navAgent02">Agent 02</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
+        <a href="/pitch" class="is-current" id="navPitch">Pitch Deck</a>
+      </nav>
+    </header>
+
+    <div class="deck">
+      <section class="slide slide-hero" id="slide-1">
+        <div style="display:grid; gap:18px; align-content:start;">
+          <div class="eyebrow">Silicon Agents / Infosys Business Incubator Pitch</div>
+          <h1>AI Copilots for Chip Design Workflows</h1>
+          <p class="lede">
+            Silicon Agents is a semiconductor workflow intelligence layer that converts raw verification and test artifacts
+            into ranked, evidence-grounded engineering actions. The current MVP proves the wedge where fabless teams lose the most time:
+            verification review, coverage closure, and regression triage.
+          </p>
+          <div class="pill-row">
+            <div class="pill">Agent 01: verification wedge</div>
+            <div class="pill">Agent 02: yield expansion</div>
+            <div class="pill">Run history + audit trail</div>
+            <div class="pill">Enterprise policy + orchestration</div>
+          </div>
+          <div class="cta-row">
+            <a class="button primary" href="/agent01" id="openAgent01">Open live Agent 01 demo</a>
+            <a class="button secondary" href="/history" id="openHistory">Open run history</a>
+          </div>
+        </div>
+        <div style="display:grid; gap:14px; align-content:start;">
+          <div class="metric">
+            <div class="metric-k">Current MVP status</div>
+            <div class="metric-v">Live</div>
+            <div class="metric-copy">Runnable product with UI, backend, LLM orchestration, exports, feedback, and persisted history.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-k">Primary wedge</div>
+            <div class="metric-v">Agent 01</div>
+            <div class="metric-copy">Coverage closure and regression triage for verification teams approaching tapeout.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-k">Proof posture</div>
+            <div class="metric-v">Benchmark + audit</div>
+            <div class="metric-copy">Known artifacts, measurable scorecards, human approval loop, and saved run evidence.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-2">
+        <div class="eyebrow">Why this matters</div>
+        <h2>The bottleneck is not raw data. It is engineering interpretation.</h2>
+        <div class="grid-3">
+          <div class="card">
+            <h3>Verification teams</h3>
+            <p>Senior DV engineers spend expensive hours reading coverage reports and regression logs before deciding what to fix next.</p>
+          </div>
+          <div class="card">
+            <h3>Yield and test teams</h3>
+            <p>ATE anomalies, mis-bins, and SPC drift often require multiple manual handoffs before a prioritized action emerges.</p>
+          </div>
+          <div class="card">
+            <h3>Enterprise consequence</h3>
+            <p>Schedule risk grows in the gap between artifact generation and engineering action selection.</p>
+          </div>
+        </div>
+        <div class="callout">
+          <div class="big-quote">
+            Silicon Agents does not need to replace EDA tools. It needs to reduce the time senior engineers spend converting reports into next actions.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-3">
+        <div class="eyebrow">What exists today</div>
+        <h2>The MVP is already more than a static demo.</h2>
+        <div class="hero-grid">
+          <div class="metric">
+            <div class="metric-k">2 agents</div>
+            <div class="metric-v">01 + 02</div>
+            <div class="metric-copy">Verification-first wedge with yield workflow expansion already live in the same platform.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-k">5 product pages</div>
+            <div class="metric-v">Shell</div>
+            <div class="metric-copy">Home, Agent 01, Agent 02, Enterprise Config, and Run History.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-k">Run audit trail</div>
+            <div class="metric-v">SQLite</div>
+            <div class="metric-copy">Provider, latency, scorecard, decisions, feedback, and exports are persisted per run.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-k">Exports</div>
+            <div class="metric-v">HTML / Jira / Email</div>
+            <div class="metric-copy">Built for sponsor review and workflow adoption, not just an AI chat output.</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Agent 01 delivered</h3>
+            <ul>
+              <li>coverage and regression ingestion</li>
+              <li>5-step streamed reasoning</li>
+              <li>ranked findings with evidence and review actions</li>
+              <li>benchmark scorecard and verification brief export</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Agent 02 delivered</h3>
+            <ul>
+              <li>ATE and SPC ingestion</li>
+              <li>ranked yield and anomaly actions</li>
+              <li>benchmark parity with Agent 01</li>
+              <li>yield brief, Jira, and email export support</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-4">
+        <div class="eyebrow">Why this is credible</div>
+        <h2>The MVP already demonstrates a scalable platform pattern.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Common orchestration core</h3>
+            <p>Both agents share the same product shell, run history, feedback loop, export layer, benchmark scoring path, and enterprise policy model.</p>
+          </div>
+          <div class="card">
+            <h3>Enterprise policy + run profile split</h3>
+            <p>Top-level policy can be set by senior engineers or program leads, while day-to-day run profiles remain operational and reusable.</p>
+          </div>
+          <div class="card">
+            <h3>Two-stage LLM flow</h3>
+            <p>Orchestration first, analysis second. This is important because enterprise clients need control over style, evidence, and escalation policy.</p>
+          </div>
+          <div class="card">
+            <h3>Human-in-the-loop by design</h3>
+            <p>Recommendations are visible, ranked, exported, accepted or rejected, and stored for later audit. This matters in semiconductor workflows.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-5">
+        <div class="eyebrow">Current proof signals</div>
+        <h2>This MVP is enough to prove the wedge if it is pitched honestly.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>What this MVP proves now</h3>
+            <ul>
+              <li>the workflow problem is real and clearly framed</li>
+              <li>a verification-first wedge can be turned into a real product shell</li>
+              <li>the architecture already supports multiple agent families</li>
+              <li>enterprise controls, exports, and auditability can be layered in without rebuilding the core</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What this MVP does not claim yet</h3>
+            <ul>
+              <li>deep native EDA integration</li>
+              <li>multi-user auth or tenancy</li>
+              <li>broad parser coverage for every client report format</li>
+              <li>production deployment inside a semiconductor enterprise environment</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout truth">
+          <div class="big-quote">
+            For Infosys, this is strong enough as a Seeder-stage MVP because it proves product thinking, architecture direction, and workflow fit. The right positioning is not “finished platform.” The right positioning is “credible wedge with scalable architecture.”
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-6">
+        <div class="eyebrow">Roadmap</div>
+        <h2>Next phase of the MVP: enterprise API integration for EDA workflows</h2>
+        <div class="timeline">
+          <div class="timeline-step">
+            <div class="timeline-phase"><span class="status-ok">Now</span></div>
+            <div>
+              <h3>Workflow intelligence MVP</h3>
+              <p>UI, agents, orchestration, scorecards, run history, exports, and human review loop are in place.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-phase"><span class="status-next">Next</span></div>
+            <div>
+              <h3>Expose integration APIs for enterprise EDA flows</h3>
+              <p>
+                Add external ingestion and trigger endpoints so existing verification farms, regression systems, dashboards,
+                and engineering workflow tools can push artifacts into Silicon Agents and consume structured results.
+              </p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-phase">Then</div>
+            <div>
+              <h3>Client workflow embedding</h3>
+              <p>Integrate with real project artifacts, support customer report variants, and align outputs with real engineering review systems.</p>
+            </div>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <h3>API phase target</h3>
+            <p>Make Silicon Agents callable from external flows, not only from the UI.</p>
+          </div>
+          <div class="card">
+            <h3>Why this matters</h3>
+            <p>That is the step that turns a sponsor demo into a systems-integration opportunity for Infosys.</p>
+          </div>
+          <div class="card">
+            <h3>Infosys fit</h3>
+            <p>Infosys can win on managed delivery, workflow embedding, client-specific policy, and semiconductor services integration.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-7">
+        <div class="eyebrow">Why Infosys can care</div>
+        <h2>This is not just an AI demo. It is a services-platform wedge.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>For semiconductor clients</h3>
+            <ul>
+              <li>faster first-pass review of coverage and regression outputs</li>
+              <li>more structured prioritization of action items</li>
+              <li>visible evidence, history, and export into downstream workflows</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>For Infosys</h3>
+            <ul>
+              <li>semiconductor AI services wedge, not generic LLM tooling</li>
+              <li>high-value integration-led offering around existing client toolchains</li>
+              <li>expandable from verification into yield, test, and signoff review workflows</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          <div class="big-quote">
+            The long-term moat is not only the model call. It is workflow embedding, domain-specific orchestration, client policy control, and trusted engineering review loops.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-8">
+        <div class="eyebrow">Ask</div>
+        <h2>Support the next phase: take the verification wedge into enterprise integration.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>What support unlocks</h3>
+            <ul>
+              <li>integration API layer for enterprise EDA workflow connection</li>
+              <li>broader artifact corpus and parser tolerance</li>
+              <li>pilot-grade instrumentation and client-specific onboarding</li>
+              <li>deeper proof with real project-style artifacts</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What the current MVP already proves</h3>
+            <ul>
+              <li>strong technical ownership</li>
+              <li>clear semiconductor wedge selection</li>
+              <li>scalable architecture thinking</li>
+              <li>the ability to build beyond a first-year-college-project level into a credible product direction</li>
+            </ul>
+          </div>
+        </div>
+        <div class="cta-row">
+          <a class="button primary" href="/agent01">Show Agent 01 live</a>
+          <a class="button secondary" href="/history">Show saved runs and exports</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const fileMode = window.location.protocol === "file:";
+    const navTargets = {
+      navHome: fileMode ? "./index.html" : "/",
+      navAgent01: fileMode ? "./agent01.html" : "/agent01",
+      navAgent02: fileMode ? "./agent02.html" : "/agent02",
+      navPitch: fileMode ? "./pitch.html" : "/pitch",
+      openAgent01: fileMode ? "./agent01.html" : "/agent01",
+      openHistory: fileMode ? "./history.html" : "/history"
+    };
+    Object.entries(navTargets).forEach(([id, href]) => {
+      const el = document.getElementById(id);
+      if (el) el.href = href;
+    });
+  </script>
+</body>
+</html>

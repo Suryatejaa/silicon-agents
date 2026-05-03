@@ -12,6 +12,7 @@ Priority = Literal["HIGH", "MEDIUM", "LOW"]
 AgentType = Literal["verification", "yield"]
 ParsedReportType = Literal["coverage", "regression", "ate", "spc", "unknown"]
 FeedbackStatus = Literal["accepted", "rejected", "refined"]
+ArtifactSource = Literal["bundled_sample", "uploaded_file", "pasted_text", "unknown"]
 
 
 class ParsedItem(BaseModel):
@@ -81,6 +82,7 @@ class VerifyRequest(BaseModel):
     project_id: str = "demo-verification"
     context: Optional[str] = None
     artifact_name: Optional[str] = None
+    artifact_source: Optional[ArtifactSource] = "unknown"
     run_profile_id: Optional[str] = None
     run_profile_name: Optional[str] = None
     chip_type: Optional[str] = None
@@ -97,6 +99,7 @@ class YieldRequest(BaseModel):
     project_id: str = "demo-yield"
     context: Optional[str] = None
     artifact_name: Optional[str] = None
+    artifact_source: Optional[ArtifactSource] = "unknown"
     run_profile_id: Optional[str] = None
     run_profile_name: Optional[str] = None
     chip_type: Optional[str] = None
@@ -159,11 +162,16 @@ class RunHistoryRecord(BaseModel):
     provider: str = "mock"
     model: Optional[str] = None
     artifact_name: Optional[str] = None
+    artifact_source: Optional[ArtifactSource] = "unknown"
+    raw_artifact: Optional[str] = None
     runtime_label: Optional[str] = None
     run_profile_id: Optional[str] = None
     run_profile_name: Optional[str] = None
     chip_type: Optional[str] = None
     client_profile: Optional[str] = None
+    parser_format: Optional[str] = None
+    parser_confidence: Optional[float] = None
+    parser_warnings: list[str] = Field(default_factory=list)
     started_at: datetime
     completed_at: datetime
     duration_ms: int = 0
@@ -195,9 +203,12 @@ class RunHistorySummary(BaseModel):
     provider: str = "mock"
     model: Optional[str] = None
     artifact_name: Optional[str] = None
+    artifact_source: Optional[ArtifactSource] = "unknown"
     runtime_label: Optional[str] = None
     run_profile_id: Optional[str] = None
     run_profile_name: Optional[str] = None
+    parser_format: Optional[str] = None
+    parser_confidence: Optional[float] = None
     started_at: datetime
     duration_ms: int = 0
     total_decisions: int = 0
@@ -213,6 +224,48 @@ class RunHistorySummary(BaseModel):
 
 class RunHistoryListResponse(BaseModel):
     runs: list[RunHistorySummary] = Field(default_factory=list)
+
+
+class PilotBreakdownItem(BaseModel):
+    label: str
+    count: int
+
+
+class PilotParserWarningItem(BaseModel):
+    warning: str
+    count: int
+
+
+class PilotAccessCodeResponse(BaseModel):
+    code: str
+    header_name: str = "X-Pilot-Access-Token"
+    bearer_example: str
+    curl_example: str
+    note: str
+
+
+class PilotMetricsResponse(BaseModel):
+    generated_at: datetime
+    pilot_access_enabled: bool = False
+    total_runs: int = 0
+    completed_runs: int = 0
+    failed_runs: int = 0
+    benchmark_runs: int = 0
+    live_runs: int = 0
+    total_decisions: int = 0
+    accepted_decisions: int = 0
+    rejected_decisions: int = 0
+    acceptance_rate: float = 0.0
+    avg_duration_ms: int = 0
+    avg_parser_confidence: float = 0.0
+    avg_benchmark_score: float = 0.0
+    total_exports: int = 0
+    artifact_source_breakdown: list[PilotBreakdownItem] = Field(default_factory=list)
+    agent_breakdown: list[PilotBreakdownItem] = Field(default_factory=list)
+    provider_breakdown: list[PilotBreakdownItem] = Field(default_factory=list)
+    run_profile_breakdown: list[PilotBreakdownItem] = Field(default_factory=list)
+    parser_warning_breakdown: list[PilotParserWarningItem] = Field(default_factory=list)
+    recent_runs: list[RunHistorySummary] = Field(default_factory=list)
 
 
 class BenchmarkFindingMatch(BaseModel):

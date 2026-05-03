@@ -22,8 +22,14 @@ class YieldAgent:
         self.settings = get_settings()
         self.llm = LLMProvider()
         self.orchestrator = PromptOrchestrator()
+        self.last_parser_format: str | None = None
+        self.last_parser_confidence: float | None = None
+        self.last_parser_warnings: list[str] = []
 
     async def stream(self, request: YieldRequest) -> AsyncIterator[tuple[str, dict]]:
+        self.last_parser_format = None
+        self.last_parser_confidence = None
+        self.last_parser_warnings = []
         if request.mode == "spc":
             async for event in self._stream_spc(request):
                 yield event
@@ -33,6 +39,7 @@ class YieldAgent:
 
     async def _stream_ate(self, request: YieldRequest) -> AsyncIterator[tuple[str, dict]]:
         parsed = parse_ate_csv(request.csv_data)
+        self._capture_parser_signals(parsed)
         fallback_decisions = self._build_ate_decisions(parsed.items, request.project_id)
         llm_result = await self._run_ate_llm(parsed, request, fallback_decisions)
         decisions = llm_result["decisions"]
@@ -67,6 +74,7 @@ class YieldAgent:
 
     async def _stream_spc(self, request: YieldRequest) -> AsyncIterator[tuple[str, dict]]:
         parsed = parse_spc_csv(request.csv_data)
+        self._capture_parser_signals(parsed)
         fallback_decisions = self._build_spc_decisions(parsed.items, request.project_id)
         llm_result = await self._run_spc_llm(parsed, request, fallback_decisions)
         decisions = llm_result["decisions"]
@@ -237,8 +245,20 @@ class YieldAgent:
             "reference_priorities": prompt_plan.get("reference_priorities", []),
             "analysis_directives": prompt_plan.get("analysis_directives", []),
             "prompt_addendum": prompt_plan.get("prompt_addendum", ""),
+            "parser_format": self.last_parser_format,
+            "parser_confidence": self.last_parser_confidence,
+            "parser_warnings": list(self.last_parser_warnings),
             "provider": self.orchestrator.last_provider,
         }
+
+    def _capture_parser_signals(self, parsed) -> None:
+        metadata = getattr(parsed, "metadata", {}) or {}
+        parser_format = metadata.get("parser_format") or getattr(parsed, "type", None)
+        parser_confidence = metadata.get("parser_confidence")
+        parser_warnings = metadata.get("parser_warnings") or []
+        self.last_parser_format = str(parser_format) if parser_format else None
+        self.last_parser_confidence = float(parser_confidence) if parser_confidence is not None else None
+        self.last_parser_warnings = [str(item) for item in parser_warnings]
 
     def _extract_json(self, raw: str) -> dict:
         stripped = raw.strip()

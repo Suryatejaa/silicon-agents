@@ -24,6 +24,8 @@ def parse_ate_csv(raw: str) -> ParsedReport:
     anomalies = 0
     passed = 0
     failed = 0
+    warnings: list[str] = []
+    fieldnames = reader.fieldnames or []
 
     for idx, row in enumerate(reader):
         chip_id = row.get("chip_id") or row.get("chip") or f"chip_{idx + 1}"
@@ -49,12 +51,24 @@ def parse_ate_csv(raw: str) -> ParsedReport:
             )
         )
 
+    if not fieldnames:
+        warnings.append("No CSV headers were recognized in the ATE artifact.")
+    elif len(fieldnames) < 4:
+        warnings.append("Only a partial ATE column set was recognized. Review the uploaded CSV format.")
+    if not items:
+        warnings.append("No ATE rows were parsed from the artifact.")
+
     return ParsedReport(
         type="ate",
         agent="yield",
         summary=ParsedSummary(total=len(items), passed=passed, failed=failed, anomalies=anomalies),
         items=items,
-        metadata={"columns": reader.fieldnames or []},
+        metadata={
+            "columns": fieldnames,
+            "parser_format": "ate_csv",
+            "parser_confidence": _estimate_tabular_confidence(fieldnames, len(items), warnings),
+            "parser_warnings": warnings,
+        },
         raw_excerpt=raw[:1000],
     )
 
@@ -62,6 +76,8 @@ def parse_ate_csv(raw: str) -> ParsedReport:
 def parse_spc_csv(raw: str) -> ParsedReport:
     reader = csv.DictReader(io.StringIO(raw.strip()))
     items: list[ParsedItem] = []
+    warnings: list[str] = []
+    fieldnames = reader.fieldnames or []
 
     for idx, row in enumerate(reader):
         lot_id = row.get("lot_id") or f"LOT_{idx + 1:03d}"
@@ -77,11 +93,37 @@ def parse_spc_csv(raw: str) -> ParsedReport:
             )
         )
 
+    if not fieldnames:
+        warnings.append("No CSV headers were recognized in the SPC artifact.")
+    elif len(fieldnames) < 3:
+        warnings.append("Only a partial SPC column set was recognized. Review the uploaded CSV format.")
+    if not items:
+        warnings.append("No SPC rows were parsed from the artifact.")
+
     return ParsedReport(
         type="spc",
         agent="yield",
         summary=ParsedSummary(total=len(items)),
         items=items,
-        metadata={"columns": reader.fieldnames or []},
+        metadata={
+            "columns": fieldnames,
+            "parser_format": "spc_csv",
+            "parser_confidence": _estimate_tabular_confidence(fieldnames, len(items), warnings),
+            "parser_warnings": warnings,
+        },
         raw_excerpt=raw[:1000],
     )
+
+
+def _estimate_tabular_confidence(fieldnames: list[str], item_count: int, warnings: list[str]) -> float:
+    confidence = 0.45
+    if fieldnames:
+        confidence += 0.25
+    if len(fieldnames) >= 4:
+        confidence += 0.15
+    if item_count >= 1:
+        confidence += 0.1
+    if item_count >= 5:
+        confidence += 0.05
+    confidence -= min(0.2, 0.08 * len(warnings))
+    return max(0.05, min(0.99, round(confidence, 2)))

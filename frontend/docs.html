@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · Product Docs</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --line: #dfe1e6;
+      --text: #10233e;
+      --muted: #53657f;
+      --accent: #155eef;
+      --accent-2: #0f7a73;
+      --code: #0b1526;
+      --code-bg: #f2f6ff;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(21, 94, 239, 0.08), transparent 32%),
+        linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .app-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 20px;
+      padding: 18px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 76px;
+      align-self: start;
+      max-height: calc(100vh - 94px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 10px 28px rgba(14, 30, 54, 0.05);
+      padding: 18px;
+    }
+    .sidebar h2 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+    .sidebar-group {
+      margin-bottom: 18px;
+    }
+    .sidebar-group-title {
+      color: var(--accent);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .sidebar a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 7px 8px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    .sidebar a:hover {
+      background: #f3f7ff;
+      color: var(--accent);
+    }
+    .content {
+      display: grid;
+      gap: 18px;
+    }
+    .hero,
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 12px 32px rgba(14, 30, 54, 0.05);
+    }
+    .hero {
+      padding: 24px;
+    }
+    .section {
+      padding: 22px;
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.55rem;
+      letter-spacing: -0.02em;
+    }
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+    p, li {
+      color: var(--muted);
+      line-height: 1.68;
+      font-size: 0.96rem;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .kpi-grid,
+    .grid-2,
+    .grid-3,
+    .field-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 18px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, var(--panel-2) 100%);
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .callout {
+      border-left: 4px solid var(--accent-2);
+      background: #f4fbf9;
+      padding: 14px 16px;
+      border-radius: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .field-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .field-table th,
+    .field-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      vertical-align: top;
+      text-align: left;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .field-table th {
+      background: #f7faff;
+      color: var(--text);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--code-bg);
+      color: var(--code);
+      border-radius: 8px;
+      padding: 2px 6px;
+      font-size: 0.9em;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #0f1726;
+      color: #eaf1ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+    .anchor-target {
+      scroll-margin-top: 92px;
+    }
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+        max-height: none;
+      }
+      .kpi-grid,
+      .grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 760px) {
+      .app-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+      .grid-2,
+      .grid-3,
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .field-table,
+      .field-table tbody,
+      .field-table tr,
+      .field-table th,
+      .field-table td {
+        display: block;
+        width: 100%;
+      }
+      .field-table th {
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-brand">
+      <div class="app-mark">SA</div>
+      <div>
+        <div class="app-brand-title">Silicon Agents Console</div>
+        <div class="app-brand-sub">Product documentation and workflow reference</div>
+      </div>
+    </div>
+    <nav class="app-nav">
+      <a href="/">Home</a>
+      <a href="/agent01">Agent 01</a>
+      <a href="/agent02">Agent 02</a>
+      <a href="/history">Run History</a>
+      <a href="/pilot">Pilot Dashboard</a>
+      <a href="/configuration">Enterprise Config</a>
+      <a href="/product-docs" class="is-current">Docs</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Documentation Index</h2>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Overview</div>
+        <a href="#overview">What Silicon Agents is</a>
+        <a href="#platform-pattern">Platform pattern</a>
+        <a href="#roles">Primary users</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Architecture</div>
+        <a href="#hld">High-level design</a>
+        <a href="#lld">Low-level workflow</a>
+        <a href="#layers">System layers</a>
+        <a href="#orchestration">Orchestration model</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Agent Workflows</div>
+        <a href="#agent01">Agent 01</a>
+        <a href="#agent02">Agent 02</a>
+        <a href="#decision-loop">Decision review loop</a>
+        <a href="#history-traceability">History and traceability</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Configuration</div>
+        <a href="#enterprise-policy">Enterprise configuration</a>
+        <a href="#run-profiles">Run profiles</a>
+        <a href="#why-policy-matters">Why policy matters</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Field Reference</div>
+        <a href="#verify-fields">Verification request fields</a>
+        <a href="#yield-fields">Yield request fields</a>
+        <a href="#run-fields">Run history fields</a>
+        <a href="#config-fields">Enterprise config fields</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Pilot Operations</div>
+        <a href="#pilot-ops">Pilot operations</a>
+        <a href="#parser-trust">Parser confidence</a>
+        <a href="#exports">Exports and workflow fit</a>
+        <a href="#api-surface">Current API surface</a>
+        <a href="#phase2-next">Next MVP phase</a>
+      </div>
+    </aside>
+
+    <div class="content">
+      <section class="hero anchor-target" id="overview">
+        <div class="eyebrow">Product docs</div>
+        <h1>Silicon Agents documentation for pilot users, delivery teams, and sponsors.</h1>
+        <p>
+          Silicon Agents is an AI workflow copilot for semiconductor engineering. It does not replace EDA tools.
+          It sits above existing verification, test, and yield workflows and reduces the time engineers spend interpreting
+          raw outputs, prioritizing findings, and deciding what to do next.
+        </p>
+        <div class="kpi-grid">
+          <div class="card">
+            <div class="metric-label">Agent 01</div>
+            <div class="metric-value">Verification workflow copilot</div>
+            <p>Coverage closure and regression triage with evidence-backed next actions.</p>
+          </div>
+          <div class="card">
+            <div class="metric-label">Agent 02</div>
+            <div class="metric-value">Yield intelligence copilot</div>
+            <p>ATE anomaly review, binning validation, and SPC-driven yield prioritization.</p>
+          </div>
+          <div class="card">
+            <div class="metric-label">Trust posture</div>
+            <div class="metric-value">Human in the loop</div>
+            <p>Recommendations are visible, ranked, evidence-cited, and explicitly accepted or rejected.</p>
+          </div>
+          <div class="card">
+            <div class="metric-label">Next MVP phase</div>
+            <div class="metric-value">EDA/API integration</div>
+            <p>Workflow embedding into enterprise toolchains is the next scale-up phase after pilot readiness.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="platform-pattern">
+        <h2>Platform pattern</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>What the product already proves</h3>
+            <ul>
+              <li>Raw artifacts can be ingested, parsed, reasoned over, and converted into reviewable actions.</li>
+              <li>Run history, parser trust, provenance, and exports make the workflow auditable instead of purely conversational.</li>
+              <li>Enterprise policy and run profiles let the same system adapt across chip programs and review styles.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What the product is not yet</h3>
+            <ul>
+              <li>It is not a simulator, compiler, testcase generator, or RTL modification engine.</li>
+              <li>It is not yet embedded into client EDA stacks through production-grade APIs.</li>
+              <li>It is not full RBAC or multi-tenant SaaS. That would be later-stage platform work.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:14px;">
+          The current MVP is best pitched as a <strong>verification-first and yield-adjacent workflow wedge</strong> with scalable platform architecture,
+          not as a finished end-state product. That is the honest and strongest positioning for pilot and Seeder conversations.
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="roles">
+        <h2>Primary users and use cases</h2>
+        <div class="grid-3">
+          <div class="card">
+            <h3>DV engineer</h3>
+            <p>Uses Agent 01 to turn coverage logs and regression outputs into ranked closure actions, evidence, and focused review paths.</p>
+          </div>
+          <div class="card">
+            <h3>Yield / product engineer</h3>
+            <p>Uses Agent 02 to detect mis-bins, leakage anomalies, SPC shifts, and lot-level review priorities without manual spreadsheet triage.</p>
+          </div>
+          <div class="card">
+            <h3>Principal / lead engineer</h3>
+            <p>Defines enterprise policy, review governance, evidence expectations, and escalation rules that shape how the agents respond.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="hld">
+        <h2>High-level design</h2>
+        <pre>Input artifact
+  -> Parser layer
+  -> Orchestration layer
+  -> LLM analysis layer
+  -> Decision generation
+  -> Human review loop
+  -> Run history + exports + pilot metrics
+
+Supporting layers:
+  - Enterprise policy store
+  - Run profile presets
+  - Benchmark / live scorecard engine
+  - Pilot access gate
+  - Structured export adapters</pre>
+      </section>
+
+      <section class="section anchor-target" id="lld">
+        <h2>Low-level workflow</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Verification path</h3>
+            <ol>
+              <li>User uploads or pastes a coverage report or regression log.</li>
+              <li>Artifact provenance is captured as bundled sample, uploaded file, or pasted text.</li>
+              <li>Parser extracts structured items and computes parser confidence and warnings.</li>
+              <li>Orchestration layer merges enterprise policy, active run profile, and artifact context.</li>
+              <li>LLM produces five-step reasoning and ranked actions.</li>
+              <li>Run history persists raw artifact, orchestration, analysis trace, decisions, and scorecard.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Yield path</h3>
+            <ol>
+              <li>User provides ATE parametric CSV or SPC trend input.</li>
+              <li>Parser extracts chips, bins, pass/fail state, and anomaly signals.</li>
+              <li>Orchestration emphasizes revenue risk, containment, and operational review style.</li>
+              <li>LLM generates lot-level review steps and ranked mis-bin or anomaly actions.</li>
+              <li>Human reviewer accepts or rejects actions and exports results into workflow targets.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="layers">
+        <h2>System layers</h2>
+        <div class="grid-3">
+          <div class="card"><h3>1. Presentation layer</h3><p>HTML dashboards for landing, agents, configuration, history, pitch, pilot dashboard, and docs.</p></div>
+          <div class="card"><h3>2. API layer</h3><p>FastAPI routes for verification, yield, feedback, config, benchmark, history, exports, pilot metrics, and access-code generation.</p></div>
+          <div class="card"><h3>3. Parser layer</h3><p>Coverage, regression, ATE, and SPC parsers normalize artifacts into structured summaries and items.</p></div>
+          <div class="card"><h3>4. Orchestration layer</h3><p>Builds run-specific prompt plans using enterprise policy, run profile, artifact metadata, and workflow mode.</p></div>
+          <div class="card"><h3>5. LLM reasoning layer</h3><p>Primary/fallback provider path for multi-step analysis and action ranking.</p></div>
+          <div class="card"><h3>6. Persistence layer</h3><p>SQLite stores enterprise config, decisions, feedback, run history, raw artifacts, parser trust, and export history.</p></div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="orchestration">
+        <h2>Orchestration model</h2>
+        <p>
+          Orchestration is the policy and context synthesis step before the main LLM analysis call. It is important because raw artifacts alone
+          are not enough to produce enterprise-appropriate actions. Different teams care about different failure modes, evidence styles,
+          escalation policies, and workflow outputs.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>What the orchestrator consumes</h3>
+            <ul>
+              <li>Enterprise policy for the selected agent</li>
+              <li>Active run profile</li>
+              <li>Artifact type and parser metadata</li>
+              <li>Chip focus and client workflow context</li>
+              <li>Optional historical reference notes</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What the orchestrator emits</h3>
+            <ul>
+              <li>Chip focus label</li>
+              <li>Output emphasis</li>
+              <li>Instruction priorities</li>
+              <li>Reference priorities</li>
+              <li>Plan source/provider details</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="agent01">
+        <h2>Agent 01: Verification Workflow Copilot</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Primary workflows</h3>
+            <ul>
+              <li>Functional coverage closure</li>
+              <li>Regression triage and clustering</li>
+              <li>Protocol escape-risk prioritization</li>
+              <li>Evidence-backed review queue creation</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Typical users</h3>
+            <ul>
+              <li>DV engineers preparing closure actions</li>
+              <li>Verification leads reviewing high-risk gaps</li>
+              <li>Program owners tracking first-pass review efficiency</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:14px;">
+          Agent 01 is the current lead wedge for pilot and sponsor demos because verification consumes the largest schedule pressure in many fabless organizations.
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="agent02">
+        <h2>Agent 02: Yield Intelligence Copilot</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Primary workflows</h3>
+            <ul>
+              <li>ATE anomaly review</li>
+              <li>Mis-bin detection and premium-bin recovery suggestions</li>
+              <li>Leakage and performance containment prioritization</li>
+              <li>SPC trend interpretation</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Typical users</h3>
+            <ul>
+              <li>Product engineering</li>
+              <li>Yield engineering</li>
+              <li>Lot review boards</li>
+              <li>Operations teams escalating excursion risk</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="decision-loop">
+        <h2>Decision review loop</h2>
+        <div class="grid-3">
+          <div class="card"><h3>1. Generate</h3><p>The agent creates ranked actions with evidence, rationale, priority, confidence, and effort.</p></div>
+          <div class="card"><h3>2. Review</h3><p>Users inspect findings in the decision queue and the analysis trace separately so reasoning does not crowd action review.</p></div>
+          <div class="card"><h3>3. Accept or reject</h3><p>Reviewer feedback is captured per decision and linked to the persisted run record for trust and evaluation.</p></div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="history-traceability">
+        <h2>Run history and traceability</h2>
+        <p>
+          Every run is stored with raw artifact replay, parser confidence, orchestration details, generated decisions, feedback, and export history.
+          This is the foundation for pilot evidence, sponsor reporting, and future workflow integration.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Why it matters</h3>
+            <ul>
+              <li>Reproducibility for engineering review</li>
+              <li>Trust and auditability for AI recommendations</li>
+              <li>Pilot metrics for Seeder or client reporting</li>
+              <li>Workflow export trace for Jira, email, and future Confluence adapters</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What is stored</h3>
+            <ul>
+              <li>Artifact identity and source</li>
+              <li>Raw artifact text</li>
+              <li>Parser format, confidence, and warnings</li>
+              <li>Orchestration plan</li>
+              <li>Analysis trace and ranked decisions</li>
+              <li>Feedback summary and export history</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="enterprise-policy">
+        <h2>Enterprise configuration</h2>
+        <p>
+          Enterprise configuration is not intended to be tuned on every run. It is a durable governance layer that should be set by high-level
+          engineers, review owners, L3/L4 specialists, or delivery leaders. It defines how the agent should speak, escalate, and justify outputs
+          within a given organization.
+        </p>
+      </section>
+
+      <section class="section anchor-target" id="run-profiles">
+        <h2>Run profiles</h2>
+        <p>
+          Run profiles are the day-to-day operational presets used by engineers. They are different from enterprise policy.
+          A run profile chooses the active workflow style for a specific chip program or review type, while enterprise policy sets the organization-wide guardrails.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Run profile examples</h3>
+            <ul>
+              <li>USB Controller DV Team · Coverage</li>
+              <li>USB Regression Triage Team</li>
+              <li>Mobile SoC Yield Team · ATE</li>
+              <li>PMIC SPC Operations</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Why this separation matters</h3>
+            <ul>
+              <li>Principal engineers set policy once</li>
+              <li>Everyday reviewers pick workflow presets without changing governance</li>
+              <li>Clients can scale across many teams without duplicating policy input</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="why-policy-matters">
+        <h2>Why enterprise policy matters</h2>
+        <div class="callout">
+          Without enterprise policy, AI recommendations may still be technically useful, but they will not be consistent with the organization’s review culture,
+          escalation cadence, evidence requirements, or decision format. Policy is what turns a generic assistant into an enterprise workflow copilot.
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="verify-fields">
+        <h2>Verification request fields</h2>
+        <table class="field-table">
+          <tr><th>Field</th><th>Purpose</th><th>Typical use case</th></tr>
+          <tr><td><code>report_text</code></td><td>Raw coverage report or regression log input.</td><td>Paste or upload a VCS/Xcelium artifact for Agent 01 analysis.</td></tr>
+          <tr><td><code>format</code></td><td>Parser hint for <code>auto</code>, <code>vcs</code>, or <code>xcelium</code>.</td><td>Force a known format when the client artifact style is predictable.</td></tr>
+          <tr><td><code>mode</code></td><td>Selects coverage closure or triage behavior.</td><td>Use <code>coverage</code> for uncovered bins, <code>triage</code> for regression clustering.</td></tr>
+          <tr><td><code>design_name</code></td><td>Human-readable runtime label shown in analysis and history.</td><td>“USB Controller v2.3” or “NoC QoS Block”.</td></tr>
+          <tr><td><code>project_id</code></td><td>Project/workspace grouping key for history and feedback.</td><td>Used to aggregate runs across the same client stream.</td></tr>
+          <tr><td><code>context</code></td><td>Extra operational framing for the run.</td><td>“Protocol escape review before tape-in signoff.”</td></tr>
+          <tr><td><code>artifact_name</code></td><td>Stored artifact identifier.</td><td>Needed for benchmark matching and run replay clarity.</td></tr>
+          <tr><td><code>artifact_source</code></td><td>Tells whether input came from a bundled sample, upload, or pasted text.</td><td>Important for pilot provenance and parser-risk discussions.</td></tr>
+          <tr><td><code>run_profile_id</code> / <code>run_profile_name</code></td><td>Operational preset identity.</td><td>Distinguishes USB DV coverage from LPDDR refresh or secure boot triage.</td></tr>
+          <tr><td><code>chip_type</code></td><td>Chip or IP family focus.</td><td>Guides orchestration emphasis and terminology.</td></tr>
+          <tr><td><code>client_profile</code></td><td>Human-readable team or client workflow label.</td><td>“Fabless verification team” or “InSemi DV pod”.</td></tr>
+          <tr><td><code>custom_instructions</code></td><td>Run-specific override instructions.</td><td>Tell the agent to prefer speed, risk containment, or formal review style for one run.</td></tr>
+          <tr><td><code>reference_data</code></td><td>Historical notes or prior artifact context.</td><td>Feed closure notes, repeated gaps, or known scenario limitations.</td></tr>
+          <tr><td><code>reference_data_label</code></td><td>Reference-data identity label.</td><td>“Historical closure notes” or “Prior regression cluster review”.</td></tr>
+        </table>
+      </section>
+
+      <section class="section anchor-target" id="yield-fields">
+        <h2>Yield request fields</h2>
+        <table class="field-table">
+          <tr><th>Field</th><th>Purpose</th><th>Typical use case</th></tr>
+          <tr><td><code>csv_data</code></td><td>Raw ATE parametric or SPC-like input.</td><td>Paste or upload lot-level measurement data into Agent 02.</td></tr>
+          <tr><td><code>lot_id</code></td><td>Runtime label for the lot or SPC population.</td><td>“LOT_004” or an excursion review slice.</td></tr>
+          <tr><td><code>mode</code></td><td>Selects ATE or SPC reasoning path.</td><td>Use <code>ate</code> for per-die parametrics and binning, <code>spc</code> for trend monitoring.</td></tr>
+          <tr><td><code>project_id</code></td><td>Project/workstream grouping key.</td><td>Group all product-yield runs under a pilot stream or product line.</td></tr>
+          <tr><td><code>context</code></td><td>Business or engineering framing for the lot review.</td><td>“Revenue containment review before customer shipment.”</td></tr>
+          <tr><td><code>artifact_name</code></td><td>Source identity for persistence and scorecard matching.</td><td>“ate_parametric_sample.csv” or a real client export name.</td></tr>
+          <tr><td><code>artifact_source</code></td><td>Sample/upload/paste provenance.</td><td>Used for pilot trust reporting and debugging ingest behavior.</td></tr>
+          <tr><td><code>run_profile_id</code> / <code>run_profile_name</code></td><td>Operational preset identity.</td><td>Mobile SoC yield review vs PMIC SPC operations.</td></tr>
+          <tr><td><code>chip_type</code></td><td>Product category or chip family.</td><td>Guides yield reasoning priorities and terminology.</td></tr>
+          <tr><td><code>client_profile</code></td><td>Team/workflow label.</td><td>“Product and yield engineering” or “Lot escalation committee”.</td></tr>
+          <tr><td><code>custom_instructions</code></td><td>Run-specific focus.</td><td>Ask the agent to prioritize revenue recovery or reliability containment.</td></tr>
+          <tr><td><code>reference_data</code></td><td>Historical lot notes or threshold context.</td><td>Earlier lot excursions, premium-bin limits, leakage correlations.</td></tr>
+          <tr><td><code>reference_data_label</code></td><td>Identity for historical input.</td><td>“Historical lot review notes” or “Premium-bin thresholds”.</td></tr>
+        </table>
+      </section>
+
+      <section class="section anchor-target" id="run-fields">
+        <h2>Run history fields</h2>
+        <table class="field-table">
+          <tr><th>Field</th><th>Meaning</th><th>Why it matters</th></tr>
+          <tr><td><code>run_id</code></td><td>Unique persisted run identifier.</td><td>Links history, exports, and feedback.</td></tr>
+          <tr><td><code>status</code></td><td>Completed or failed.</td><td>Needed for pilot reliability reporting.</td></tr>
+          <tr><td><code>provider</code> / <code>model</code></td><td>LLM provider and resolved model.</td><td>Supports pilot observability and provider comparisons.</td></tr>
+          <tr><td><code>raw_artifact</code></td><td>Stored artifact body.</td><td>Makes runs replayable and auditable.</td></tr>
+          <tr><td><code>parser_format</code></td><td>Detected parser family.</td><td>Useful when debugging format mismatches.</td></tr>
+          <tr><td><code>parser_confidence</code></td><td>Confidence score from parser layer.</td><td>Prevents silent trust in weak parses.</td></tr>
+          <tr><td><code>parser_warnings</code></td><td>Warnings about uncertain or partial parse quality.</td><td>Helps pilots surface reliability risk honestly.</td></tr>
+          <tr><td><code>orchestration</code></td><td>Run-specific plan context.</td><td>Shows how enterprise policy and run profile shaped the result.</td></tr>
+          <tr><td><code>analysis_log</code></td><td>Five-step analysis trace.</td><td>Human reviewers can audit reasoning separately from actions.</td></tr>
+          <tr><td><code>decisions</code></td><td>Structured recommended actions.</td><td>Core user-facing value output.</td></tr>
+          <tr><td><code>feedback_summary</code></td><td>Aggregate accept/reject outcome.</td><td>Critical pilot trust signal.</td></tr>
+          <tr><td><code>export_history</code></td><td>Workflow-export event trail.</td><td>Shows the product is fitting into real workflows.</td></tr>
+          <tr><td><code>benchmark_title</code> / <code>benchmark_score</code></td><td>Benchmark or live scorecard result.</td><td>Measures quality for sponsor walkthroughs and internal reviews.</td></tr>
+        </table>
+      </section>
+
+      <section class="section anchor-target" id="config-fields">
+        <h2>Enterprise config fields</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Agent 01 policy fields</h3>
+            <table class="field-table">
+              <tr><th>Field</th><th>Use</th></tr>
+              <tr><td><code>org_name</code></td><td>Names the owning business or engineering unit for review framing.</td></tr>
+              <tr><td><code>review_board</code></td><td>Specifies the body receiving or judging recommendations.</td></tr>
+              <tr><td><code>output_style</code></td><td>Controls how the agent formats recommendations conceptually.</td></tr>
+              <tr><td><code>escalation_policy</code></td><td>Defines what should be escalated before optimization tasks.</td></tr>
+              <tr><td><code>evidence_policy</code></td><td>Forces evidence-first reasoning standards.</td></tr>
+              <tr><td><code>instruction_addendum</code></td><td>Stores additional durable org guidance.</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Agent 02 policy fields</h3>
+            <table class="field-table">
+              <tr><th>Field</th><th>Use</th></tr>
+              <tr><td><code>org_name</code></td><td>Names the yield/product organization using the agent.</td></tr>
+              <tr><td><code>review_board</code></td><td>Specifies escalation committee or yield board context.</td></tr>
+              <tr><td><code>output_style</code></td><td>Guides tone toward revenue-aware and operational lot review.</td></tr>
+              <tr><td><code>escalation_policy</code></td><td>Prioritizes what must be raised immediately.</td></tr>
+              <tr><td><code>risk_policy</code></td><td>Explains how the agent should balance revenue and containment concerns.</td></tr>
+              <tr><td><code>instruction_addendum</code></td><td>Captures durable local review expectations.</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="pilot-ops">
+        <h2>Pilot operations</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>How to run a pilot safely</h3>
+            <ul>
+              <li>Enable <code>PILOT_ACCESS_TOKEN</code> before sharing a URL.</li>
+              <li>Use sanitized artifacts first.</li>
+              <li>Track parser confidence and warnings during early client ingestion.</li>
+              <li>Push reviewers to accept or reject findings so the feedback loop becomes measurable.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What to show a sponsor</h3>
+            <ul>
+              <li>Pilot dashboard with total runs, acceptance rate, exports, and parser confidence</li>
+              <li>Run History showing raw artifact replay and decision audit trail</li>
+              <li>Agent page with artifact summary, scorecard, orchestration, and human review loop</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="parser-trust">
+        <h2>Parser confidence and parser trust</h2>
+        <p>
+          Parser confidence exists because a wrong structured interpretation can look deceptively polished once passed through an LLM.
+          Silicon Agents treats parser trust as a first-class signal and stores it alongside the run.
+        </p>
+        <div class="callout">
+          If parser confidence is weak or warnings appear, the right product behavior is not “silently continue.” The right behavior is “continue visibly, with uncertainty exposed.”
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="exports">
+        <h2>Exports and workflow fit</h2>
+        <div class="grid-3">
+          <div class="card"><h3>HTML brief</h3><p>Executive-readable artifact for sponsor reviews, pilot summaries, and email circulation.</p></div>
+          <div class="card"><h3>Jira export</h3><p>Structured payload for issue-creation or review-queue integration in engineering workflows.</p></div>
+          <div class="card"><h3>Email export</h3><p>Formatted payload that helps teams circulate review actions without opening the UI.</p></div>
+        </div>
+      </section>
+
+      <section class="section anchor-target" id="api-surface">
+        <h2>Current API surface</h2>
+        <table class="field-table">
+          <tr><th>Endpoint</th><th>Purpose</th><th>Why it matters</th></tr>
+          <tr><td><code>POST /api/v1/verify</code></td><td>Run Agent 01 analysis as a streaming workflow.</td><td>Core verification workflow entrypoint for future enterprise integration.</td></tr>
+          <tr><td><code>POST /api/v1/yield</code></td><td>Run Agent 02 analysis as a streaming workflow.</td><td>Core yield workflow entrypoint.</td></tr>
+          <tr><td><code>GET /api/v1/runs</code></td><td>List saved runs.</td><td>Supports history, audit, and pilot dashboards.</td></tr>
+          <tr><td><code>GET /api/v1/runs/{run_id}</code></td><td>Retrieve one saved run in detail.</td><td>Enables replay, review, and export orchestration.</td></tr>
+          <tr><td><code>POST /api/v1/feedback</code></td><td>Persist accept/reject review signals.</td><td>Critical for human-in-the-loop trust measurement.</td></tr>
+          <tr><td><code>GET /api/v1/runs/{run_id}/export/jira</code></td><td>Generate Jira-ready payload for a saved run.</td><td>Proves workflow fit beyond the UI.</td></tr>
+          <tr><td><code>GET /api/v1/runs/{run_id}/export/email</code></td><td>Generate email-ready payload for a saved run.</td><td>Lets teams circulate findings immediately.</td></tr>
+          <tr><td><code>GET /api/v1/pilot/metrics</code></td><td>Aggregate pilot evidence across all saved runs.</td><td>Provides sponsor-grade usage and trust signals.</td></tr>
+          <tr><td><code>POST /api/v1/pilot/access-code/generate</code></td><td>Generate a suggested pilot access token value.</td><td>Supports controlled sharing without building full auth.</td></tr>
+          <tr><td><code>GET /api/v1/config/agent01</code> / <code>agent02</code></td><td>Read server-backed enterprise policy for each agent.</td><td>Separates governance from day-to-day run selection.</td></tr>
+        </table>
+      </section>
+
+      <section class="section anchor-target" id="phase2-next">
+        <h2>Next MVP phase: enterprise API integration for EDA workflows</h2>
+        <p>
+          The next phase is about making Silicon Agents a pilot-accessible integration layer rather than just a self-contained workflow console.
+          That means exposing artifact ingestion APIs, workflow-trigger APIs, and result-return paths so enterprises can call Silicon Agents from
+          verification dashboards, test operations, and review tooling.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Why this is next</h3>
+            <ul>
+              <li>The current MVP already proves the workflow value.</li>
+              <li>Pilot clients will next ask how this fits their toolchain, not just whether the dashboard looks good.</li>
+              <li>API exposure is the bridge from demo to embedded pilot usage.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What Phase 2 API work should enable</h3>
+            <ul>
+              <li>Artifact submission from external tools</li>
+              <li>Run status polling or callback integration</li>
+              <li>Structured results consumption</li>
+              <li>Workflow embedding into EDA-adjacent review systems</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

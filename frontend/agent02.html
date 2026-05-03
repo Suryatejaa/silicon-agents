@@ -440,7 +440,9 @@
         <a href="/agent01" id="navAgent01">Agent 01</a>
         <a href="/agent02" class="is-current" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="/configuration" id="navConfig">Enterprise Config</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
     </header>
     <div class="hero">
@@ -493,6 +495,7 @@
         <div class="box" style="margin-bottom: 12px;">
           <div class="eyebrow">Configuration Source</div>
           <div class="sub" id="configStatus" style="max-width: none; margin: 0 0 10px;">This workspace reads top-level policy from the dedicated configuration page and combines it with the active lot or SPC artifact.</div>
+          <div class="sub" id="artifactStatus" style="max-width: none; margin: 0 0 10px;">Active artifact source: bundled sample.</div>
           <div class="toolbar" style="margin-top: 0;">
             <button id="openConfig" class="ghost" type="button">Open Enterprise Configuration</button>
           </div>
@@ -663,7 +666,8 @@
         provider: "mock/local",
         artifactName: "",
         runProfileId: "",
-        runId: null
+        runId: null,
+        artifactSource: "bundled_sample"
       };
 	    let activeStepNode = null;
 	    let activeStepBody = null;
@@ -827,6 +831,22 @@
       }
       document.getElementById("configStatus").textContent =
         `Using top-level policy for ${policyText}. Active run profile: Custom workspace run.`;
+    }
+
+    function formatArtifactSourceLabel(source) {
+      return ({
+        bundled_sample: "bundled sample",
+        uploaded_file: "uploaded file",
+        pasted_text: "pasted text",
+        unknown: "unknown source"
+      })[source] || "unknown source";
+    }
+
+    function updateArtifactStatus(name, source) {
+      state.artifactName = name;
+      state.artifactSource = source;
+      document.getElementById("artifactStatus").textContent =
+        `Active artifact source: ${formatArtifactSourceLabel(source)}${name ? ` · ${name}` : ""}.`;
     }
 
     async function sendFeedback(decisionId, accepted, note, node) {
@@ -1142,7 +1162,7 @@
       if (!selected) {
         state.runProfileId = "";
         runProfileEl.value = "";
-        state.artifactName = "Custom lot data";
+        updateArtifactStatus("Custom lot data", "pasted_text");
         state.benchmarkId = null;
         renderBenchmarkIdle();
         updateConfigSummary(loadAgent02Config(), null);
@@ -1151,7 +1171,7 @@
       const response = await apiFetch(`/sample-data/${selected}`);
       csvEl.value = await response.text();
       modeEl.value = selected.includes("spc") ? "spc" : "ate";
-      state.artifactName = selected;
+      updateArtifactStatus(selected, "bundled_sample");
       state.benchmarkId = selected;
       const matchedProfile = findRunProfileBySample(selected, modeEl.value);
       if (matchedProfile) {
@@ -1193,6 +1213,7 @@
 	          project_id: document.getElementById("projectId").value,
 	          context: document.getElementById("contextText").value,
 	          artifact_name: state.artifactName || sampleSelectEl.value || "Custom lot data",
+	          artifact_source: state.artifactSource || "unknown",
 	          run_profile_id: activeProfile?.id || null,
 	          run_profile_name: activeProfile?.label || null,
 	          chip_type: activeProfile?.chip_type || "Custom yield program",
@@ -1286,7 +1307,7 @@
         state.runProfileId = "";
         runProfileEl.value = "";
         sampleSelectEl.value = "";
-        state.artifactName = "Custom lot data";
+        updateArtifactStatus("Custom lot data", "pasted_text");
         state.benchmarkId = null;
         renderBenchmarkIdle();
         updateConfigSummary(loadAgent02Config(), null);
@@ -1320,6 +1341,7 @@
 	      await refreshAgent02Config();
 	      applyAgent02Config(loadAgent02Config());
 	      await applyRunProfile("mobile_soc_yield");
+        updateArtifactStatus(state.artifactName || "ate_parametric_sample.csv", state.artifactSource || "bundled_sample");
 	      syncStats("Ready");
         updateImpactSummary([]);
         renderBenchmarkIdle();
