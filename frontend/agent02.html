@@ -639,7 +639,13 @@
       const exportEmailEl = document.getElementById("exportEmail");
       const openHistoryEl = document.getElementById("openHistory");
       const openConfigBtnEl = document.getElementById("openConfig");
-	    const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+	    const apiBase = (() => {
+	      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+	      if (window.location.protocol === "file:") {
+	        return stored || "http://127.0.0.1:8000";
+	      }
+	      return stored;
+	    })();
 	    document.getElementById("homeLink").href = window.location.protocol === "file:" ? "./index.html" : "/";
       document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
       document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";

@@ -11,7 +11,8 @@ services:
       - .env
     environment:
       PORT: 8000
-      SA_DB_PATH: /data/silicon_agents.db
+      DATABASE_URL: ${DATABASE_URL:-}
+      SA_DB_PATH: ${SA_DB_PATH:-/data/silicon_agents.db}
     volumes:
       - silicon_agents_data:/data
     restart: unless-stopped

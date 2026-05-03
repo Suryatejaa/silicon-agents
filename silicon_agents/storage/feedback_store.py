@@ -25,13 +25,27 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for fresh local envs
     aiosqlite = None
 
+try:
+    import psycopg  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - postgres support is optional in local dev
+    psycopg = None
+
 
 class FeedbackStore:
     def __init__(self, db_path: str) -> None:
-        self.db_path = db_path
+        normalized = str(db_path or "").strip() or "./silicon_agents.db"
+        if normalized.startswith("postgres://"):
+            normalized = "postgresql://" + normalized[len("postgres://"):]
+        self.db_path = normalized
+        self.backend = "postgres" if self.db_path.startswith(("postgresql://", "postgres://")) else "sqlite"
+        self._use_async_sqlite = self.backend == "sqlite" and aiosqlite is not None
+
+    @property
+    def is_postgres(self) -> bool:
+        return self.backend == "postgres"
 
     async def init(self) -> None:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._init_sync()
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -141,7 +155,7 @@ class FeedbackStore:
     async def save_decisions(self, decisions: list[Decision]) -> None:
         if not decisions:
             return
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._save_decisions_sync(decisions)
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -180,7 +194,7 @@ class FeedbackStore:
         run_id: str = "",
     ) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._record_feedback_sync(decision_id, project_id, accepted, notes, engineer_id, timestamp, run_id)
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -198,7 +212,7 @@ class FeedbackStore:
             await db.commit()
 
     async def get_feedback(self, project_id: str, run_id: str | None = None) -> list[FeedbackRecord]:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             rows = self._get_feedback_sync(project_id, run_id)
             return [
                 FeedbackRecord(
@@ -239,7 +253,7 @@ class FeedbackStore:
         ]
 
     async def get_decisions(self, project_id: str) -> list[Decision]:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             rows = self._get_decisions_sync(project_id)
             return [
                 Decision(
@@ -287,7 +301,7 @@ class FeedbackStore:
 
     async def save_enterprise_config(self, agent: str, payload: dict[str, object]) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._save_enterprise_config_sync(agent, payload, timestamp)
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -301,7 +315,7 @@ class FeedbackStore:
             await db.commit()
 
     async def get_enterprise_config(self, agent: str) -> dict[str, object]:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             payload = self._get_enterprise_config_sync(agent)
         else:
             async with aiosqlite.connect(self.db_path) as db:
@@ -319,7 +333,7 @@ class FeedbackStore:
         return self._default_enterprise_config(agent)
 
     async def save_run_history(self, record: RunHistoryRecord) -> None:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._save_run_history_sync(record)
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -344,7 +358,7 @@ class FeedbackStore:
         agent: str | None = None,
         limit: int = 50,
     ) -> list[RunHistorySummary]:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             rows = self._get_run_history_sync(project_id, agent, limit)
         else:
             query = (
@@ -377,7 +391,7 @@ class FeedbackStore:
         return summaries
 
     async def get_run(self, run_id: str) -> RunHistoryRecord | None:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             row = self._get_run_sync(run_id)
         else:
             async with aiosqlite.connect(self.db_path) as db:
@@ -404,7 +418,7 @@ class FeedbackStore:
 
     async def record_export(self, run_id: str, target: str, title: str, filename: str) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             self._record_export_sync(run_id, target, title, filename, timestamp)
             return
         async with aiosqlite.connect(self.db_path) as db:
@@ -418,7 +432,7 @@ class FeedbackStore:
             await db.commit()
 
     async def get_export_history(self, run_id: str) -> list[ExportHistoryRecord]:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             rows = self._get_export_history_sync(run_id)
         else:
             async with aiosqlite.connect(self.db_path) as db:
@@ -444,7 +458,7 @@ class FeedbackStore:
         ]
 
     async def get_pilot_metrics(self, access_enabled: bool = False, recent_limit: int = 6) -> PilotMetricsResponse:
-        if aiosqlite is None:
+        if not self._use_async_sqlite:
             return self._get_pilot_metrics_sync(access_enabled=access_enabled, recent_limit=recent_limit)
 
         async with aiosqlite.connect(self.db_path) as db:
@@ -472,11 +486,26 @@ class FeedbackStore:
         )
 
     def _connect_sync(self) -> sqlite3.Connection:
+        if self.is_postgres:
+            if psycopg is None:
+                raise RuntimeError("PostgreSQL support requires the optional 'psycopg' package.")
+            return psycopg.connect(self.db_path)
         return sqlite3.connect(self.db_path)
+
+    def _db_execute(self, db, query: str, params: tuple[object, ...] | list[object] | None = None):
+        sql = query if not self.is_postgres else query.replace("?", "%s")
+        if params is None:
+            return db.execute(sql)
+        return db.execute(sql, tuple(params))
+
+    def _db_executemany(self, db, query: str, params_seq):
+        sql = query if not self.is_postgres else query.replace("?", "%s")
+        return db.executemany(sql, params_seq)
 
     def _init_sync(self) -> None:
         with self._connect_sync() as db:
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 CREATE TABLE IF NOT EXISTS decisions (
                     id TEXT PRIMARY KEY,
@@ -493,7 +522,8 @@ class FeedbackStore:
                 )
                 """
             )
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 CREATE TABLE IF NOT EXISTS feedback (
                     decision_id TEXT NOT NULL,
@@ -506,7 +536,8 @@ class FeedbackStore:
                 )
                 """
             )
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 CREATE TABLE IF NOT EXISTS enterprise_config (
                     agent TEXT PRIMARY KEY,
@@ -515,7 +546,8 @@ class FeedbackStore:
                 )
                 """
             )
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 CREATE TABLE IF NOT EXISTS run_history (
                     run_id TEXT PRIMARY KEY,
@@ -556,7 +588,8 @@ class FeedbackStore:
                 )
                 """
             )
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 CREATE TABLE IF NOT EXISTS export_history (
                     run_id TEXT NOT NULL,
@@ -581,29 +614,53 @@ class FeedbackStore:
 
     def _save_decisions_sync(self, decisions: list[Decision]) -> None:
         with self._connect_sync() as db:
-            db.executemany(
-                """
-                INSERT OR REPLACE INTO decisions
-                (id, project_id, type, target, action, rationale, priority, confidence, effort, status, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    (
-                        decision.id,
-                        decision.project_id,
-                        decision.type,
-                        decision.target,
-                        decision.action,
-                        decision.rationale,
-                        decision.priority,
-                        decision.confidence,
-                        decision.effort,
-                        decision.status,
-                        json.dumps(decision.metadata),
-                    )
-                    for decision in decisions
-                ],
-            )
+            params = [
+                (
+                    decision.id,
+                    decision.project_id,
+                    decision.type,
+                    decision.target,
+                    decision.action,
+                    decision.rationale,
+                    decision.priority,
+                    decision.confidence,
+                    decision.effort,
+                    decision.status,
+                    json.dumps(decision.metadata),
+                )
+                for decision in decisions
+            ]
+            if self.is_postgres:
+                self._db_executemany(
+                    db,
+                    """
+                    INSERT INTO decisions
+                    (id, project_id, type, target, action, rationale, priority, confidence, effort, status, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                        project_id = EXCLUDED.project_id,
+                        type = EXCLUDED.type,
+                        target = EXCLUDED.target,
+                        action = EXCLUDED.action,
+                        rationale = EXCLUDED.rationale,
+                        priority = EXCLUDED.priority,
+                        confidence = EXCLUDED.confidence,
+                        effort = EXCLUDED.effort,
+                        status = EXCLUDED.status,
+                        metadata = EXCLUDED.metadata
+                    """,
+                    params,
+                )
+            else:
+                self._db_executemany(
+                    db,
+                    """
+                    INSERT OR REPLACE INTO decisions
+                    (id, project_id, type, target, action, rationale, priority, confidence, effort, status, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    params,
+                )
             db.commit()
 
     def _record_feedback_sync(
@@ -617,14 +674,16 @@ class FeedbackStore:
         run_id: str,
     ) -> None:
         with self._connect_sync() as db:
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 INSERT INTO feedback (decision_id, project_id, run_id, accepted, notes, engineer_id, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (decision_id, project_id, run_id, int(accepted), notes, engineer_id, timestamp),
             )
-            db.execute(
+            self._db_execute(
+                db,
                 "UPDATE decisions SET status = ? WHERE id = ?",
                 ("accepted" if accepted else "rejected", decision_id),
             )
@@ -642,12 +701,13 @@ class FeedbackStore:
                 query += " AND run_id = ?"
                 params.append(run_id)
             query += " ORDER BY timestamp DESC"
-            cursor = db.execute(query, tuple(params))
+            cursor = self._db_execute(db, query, tuple(params))
             return cursor.fetchall()
 
     def _get_decisions_sync(self, project_id: str):
         with self._connect_sync() as db:
-            cursor = db.execute(
+            cursor = self._db_execute(
+                db,
                 """
                 SELECT id, project_id, type, target, action, rationale, priority, confidence, effort, status, metadata
                 FROM decisions
@@ -660,18 +720,33 @@ class FeedbackStore:
 
     def _save_enterprise_config_sync(self, agent: str, payload: dict[str, object], timestamp: str) -> None:
         with self._connect_sync() as db:
-            db.execute(
-                """
-                INSERT OR REPLACE INTO enterprise_config (agent, payload, updated_at)
-                VALUES (?, ?, ?)
-                """,
-                (agent, json.dumps(payload), timestamp),
-            )
+            if self.is_postgres:
+                self._db_execute(
+                    db,
+                    """
+                    INSERT INTO enterprise_config (agent, payload, updated_at)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT (agent) DO UPDATE SET
+                        payload = EXCLUDED.payload,
+                        updated_at = EXCLUDED.updated_at
+                    """,
+                    (agent, json.dumps(payload), timestamp),
+                )
+            else:
+                self._db_execute(
+                    db,
+                    """
+                    INSERT OR REPLACE INTO enterprise_config (agent, payload, updated_at)
+                    VALUES (?, ?, ?)
+                    """,
+                    (agent, json.dumps(payload), timestamp),
+                )
             db.commit()
 
     def _get_enterprise_config_sync(self, agent: str):
         with self._connect_sync() as db:
-            cursor = db.execute(
+            cursor = self._db_execute(
+                db,
                 """
                 SELECT payload FROM enterprise_config
                 WHERE agent = ?
@@ -683,19 +758,71 @@ class FeedbackStore:
 
     def _save_run_history_sync(self, record: RunHistoryRecord) -> None:
         with self._connect_sync() as db:
-            db.execute(
-                """
-                INSERT OR REPLACE INTO run_history (
-                    run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
-                    run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
-                    duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
-                    analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
-                    scorecard_mode, error_message
+            if self.is_postgres:
+                self._db_execute(
+                    db,
+                    """
+                    INSERT INTO run_history (
+                        run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                        run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
+                        duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
+                        analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
+                        scorecard_mode, error_message
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (run_id) DO UPDATE SET
+                        project_id = EXCLUDED.project_id,
+                        agent = EXCLUDED.agent,
+                        mode = EXCLUDED.mode,
+                        status = EXCLUDED.status,
+                        provider = EXCLUDED.provider,
+                        model = EXCLUDED.model,
+                        artifact_name = EXCLUDED.artifact_name,
+                        artifact_source = EXCLUDED.artifact_source,
+                        raw_artifact = EXCLUDED.raw_artifact,
+                        runtime_label = EXCLUDED.runtime_label,
+                        run_profile_id = EXCLUDED.run_profile_id,
+                        run_profile_name = EXCLUDED.run_profile_name,
+                        chip_type = EXCLUDED.chip_type,
+                        client_profile = EXCLUDED.client_profile,
+                        parser_format = EXCLUDED.parser_format,
+                        parser_confidence = EXCLUDED.parser_confidence,
+                        parser_warnings = EXCLUDED.parser_warnings,
+                        started_at = EXCLUDED.started_at,
+                        completed_at = EXCLUDED.completed_at,
+                        duration_ms = EXCLUDED.duration_ms,
+                        total_decisions = EXCLUDED.total_decisions,
+                        high = EXCLUDED.high,
+                        medium = EXCLUDED.medium,
+                        low = EXCLUDED.low,
+                        request_payload = EXCLUDED.request_payload,
+                        orchestration = EXCLUDED.orchestration,
+                        analysis_log = EXCLUDED.analysis_log,
+                        decisions = EXCLUDED.decisions,
+                        observability = EXCLUDED.observability,
+                        benchmark_title = EXCLUDED.benchmark_title,
+                        benchmark_score = EXCLUDED.benchmark_score,
+                        benchmark_notes = EXCLUDED.benchmark_notes,
+                        scorecard_mode = EXCLUDED.scorecard_mode,
+                        error_message = EXCLUDED.error_message
+                    """,
+                    self._run_history_params(record),
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                self._run_history_params(record),
-            )
+            else:
+                self._db_execute(
+                    db,
+                    """
+                    INSERT OR REPLACE INTO run_history (
+                        run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
+                        run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
+                        duration_ms, total_decisions, high, medium, low, request_payload, orchestration,
+                        analysis_log, decisions, observability, benchmark_title, benchmark_score, benchmark_notes,
+                        scorecard_mode, error_message
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    self._run_history_params(record),
+                )
             db.commit()
 
     def _get_run_history_sync(self, project_id: str | None, agent: str | None, limit: int):
@@ -717,12 +844,13 @@ class FeedbackStore:
         query += " ORDER BY started_at DESC LIMIT ?"
         params.append(limit)
         with self._connect_sync() as db:
-            cursor = db.execute(query, tuple(params))
+            cursor = self._db_execute(db, query, tuple(params))
             return cursor.fetchall()
 
     def _get_run_sync(self, run_id: str):
         with self._connect_sync() as db:
-            cursor = db.execute(
+            cursor = self._db_execute(
+                db,
                 """
                 SELECT run_id, project_id, agent, mode, status, provider, model, artifact_name, artifact_source, raw_artifact, runtime_label,
                        run_profile_id, run_profile_name, chip_type, client_profile, parser_format, parser_confidence, parser_warnings, started_at, completed_at,
@@ -738,7 +866,8 @@ class FeedbackStore:
 
     def _record_export_sync(self, run_id: str, target: str, title: str, filename: str, timestamp: str) -> None:
         with self._connect_sync() as db:
-            db.execute(
+            self._db_execute(
+                db,
                 """
                 INSERT INTO export_history (run_id, target, title, filename, created_at)
                 VALUES (?, ?, ?, ?, ?)
@@ -749,7 +878,8 @@ class FeedbackStore:
 
     def _get_export_history_sync(self, run_id: str):
         with self._connect_sync() as db:
-            cursor = db.execute(
+            cursor = self._db_execute(
+                db,
                 """
                 SELECT run_id, target, title, filename, created_at
                 FROM export_history
@@ -904,11 +1034,24 @@ class FeedbackStore:
             await db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def _ensure_sync_column(self, db: sqlite3.Connection, table: str, column: str, definition: str) -> None:
-        cursor = db.execute(f"PRAGMA table_info({table})")
-        rows = cursor.fetchall()
-        existing = {row[1] for row in rows}
+        if self.is_postgres:
+            cursor = self._db_execute(
+                db,
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = ? AND column_name = ?
+                """,
+                (table, column),
+            )
+            rows = cursor.fetchall()
+            existing = {row[0] for row in rows}
+        else:
+            cursor = db.execute(f"PRAGMA table_info({table})")
+            rows = cursor.fetchall()
+            existing = {row[1] for row in rows}
         if column not in existing:
-            db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+            self._db_execute(db, f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def _feedback_summary(self, feedback: list[FeedbackRecord]) -> FeedbackSummary:
         if not feedback:

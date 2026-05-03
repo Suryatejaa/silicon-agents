@@ -13,6 +13,8 @@ class ApiTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.temp_dir = tempfile.TemporaryDirectory()
         os.environ["SA_DB_PATH"] = os.path.join(cls.temp_dir.name, "test.db")
+        os.environ.pop("DATABASE_URL", None)
+        os.environ.pop("PILOT_ACCESS_TOKEN", None)
         get_settings.cache_clear()
         import main
 
@@ -23,6 +25,8 @@ class ApiTests(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.temp_dir.cleanup()
         os.environ.pop("SA_DB_PATH", None)
+        os.environ.pop("DATABASE_URL", None)
+        os.environ.pop("PILOT_ACCESS_TOKEN", None)
         get_settings.cache_clear()
 
     def test_health(self) -> None:
@@ -378,6 +382,7 @@ class PilotAccessTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.temp_dir = tempfile.TemporaryDirectory()
         os.environ["SA_DB_PATH"] = os.path.join(cls.temp_dir.name, "pilot_test.db")
+        os.environ.pop("DATABASE_URL", None)
         os.environ["PILOT_ACCESS_TOKEN"] = "pilot-secret"
         get_settings.cache_clear()
         import main

@@ -27,7 +27,7 @@ class Settings(BaseModel):
     gemini_fallback_model: str = Field(default_factory=lambda: os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash"))
     openai_api_key: str = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
     openai_model: str = Field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4o"))
-    db_path: str = Field(default_factory=lambda: os.getenv("SA_DB_PATH", "./silicon_agents.db"))
+    db_path: str = Field(default_factory=lambda: os.getenv("DATABASE_URL", os.getenv("SA_DB_PATH", "./silicon_agents.db")))
     max_report_chars: int = Field(default_factory=lambda: int(os.getenv("SA_MAX_REPORT_CHARS", "50000")))
     max_csv_chars: int = Field(default_factory=lambda: int(os.getenv("SA_MAX_CSV_CHARS", "100000")))
     max_decisions: int = Field(default_factory=lambda: int(os.getenv("SA_MAX_DECISIONS", "20")))

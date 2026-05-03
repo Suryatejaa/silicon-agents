@@ -564,7 +564,13 @@
     const scoreRuntimeCopy = document.getElementById("scoreRuntimeCopy");
     const scoreBenchmarks = document.getElementById("scoreBenchmarks");
     const latestRunsBoard = document.getElementById("latestRunsBoard");
-    const apiBase = isFileMode ? "http://127.0.0.1:8000" : "";
+    const apiBase = (() => {
+      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      if (isFileMode) {
+        return stored || "http://127.0.0.1:8000";
+      }
+      return stored;
+    })();
 
     if (isFileMode) {
       navHomeLink.href = "./index.html";

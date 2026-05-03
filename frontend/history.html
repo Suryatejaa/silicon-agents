@@ -405,7 +405,13 @@
 
   <script>
     const isFileMode = window.location.protocol === "file:";
-    const apiBase = isFileMode ? "http://127.0.0.1:8000" : "";
+    const apiBase = (() => {
+      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      if (isFileMode) {
+        return stored || "http://127.0.0.1:8000";
+      }
+      return stored;
+    })();
 
     document.getElementById("navHome").href = isFileMode ? "./index.html" : "/";
     document.getElementById("navAgent01").href = isFileMode ? "./agent01.html" : "/agent01";

@@ -36,6 +36,13 @@ def configure_logging(level: str) -> None:
 
 logger = logging.getLogger(__name__)
 
+
+def redact_db_target(value: str) -> str:
+    text = str(value or "")
+    if text.startswith(("postgresql://", "postgres://")):
+        return "postgresql://<redacted>"
+    return text
+
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -46,7 +53,7 @@ def create_app() -> FastAPI:
         logger.info(
             "Silicon Agents starting version=%s db_path=%s pilot_access=%s",
             settings.app_version,
-            settings.db_path,
+            redact_db_target(settings.db_path),
             "enabled" if settings.pilot_access_token else "disabled",
         )
         yield

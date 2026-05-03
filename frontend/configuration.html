@@ -305,6 +305,22 @@
       <div id="lastSaved">No saved updates yet.</div>
     </div>
 
+    <section class="panel">
+      <div class="section-title">Deployment API Base</div>
+      <div class="section-copy">Use this only when the frontend is hosted separately from the backend, such as Vercel for the UI and Render for the API. Leave it blank for same-origin local runs.</div>
+      <div class="row" style="grid-template-columns: 1.4fr 0.6fr;">
+        <div class="field-stack">
+          <div class="field-label">Backend API Base URL</div>
+          <input id="backendApiBase" placeholder="https://your-render-backend.onrender.com" />
+        </div>
+        <div class="field-stack" style="justify-content:end;">
+          <div class="field-label">Action</div>
+          <button id="saveApiBase" type="button">Save API Base</button>
+        </div>
+      </div>
+      <div class="field-note" id="apiBaseStatus">Current API base: same-origin or local file fallback.</div>
+    </section>
+
     <div class="grid">
       <section class="panel">
         <div class="section-title">Agent 01 Enterprise Policy</div>
@@ -483,8 +499,24 @@
       document.getElementById("lastSaved").textContent = message;
     }
 
+    function resolveApiBase() {
+      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      if (window.location.protocol === "file:") {
+        return stored || "http://127.0.0.1:8000";
+      }
+      return stored;
+    }
+
+    function updateApiBaseStatus() {
+      const current = window.localStorage.getItem("silicon_agents_api_base") || "";
+      document.getElementById("apiBaseStatus").textContent = current
+        ? `Current API base: ${current}`
+        : "Current API base: same-origin or local file fallback.";
+      document.getElementById("backendApiBase").value = current;
+    }
+
     async function apiFetch(path, options = {}) {
-      const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+      const apiBase = resolveApiBase();
       return fetch(`${apiBase}${path}`, options);
     }
 
@@ -656,6 +688,7 @@
       populateFieldSelects("agent02");
       bindCustomVisibility("agent01");
       bindCustomVisibility("agent02");
+      updateApiBaseStatus();
       const [agent01Config, agent02Config] = await Promise.all([
         fetchConfig("agent01", defaultAgent01Config()),
         fetchConfig("agent02", defaultAgent02Config())
@@ -668,6 +701,17 @@
 
     document.getElementById("saveAll").addEventListener("click", () => {
       saveAll();
+    });
+    document.getElementById("saveApiBase").addEventListener("click", () => {
+      const value = document.getElementById("backendApiBase").value.trim().replace(/\/$/, "");
+      if (value) {
+        window.localStorage.setItem("silicon_agents_api_base", value);
+      } else {
+        window.localStorage.removeItem("silicon_agents_api_base");
+      }
+      updateApiBaseStatus();
+      setSaveStatus("Deployment API base updated.");
+      setLastSaved(`API base saved ${nowLabel()}`);
     });
     document.getElementById("resetDefaults").addEventListener("click", resetDefaults);
     initializePage().catch(() => {

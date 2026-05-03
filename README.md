@@ -95,14 +95,35 @@ Recommended pilot env values:
 PILOT_ACCESS_TOKEN=replace-with-shared-pilot-token
 GEMINI_API_KEY=...
 OPENAI_API_KEY=
-SA_DB_PATH=/data/silicon_agents.db
+DATABASE_URL=postgresql://...
+SA_DB_PATH=./silicon_agents.db
 SA_LOG_LEVEL=INFO
 ```
+
+Recommended deployment split:
+
+- `Frontend`: Vercel
+- `Backend`: Render web service
+- `Database`: Render PostgreSQL
+
+Repository split for deployment:
+
+- `Render backend repo`: `https://github.com/EchoLift/silicon-agent-mvp.git`
+- `Vercel frontend repo`: your personal frontend deployment repo
+- Render should be connected to the backend repo only, even though the codebase currently contains both frontend and backend assets.
+
+Deployment notes:
+
+- The backend now supports `DATABASE_URL` for PostgreSQL deployments and falls back to `SA_DB_PATH` for local SQLite development.
+- If you host the frontend separately from the backend, open `Enterprise Config` and save the Render backend URL in `Deployment API Base`.
+- Leave `Deployment API Base` blank for local same-origin runs.
 
 ## Core Endpoints
 
 - `GET /health`
 - `GET /pitch`
+- `GET /pilot`
+- `GET /product-docs`
 - `POST /api/v1/verify`
 - `POST /api/v1/yield`
 - `POST /api/v1/feedback`
@@ -112,6 +133,8 @@ SA_LOG_LEVEL=INFO
 - `GET /api/v1/runs/{run_id}`
 - `GET /api/v1/runs/{run_id}/export/jira`
 - `GET /api/v1/runs/{run_id}/export/email`
+- `GET /api/v1/pilot/metrics`
+- `POST /api/v1/pilot/access-code/generate`
 
 ## Testing From Day One
 

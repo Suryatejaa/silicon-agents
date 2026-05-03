@@ -97,6 +97,16 @@ The frontend currently includes 8 product pages:
 - Browser-session cookie unlock flow
 - Request logging middleware for pilot usage visibility
 
+### Deployment ownership model
+
+The intended deployment split is:
+
+- `Backend deployment repo on Render`: `https://github.com/EchoLift/silicon-agent-mvp.git`
+- `Frontend deployment repo on Vercel`: personal frontend repo
+- `Database`: Render PostgreSQL
+
+This means Render should be connected to the backend repository rather than the original source-control remote used for broader project development history.
+
 ## 3. High-Level Architecture
 
 ### System intent
