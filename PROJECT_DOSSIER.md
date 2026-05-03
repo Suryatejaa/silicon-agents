@@ -24,12 +24,13 @@ The platform is designed as an orchestration layer above existing semiconductor 
 
 ### Product pages delivered
 
-The frontend currently includes 4 product pages:
+The frontend currently includes 5 product pages:
 
 1. `Home / Executive Brief`
 2. `Agent 01`
 3. `Agent 02`
 4. `Enterprise Configuration`
+5. `Run History`
 
 ### Active workflow scope
 
@@ -51,17 +52,32 @@ The frontend currently includes 4 product pages:
 - SPC CSV ingestion
 - 5-step streamed reasoning
 - Ranked yield / SPC action stream
+- Accept / reject feedback capture
+- Benchmark scorecard
+- Yield brief export
+- Jira-ready export
+- Email-ready export
 - Enterprise orchestration support
 
 ### Enterprise customization delivered
 
 - Centralized enterprise configuration page
 - Separate saved setup for Agent 01 and Agent 02
-- Chip-specific operating context
-- Client workflow profile
-- Custom review instructions
-- Historical reference data
+- Server-backed enterprise policy persistence
+- Organization-specific review and evidence policy
+- Escalation and output-style guidance
+- Reference-data weighting guidance
 - Two-stage orchestration before analysis
+
+### Run governance and observability delivered
+
+- Persisted run history in SQLite
+- Per-run provider and model tracking
+- Per-run latency and status tracking
+- Stored orchestration preview payload
+- Stored analysis trace and decision payload
+- Export history per run
+- Feedback visibility per saved run
 
 ## 3. High-Level Architecture
 
@@ -95,7 +111,7 @@ LLM analysis layer
     ->
 Decision extraction and ranking
     ->
-Streaming response / HTML export / stored feedback
+Streaming response / run persistence / structured exports / stored feedback
 ```
 
 ### Product-level flows
@@ -108,7 +124,8 @@ Streaming response / HTML export / stored feedback
 4. Analysis agent runs the 5-step reasoning flow.
 5. Decisions are ranked and streamed to the UI.
 6. Benchmark scoring can run for known bundled artifacts.
-7. User can export a verification brief and/or submit feedback.
+7. Run data is persisted with scorecard, observability, feedback, and export trail.
+8. User can export a verification brief, Jira payload, email payload, and/or submit feedback.
 
 #### Agent 02 flow
 
@@ -117,7 +134,9 @@ Streaming response / HTML export / stored feedback
 3. Enterprise orchestration builds a run-specific prompt plan.
 4. Analysis agent runs the 5-step reasoning flow.
 5. Decisions are ranked and streamed to the UI.
-6. Stored decisions are persisted for later feedback or review.
+6. Benchmark or live scorecard evaluation can run after completion.
+7. Run data is persisted for later feedback, export, review, and audit.
+8. User can export a yield brief, Jira payload, email payload, and/or submit feedback.
 
 ## 4. Architectural Layers
 
@@ -131,6 +150,7 @@ Files:
 - [frontend/agent01.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/agent01.html)
 - [frontend/agent02.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/agent02.html)
 - [frontend/configuration.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/configuration.html)
+- [frontend/history.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/history.html)
 
 Responsibilities:
 
@@ -140,6 +160,7 @@ Responsibilities:
 - decision review
 - benchmark and impact visibility
 - configuration management
+- run-history review and workflow exports
 
 ### Layer 2. API / App Shell Layer
 
@@ -150,6 +171,7 @@ Files:
 - [silicon_agents/api/router_yield.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_yield.py)
 - [silicon_agents/api/router_feedback.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_feedback.py)
 - [silicon_agents/api/router_benchmark.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_benchmark.py)
+- [silicon_agents/api/router_config.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_config.py)
 
 Responsibilities:
 
@@ -159,6 +181,8 @@ Responsibilities:
 - SSE response streaming
 - request size enforcement
 - benchmark and feedback endpoints
+- configuration endpoints
+- run-history and structured-export endpoints
 
 ### Layer 3. Schema / Contract Layer
 
@@ -173,6 +197,7 @@ Responsibilities:
 - typed decision models
 - benchmark request / response models
 - export request model
+- run-history, export-history, and feedback-summary models
 
 ### Layer 4. Parser Layer
 
@@ -242,16 +267,22 @@ Files:
 
 - [silicon_agents/output/report_html.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/output/report_html.py)
 - [silicon_agents/output/report_json.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/output/report_json.py)
+- [silicon_agents/output/report_structured.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/output/report_structured.py)
 - [silicon_agents/storage/feedback_store.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/storage/feedback_store.py)
 - [silicon_agents/benchmarks/agent01_scorecard.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/benchmarks/agent01_scorecard.py)
+- [silicon_agents/benchmarks/agent02_scorecard.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/benchmarks/agent02_scorecard.py)
+- [silicon_agents/benchmarks/run_scorecard.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/benchmarks/run_scorecard.py)
 
 Responsibilities:
 
 - verification brief export
+- structured Jira / email export formatting
 - JSON report formatting
 - SQLite persistence
 - feedback capture
 - benchmark evaluation
+- per-run scorecard persistence
+- export audit persistence
 
 ## 5. Low-Level Design
 
@@ -271,6 +302,7 @@ Current FastAPI responsibilities:
   - `/agent01`
   - `/agent02`
   - `/configuration`
+  - `/history`
 - expose API routes
 - expose `/health`
 
@@ -285,6 +317,9 @@ Current FastAPI responsibilities:
 - `mode`
 - `design_name`
 - `project_id`
+- `artifact_name`
+- `run_profile_id`
+- `run_profile_name`
 - `context`
 - `chip_type`
 - `client_profile`
@@ -300,6 +335,9 @@ Current FastAPI responsibilities:
 - `lot_id`
 - `mode`
 - `project_id`
+- `artifact_name`
+- `run_profile_id`
+- `run_profile_name`
 - `context`
 - `chip_type`
 - `client_profile`
@@ -325,7 +363,7 @@ Meaning:
 - `step`: opens a new step in the 5-step reasoning trace
 - `chunk`: step text or reasoning text
 - `decision`: adds a ranked finding/action to the review queue
-- `done`: emits totals and provider summary
+- `done`: emits totals, provider summary, persisted `run_id`, and model summary
 
 ### 5.4 Agent 01 internals
 
@@ -417,7 +455,8 @@ Current UX elements:
 - KPI cards
 - adoption path
 - runtime status
-- links into Agent 01, Agent 02, and configuration
+- latest-runs widget
+- links into Agent 01, Agent 02, configuration, and run history
 
 ### Agent 01 UX
 
@@ -454,9 +493,16 @@ Current UX features:
 - ATE/SPC mode selector
 - sample data loading
 - status metrics
+- impact snapshot
+- benchmark scorecard
 - orchestration preview
+- separate decision review queue
+- separate analysis trace
 - step-wise streaming trace
 - disabled controls while analysis is running
+- yield brief export
+- Jira/email direct export actions
+- feedback capture via accept / reject buttons
 - hidden enterprise configuration from workspace
 - reads enterprise setup from the dedicated configuration page
 
@@ -474,10 +520,27 @@ Current UX features:
   - Agent 01 configuration
   - Agent 02 configuration
 - profile template selection
-- editable project metadata
-- editable chip / client / instruction fields
-- local browser persistence
+- policy-oriented governance fields
+- organization / review / evidence policy fields
+- backend SQLite persistence
 - saved configuration summary
+
+### Run History UX
+
+Purpose:
+
+- make the platform auditable and pilot-ready
+- expose saved run details, scorecards, feedback, and exports
+
+Current UX features:
+
+- recent run listing
+- filter by agent and project
+- saved run detail inspection
+- benchmark and live score visibility
+- feedback summary and feedback history
+- export history visibility
+- Jira/email export actions from saved runs
 
 ## 7. Backend Stack
 
@@ -515,6 +578,8 @@ Current tables:
 
 - `decisions`
 - `feedback`
+- `enterprise_config`
+- `run_history`
 
 Stored decision fields:
 
@@ -537,6 +602,36 @@ Stored feedback fields:
 - accepted / rejected
 - notes
 - engineer ID
+- timestamp
+
+Stored enterprise config fields:
+
+- agent key
+- organization
+- review board
+- output style
+- escalation policy
+- evidence policy
+- enterprise instruction addendum
+- timestamp
+
+Stored run-history fields:
+
+- run ID
+- agent
+- mode
+- project ID
+- artifact name
+- run profile ID and name
+- provider and model
+- latency
+- benchmark / live scorecard summary
+- orchestration payload
+- analysis trace
+- decisions JSON
+- feedback summary
+- export history
+- status
 - timestamp
 
 ## 8. Frontend Stack
@@ -574,7 +669,8 @@ Current provider abstraction:
 From [silicon_agents/core/config.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/core/config.py):
 
 - primary provider env: `SA_LLM_PRIMARY`
-- Gemini model default: `gemini-2.5-flash`
+- Gemini model default: `gemini-2.5-pro`
+- Gemini fallback model: `gemini-2.5-flash`
 - OpenAI model default: `gpt-4o`
 
 ### LLM usage pattern
@@ -747,10 +843,11 @@ It currently influences:
 
 Today, the enterprise config page stores settings:
 
-- in browser local storage
+- in backend SQLite
 - separately for Agent 01 and Agent 02
+- as durable top-level policy rather than per-run workspace context
 
-This is adequate for local demos but not yet multi-user or server-backed.
+This is stronger than the original local-demo implementation, but it is not yet multi-user or tenant-aware.
 
 ## 11. Benchmarking and Evaluation
 
@@ -761,6 +858,13 @@ Verification:
 - `coverage_vcs_sample.log`
 - `coverage_xcelium_sample.log`
 - `regression_sample.log`
+- `coverage_pcie_dma_sample.log`
+- `coverage_lpddr_refresh_sample.log`
+- `coverage_noc_qos_sample.log`
+- `coverage_secure_boot_sample.log`
+- `regression_pcie_dma_sample.log`
+- `regression_audio_dsp_sample.log`
+- `regression_secure_boot_sample.log`
 
 Yield:
 
@@ -773,7 +877,7 @@ Configuration:
 
 ### In-product benchmarking
 
-Current benchmarking is implemented for Agent 01.
+Current benchmarking is implemented for Agent 01 and Agent 02.
 
 Capabilities:
 
@@ -781,6 +885,7 @@ Capabilities:
 - evaluate decisions against expected findings
 - grade action alignment
 - estimate review time saved
+- compute persisted run scorecards for saved-run review
 
 ### Evaluation dimensions
 
@@ -798,10 +903,14 @@ Current scorecard metrics include:
 ### Current export implemented
 
 - verification brief HTML export
+- yield brief HTML export
+- Jira-ready structured export
+- email-ready structured export
 
 File:
 
 - [silicon_agents/output/report_html.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/output/report_html.py)
+- [silicon_agents/output/report_structured.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/output/report_structured.py)
 
 Current export contents:
 
@@ -815,6 +924,8 @@ Current export contents:
 - evidence
 - rank basis
 - analysis trace
+- Jira-ready ticket payloads with summary, description, severity, and metadata
+- email-ready payloads with subject, recipients placeholder, executive summary, and action list
 
 ## 13. Persistence and Feedback
 
@@ -822,6 +933,9 @@ Current export contents:
 
 - streamed decisions after a run
 - user feedback on decisions
+- enterprise policy per agent
+- full run history with observability and scorecards
+- export audit history
 
 ### Feedback semantics
 
@@ -839,6 +953,7 @@ This establishes the foundation for:
 - future ranking calibration
 - enterprise pilot studies
 - outcome-based evaluation
+- auditable engineering run replay
 
 ## 14. File and Module Inventory
 
@@ -865,6 +980,7 @@ frontend/
   agent01.html
   agent02.html
   configuration.html
+  history.html
 ```
 
 ### Support areas
@@ -888,10 +1004,11 @@ Current test coverage areas include:
 - benchmark evaluation
 - orchestration schema behavior
 - feedback storage
+- run history and structured exports
 
 Current observed suite status in this workspace:
 
-- `18/18` tests passing
+- `26/26` tests passing
 
 Notes:
 
@@ -906,18 +1023,16 @@ Notes:
 - no auth
 - no RBAC
 - no multi-user persistence
-- no server-side enterprise config persistence
 - no direct EDA integration
 - no job queue
-- no long-term memory beyond SQLite feedback and local browser config
+- no long-term memory beyond SQLite-backed run, config, and feedback persistence
 
 ### Practical limitations
 
-- enterprise configuration is browser-local today
 - UI is still vanilla HTML rather than componentized frontend architecture
-- Agent 02 is functional but not yet as sponsor-ready as Agent 01
 - sample data is still synthetic / benchmark-oriented
 - there is no production deployment packaging yet
+- no tenant isolation or auth-protected run access
 
 ## 17. Current Product Readiness Assessment
 
@@ -926,40 +1041,40 @@ Notes:
 - clear Agent 01 wedge
 - real parser + orchestration + streaming loop
 - benchmark-backed demo path
-- exportable sponsor artifact
+- exportable sponsor and workflow artifacts
 - centralized enterprise configuration model
 - human-in-the-loop review posture
+- auditable run history and observability
 
 ### Areas still considered MVP / pre-pilot
 
 - production deployment model
 - auth and enterprise tenancy
 - richer benchmark corpus
-- server-side config management
-- audit trails beyond basic feedback store
 - real customer artifact integration
+- stronger parser coverage for heterogeneous client report formats
 
 ## 18. Recommended Next Engineering Steps
 
-1. Move enterprise configuration from browser local storage to backend persistence.
-2. Add auth, role boundaries, and workspace-level project separation.
-3. Expand Agent 01 benchmark corpus with 10 to 20 richer sanitized artifacts.
-4. Add file upload persistence and artifact history.
-5. Improve Agent 02 parity so it feels closer to Agent 01 in sponsor readiness.
-6. Add structured export targets for Jira / Confluence / email-ready formats.
-7. Add observability and per-run logging for pilot environments.
+1. Add auth, role boundaries, and workspace-level project separation.
+2. Expand benchmark corpus further with richer sanitized client-style artifacts.
+3. Add file upload persistence and artifact-object history beyond inline payloads.
+4. Improve parser tolerance for heterogeneous client report formats.
+5. Add tenant-aware enterprise policy management and versioning.
+6. Add Confluence-ready export and workflow integrations beyond Jira/email.
+7. Add pilot-grade dashboards over persisted run history and outcomes.
 
 ## 19. One-Line Summary
 
 Silicon Agents today is a verification-first semiconductor AI workflow platform with:
 
 - 2 agents
-- 4 frontend pages
+- 5 frontend pages
 - 8 implemented functional layers
 - 5 prompt families
 - 2-stage orchestration + analysis LLM flow
 - SSE-based step streaming
 - benchmark scoring
-- exportable reporting
-- SQLite-backed decisions and feedback
-- centralized enterprise configuration for both agents
+- HTML + Jira + email exportable reporting
+- SQLite-backed runs, decisions, feedback, exports, and enterprise policy
+- centralized enterprise configuration plus workspace run profiles
