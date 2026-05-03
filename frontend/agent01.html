@@ -1401,7 +1401,7 @@
     }
 
     async function loadRunProfiles() {
-      const response = await apiFetch("/sample-data/client_profiles.json");
+      const response = await fetch("./sample-data/client_profiles.json");
       if (!response.ok) return;
       const library = await response.json();
       runProfiles = library.agent01 || [];
@@ -1431,7 +1431,10 @@
     }
 
     async function apiFetch(path, options = {}) {
-      return fetch(`${apiBase}${path}`, options);
+      const headers = new Headers(options.headers || {});
+      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
+      if (token) headers.set("X-Pilot-Access-Token", token);
+      return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 
     function defaultAgent01Config() {
@@ -1743,7 +1746,7 @@
         updateConfigSummary(loadAgent01Config(), null);
         return;
       }
-      const response = await apiFetch(`/sample-data/${selected}`);
+      const response = await fetch(`./sample-data/${selected}`);
       const text = await response.text();
       reportTextEl.value = text;
       applyBenchmarkPreset(selected);

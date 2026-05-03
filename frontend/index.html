@@ -571,6 +571,13 @@
       }
       return stored;
     })();
+    const pilotToken = window.localStorage.getItem("silicon_agents_pilot_token") || "";
+
+    function authorizedFetch(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (pilotToken) headers.set("X-Pilot-Access-Token", pilotToken);
+      return fetch(`${apiBase}${path}`, { ...options, headers });
+    }
 
     if (isFileMode) {
       navHomeLink.href = "./index.html";
@@ -590,7 +597,7 @@
       try {
         const [healthResponse, benchmarkResponse] = await Promise.all([
           fetch(`${apiBase}/health`),
-          fetch(`${apiBase}/api/v1/benchmarks/agent01`)
+          authorizedFetch("/api/v1/benchmarks/agent01")
         ]);
 
         if (!healthResponse.ok || !benchmarkResponse.ok) {
@@ -616,7 +623,7 @@
 
     async function loadLatestRuns() {
       try {
-        const response = await fetch(`${apiBase}/api/v1/runs?limit=4`);
+        const response = await authorizedFetch("/api/v1/runs?limit=4");
         if (!response.ok) throw new Error("Latest runs unavailable");
         const payload = await response.json();
         const runs = payload.runs || [];

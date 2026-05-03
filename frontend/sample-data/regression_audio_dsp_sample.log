@@ -1,0 +1,22 @@
+Run: nightly_audio_dsp_regression_2026_05_02
+RTL Change: audio_dsp_v4.2 to v4.3 (commit d812af)
+Block: audio_dsp_top
+Branch: feature/live-rate-switch
+Simulator: Synopsys VCS M-2024.06
+Verification owner: audio_dsp_verification
+Total: 22 | PASSED: 9 | FAILED: 13
+frame_overrun_test_001 FAIL output frame overrun observed during live rate switch
+frame_overrun_test_002 FAIL output frame overrun observed during live rate switch
+frame_overrun_test_003 FAIL dma push window exceeded audio frame budget
+frame_overrun_test_004 FAIL dma push window exceeded audio frame budget
+frame_overrun_test_005 FAIL output frame overrun observed during live rate switch
+frame_overrun_test_006 FAIL dma push window exceeded audio frame budget
+frame_overrun_test_007 FAIL output frame overrun observed during live rate switch
+frame_overrun_test_008 FAIL dma push window exceeded audio frame budget
+frame_overrun_test_009 FAIL output frame overrun observed during live rate switch
+frame_overrun_test_010 FAIL dma push window exceeded audio frame budget
+coeff_update_test_011 FAIL stale coefficient bank selected after reload request
+coeff_update_test_012 FAIL stale coefficient bank selected after reload request
+coeff_update_test_013 FAIL stale coefficient bank selected after reload request
+audio_dsp_smoke_014 PASS
+audio_dsp_smoke_015 PASS

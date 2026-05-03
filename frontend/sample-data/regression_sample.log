@@ -1,0 +1,19 @@
+Run: nightly_regression_2026_05_02
+RTL Change: usb_ctrl_v2.3 to v2.4 (commit a3f91b)
+Block: usb_controller_top
+Branch: feature/dma-handshake-cleanup
+Simulator: Synopsys VCS M-2023.12
+Verification owner: usb_verif_team
+Total: 18 | PASSED: 7 | FAILED: 11
+usb_bulk_transfer_test_001 FAIL timeout at cycle 4820
+usb_bulk_transfer_test_002 FAIL timeout at cycle 4820
+dma_single_channel_test_003 FAIL assertion: arb_grant
+dma_single_channel_test_004 FAIL assertion: arb_grant
+interrupt_latency_test_012 PASS
+usb_bulk_transfer_test_005 FAIL timeout at cycle 4820
+usb_bulk_transfer_test_006 FAIL timeout at cycle 4820
+usb_bulk_transfer_test_007 FAIL timeout at cycle 4820
+dma_single_channel_test_008 FAIL assertion: arb_grant
+dma_single_channel_test_009 FAIL assertion: arb_grant
+usb_bulk_transfer_test_010 FAIL timeout at cycle 4820
+usb_bulk_transfer_test_011 FAIL timeout at cycle 4820

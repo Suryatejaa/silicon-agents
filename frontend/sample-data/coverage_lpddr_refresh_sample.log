@@ -1,0 +1,14 @@
+XCELIUM COVERAGE SUMMARY
+Tool: Cadence Xcelium xrun 24.09-s002
+Project: lpddr_ctrl_revD
+Block: lpddr_refresh_manager
+Regression: nightly_lpddr_refresh_2026_05_02
+Testbench: tb_lpddr_refresh_uvm
+Cover Group: refresh_control [Coverage: 44.4%]
+bins scheduled_refresh: 611 hits PASS
+bins self_refresh_exit: 0 hits FAIL gap
+bins refresh_during_throttle: 3 hits FAIL below threshold
+
+Cover Group: bank_recovery [Coverage: 50.0%]
+bins bank_open_close: 288 hits PASS
+bins bank_conflict_recovery: 0 hits FAIL gap

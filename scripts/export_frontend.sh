@@ -26,6 +26,7 @@ copy_page "docs.html" "product-docs.html"
 copy_page "pilot_access.html" "pilot-login.html"
 
 cp "${SAMPLE_DATA_DIR}/client_profiles.json" "${OUT_DIR}/sample-data/client_profiles.json"
+cp "${SAMPLE_DATA_DIR}/"* "${OUT_DIR}/sample-data/"
 
 cat > "${OUT_DIR}/vercel.json" <<'JSON'
 {

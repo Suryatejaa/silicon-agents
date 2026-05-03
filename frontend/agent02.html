@@ -1092,11 +1092,14 @@
 	    }
 
     async function apiFetch(path, options = {}) {
-      return fetch(`${apiBase}${path}`, options);
+      const headers = new Headers(options.headers || {});
+      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
+      if (token) headers.set("X-Pilot-Access-Token", token);
+      return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 
     async function loadRunProfiles() {
-      const response = await apiFetch("/sample-data/client_profiles.json");
+      const response = await fetch("./sample-data/client_profiles.json");
       if (!response.ok) return;
       const library = await response.json();
       runProfiles = library.agent02 || [];
@@ -1174,7 +1177,7 @@
         updateConfigSummary(loadAgent02Config(), null);
         return;
       }
-      const response = await apiFetch(`/sample-data/${selected}`);
+      const response = await fetch(`./sample-data/${selected}`);
       csvEl.value = await response.text();
       modeEl.value = selected.includes("spc") ? "spc" : "ate";
       updateArtifactStatus(selected, "bundled_sample");

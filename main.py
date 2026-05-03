@@ -80,13 +80,14 @@ def create_app() -> FastAPI:
     async def pilot_access_and_logging(request: Request, call_next):
         started = perf_counter()
         path = request.url.path
+        method = request.method.upper()
         access_enabled = bool(settings.pilot_access_token)
         exempt_paths = {"/health", "/pilot-login", "/pilot/unlock"}
-        exempt_prefixes = ("/docs", "/openapi.json", "/redoc")
+        exempt_prefixes = ("/docs", "/openapi.json", "/redoc", "/sample-data")
         header_token = request.headers.get("X-Pilot-Access-Token", "")
         cookie_token = request.cookies.get(settings.pilot_cookie_name, "")
 
-        if access_enabled and path not in exempt_paths and not path.startswith(exempt_prefixes):
+        if access_enabled and method != "OPTIONS" and path not in exempt_paths and not path.startswith(exempt_prefixes):
             authorized = header_token == settings.pilot_access_token or cookie_token == settings.pilot_access_token
             if not authorized:
                 accepts_html = "text/html" in request.headers.get("accept", "")

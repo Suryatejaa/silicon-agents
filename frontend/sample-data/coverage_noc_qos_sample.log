@@ -1,0 +1,15 @@
+COVERAGE REPORT - NoC QoS Fabric v5.1
+Tool: Synopsys VCS M-2024.06
+Project: noc_qos_revF
+Block: noc_qos_scheduler
+Regression: nightly_noc_qos_2026_05_02
+Testbench: tb_noc_qos_uvm
+Coverage model owner: noc_fabric_dv
+Cover Group: qos_arbitration [Coverage: 55.6%]
+bins nominal_qos_boost: 188 hits PASS
+bins starvation_prevention: 0 hits FAIL gap
+bins qos_boost_demotion: 5 hits FAIL below threshold
+
+Cover Group: credit_return_path [Coverage: 50.0%]
+bins steady_state_credit: 420 hits PASS
+bins credit_exhaustion_backoff: 0 hits FAIL gap

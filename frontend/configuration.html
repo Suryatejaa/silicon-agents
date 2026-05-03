@@ -308,10 +308,14 @@
     <section class="panel">
       <div class="section-title">Deployment API Base</div>
       <div class="section-copy">Use this only when the frontend is hosted separately from the backend, such as Vercel for the UI and Render for the API. Leave it blank for same-origin local runs.</div>
-      <div class="row" style="grid-template-columns: 1.4fr 0.6fr;">
+      <div class="row" style="grid-template-columns: 1.2fr 1fr 0.6fr;">
         <div class="field-stack">
           <div class="field-label">Backend API Base URL</div>
           <input id="backendApiBase" placeholder="https://your-render-backend.onrender.com" />
+        </div>
+        <div class="field-stack">
+          <div class="field-label">Pilot Access Token</div>
+          <input id="pilotAccessToken" placeholder="Optional shared token for protected Render APIs" />
         </div>
         <div class="field-stack" style="justify-content:end;">
           <div class="field-label">Action</div>
@@ -509,15 +513,20 @@
 
     function updateApiBaseStatus() {
       const current = window.localStorage.getItem("silicon_agents_api_base") || "";
+      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
       document.getElementById("apiBaseStatus").textContent = current
         ? `Current API base: ${current}`
         : "Current API base: same-origin or local file fallback.";
       document.getElementById("backendApiBase").value = current;
+      document.getElementById("pilotAccessToken").value = token;
     }
 
     async function apiFetch(path, options = {}) {
       const apiBase = resolveApiBase();
-      return fetch(`${apiBase}${path}`, options);
+      const headers = new Headers(options.headers || {});
+      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
+      if (token) headers.set("X-Pilot-Access-Token", token);
+      return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 
     function populateFieldSelects(agentKey) {
@@ -704,13 +713,19 @@
     });
     document.getElementById("saveApiBase").addEventListener("click", () => {
       const value = document.getElementById("backendApiBase").value.trim().replace(/\/$/, "");
+      const token = document.getElementById("pilotAccessToken").value.trim();
       if (value) {
         window.localStorage.setItem("silicon_agents_api_base", value);
       } else {
         window.localStorage.removeItem("silicon_agents_api_base");
       }
+      if (token) {
+        window.localStorage.setItem("silicon_agents_pilot_token", token);
+      } else {
+        window.localStorage.removeItem("silicon_agents_pilot_token");
+      }
       updateApiBaseStatus();
-      setSaveStatus("Deployment API base updated.");
+      setSaveStatus("Deployment API base and pilot token updated.");
       setLastSaved(`API base saved ${nowLabel()}`);
     });
     document.getElementById("resetDefaults").addEventListener("click", resetDefaults);

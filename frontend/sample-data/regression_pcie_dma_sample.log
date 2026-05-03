@@ -1,0 +1,24 @@
+Run: nightly_pcie_dma_regression_2026_05_02
+RTL Change: pcie_dma_r1.8 to r1.9 (commit c31b8a)
+Block: pcie_dma_top
+Branch: feature/posted-write-recovery
+Simulator: Synopsys VCS O-2024.03
+Verification owner: pcie_dma_verification
+Total: 24 | PASSED: 10 | FAILED: 14
+completion_replay_test_001 FAIL poisoned completion not retired during replay window
+completion_replay_test_002 FAIL poisoned completion not retired during replay window
+completion_replay_test_003 FAIL replay window expired before completion retire
+completion_replay_test_004 FAIL replay window expired before completion retire
+completion_replay_test_005 FAIL poisoned completion not retired during replay window
+completion_replay_test_006 FAIL replay window expired before completion retire
+completion_replay_test_007 FAIL poisoned completion not retired during replay window
+completion_replay_test_008 FAIL replay window expired before completion retire
+completion_replay_test_009 FAIL poisoned completion not retired during replay window
+completion_replay_test_010 FAIL replay window expired before completion retire
+tag_credit_test_011 FAIL available tag credit dropped below expected watermark
+tag_credit_test_012 FAIL available tag credit dropped below expected watermark
+tag_credit_test_013 FAIL available tag credit dropped below expected watermark
+tag_credit_test_014 FAIL available tag credit dropped below expected watermark
+pcie_dma_smoke_015 PASS
+pcie_dma_smoke_016 PASS
+pcie_dma_smoke_017 PASS
