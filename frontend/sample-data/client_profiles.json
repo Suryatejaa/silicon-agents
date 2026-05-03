@@ -10,7 +10,7 @@
       "context": "USB 3.0 controller verification focused on transfer modes, arbitration, and interrupt interactions",
       "chip_type": "USB 3.0 Controller IP",
       "client_profile": "Fabless verification team with protocol-heavy closure reviews",
-      "reference_data_label": "Historical closure notes",
+      "reference_data_label": "Historical closure notes.",
       "custom_instructions": "Prioritize protocol escape risk and recommend the fastest engineer-reviewable closure action first.",
       "reference_data": "Previous runs showed isochronous_transfer and concurrent_dma_conflict were repeatedly undercovered when constrained-random traffic dominated the scenario mix."
     },
