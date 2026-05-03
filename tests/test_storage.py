@@ -9,6 +9,37 @@ from silicon_agents.storage.feedback_store import FeedbackStore
 
 
 class FeedbackStoreTests(unittest.TestCase):
+    def test_postgres_executemany_uses_cursor(self) -> None:
+        class FakeCursor:
+            def __init__(self) -> None:
+                self.calls = []
+
+            def executemany(self, sql, params_seq) -> None:
+                self.calls.append((sql, list(params_seq)))
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        class FakePostgresConnection:
+            def __init__(self) -> None:
+                self.cursor_instance = FakeCursor()
+
+            def cursor(self):
+                return self.cursor_instance
+
+        store = FeedbackStore("postgresql://example.test/db")
+        fake_db = FakePostgresConnection()
+        params = [("D001", "project-a"), ("D002", "project-b")]
+        store._db_executemany(fake_db, "INSERT INTO decisions (id, project_id) VALUES (?, ?)", params)
+
+        self.assertEqual(len(fake_db.cursor_instance.calls), 1)
+        sql, saved_params = fake_db.cursor_instance.calls[0]
+        self.assertIn("%s", sql)
+        self.assertEqual(saved_params, params)
+
     def test_decision_and_feedback_round_trip(self) -> None:
         async def run() -> None:
             with tempfile.TemporaryDirectory() as temp_dir:

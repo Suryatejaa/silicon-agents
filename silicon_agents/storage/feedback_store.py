@@ -500,6 +500,10 @@ class FeedbackStore:
 
     def _db_executemany(self, db, query: str, params_seq):
         sql = query if not self.is_postgres else query.replace("?", "%s")
+        if self.is_postgres:
+            with db.cursor() as cursor:
+                cursor.executemany(sql, params_seq)
+                return cursor
         return db.executemany(sql, params_seq)
 
     def _init_sync(self) -> None:
