@@ -115,6 +115,11 @@ Repository split for deployment:
 Deployment notes:
 
 - The backend now supports `DATABASE_URL` for PostgreSQL deployments and falls back to `SA_DB_PATH` for local SQLite development.
+- Export a frontend-only Vercel bundle with:
+  ```bash
+  zsh scripts/export_frontend.sh
+  ```
+- The export lands in `dist/silicon-agents-frontend` and includes route-mapped files for `/product-docs` and `/pilot-login`.
 - If you host the frontend separately from the backend, open `Enterprise Config` and save the Render backend URL in `Deployment API Base`.
 - Leave `Deployment API Base` blank for local same-origin runs.
 
