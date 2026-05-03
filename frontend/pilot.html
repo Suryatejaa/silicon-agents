@@ -350,6 +350,47 @@
       font-size: 0.92rem;
       line-height: 1.6;
     }
+    .setup-notice {
+      border: 1px solid #f4c7be;
+      background: #fff6f4;
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .setup-notice h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--warn);
+    }
+    .setup-notice p {
+      margin: 0;
+    }
+    .setup-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .setup-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      background: #ffffff;
+    }
+    .setup-actions a.primary {
+      border: none;
+      color: #ffffff;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      box-shadow: 0 6px 14px rgba(12, 102, 228, 0.22);
+    }
     @media (max-width: 1200px) {
       .summary-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -409,6 +450,7 @@
           <div class="status-strip" id="statusStrip">
             <span class="status-pill">Loading pilot metrics...</span>
           </div>
+          <div id="setupNotice"></div>
         </div>
         <div class="panel">
           <div class="section-head">
@@ -530,13 +572,30 @@
   </main>
 
   <script>
+    const isFileMode = window.location.protocol === "file:";
     const apiBase = (() => {
       const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
-      if (window.location.protocol === "file:") {
+      if (isFileMode) {
         return stored || "http://127.0.0.1:8000";
       }
       return stored;
     })();
+    const configHref = isFileMode ? "./configuration.html" : "/configuration";
+    const setupNoticeEl = document.getElementById("setupNotice");
+
+    function renderSetupNotice(title, body, tips = []) {
+      setupNoticeEl.innerHTML = `
+        <div class="setup-notice">
+          <h3>${title}</h3>
+          <p>${body}</p>
+          ${tips.length ? `<div class="empty">${tips.join("<br />")}</div>` : ""}
+          <div class="setup-actions">
+            <a class="primary" href="${configHref}">Open Enterprise Config</a>
+            <a href="${configHref}#backendApiBase">Set backend URL and pilot token</a>
+          </div>
+        </div>
+      `;
+    }
 
     function safeText(value, fallback = "Not available") {
       const text = String(value ?? "").trim();
@@ -632,6 +691,7 @@
         <span class="status-pill">${metrics.benchmark_runs} benchmark-backed runs</span>
         <span class="status-pill">${metrics.total_exports} workflow exports</span>
       `;
+      setupNoticeEl.innerHTML = "";
     }
 
     async function loadMetrics() {
@@ -677,9 +737,52 @@
     document.getElementById("generateCodeBtn").addEventListener("click", generateCode);
     document.getElementById("copyCodeBtn").addEventListener("click", copyCode);
 
+    if (!apiBase && !isFileMode) {
+      renderSetupNotice(
+        "Pilot backend not configured on this device",
+        "This Vercel frontend needs the deployed backend URL before it can load pilot evidence. Ask your admin for the Render backend URL and, if protection is enabled, the shared pilot access token.",
+        [
+          "Step 1: Open Enterprise Config.",
+          "Step 2: Set Deployment API Base to the Render backend URL.",
+          "Step 3: If your pilot is protected, paste the shared Pilot Access Token there too.",
+        ]
+      );
+      document.getElementById("statusStrip").innerHTML = `<span class="status-pill warn">Backend configuration required on this device</span>`;
+    } else {
     loadMetrics().catch((error) => {
-      document.getElementById("statusStrip").innerHTML = `<span class="status-pill warn">${safeText(error.message, "Unable to load pilot metrics.")}</span>`;
+      const message = safeText(error.message, "Unable to load pilot metrics.");
+      document.getElementById("statusStrip").innerHTML = `<span class="status-pill warn">${message}</span>`;
+      if (message.includes("401") || message.includes("Pilot access token required")) {
+        renderSetupNotice(
+          "Pilot access token required",
+          "This backend is protected. Ask your admin for the shared pilot access token, then save it in Enterprise Config on this device before using the dashboard.",
+          [
+            "Open Enterprise Config.",
+            "Paste the Pilot Access Token into the deployment section.",
+            "Save once, then reload this page.",
+          ]
+        );
+      } else if (message.includes("404")) {
+        renderSetupNotice(
+          "Pilot backend not configured on this device",
+          "The frontend is currently trying a route that does not exist on the deployed host. This usually means Deployment API Base has not been set yet.",
+          [
+            "Ask your admin for the Render backend URL.",
+            "Save that URL in Enterprise Config as Deployment API Base.",
+            "If the backend is protected, save the Pilot Access Token there too.",
+          ]
+        );
+      } else {
+        renderSetupNotice(
+          "Pilot dashboard could not connect",
+          "Ask your admin to confirm the backend URL and pilot token for this device. If both are already set, the backend may be temporarily unavailable.",
+          [
+            `Current backend target: ${apiBase || "Not configured"}`,
+          ]
+        );
+      }
     });
+    }
   </script>
 </body>
 </html>
