@@ -263,6 +263,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
+      align-items: start;
     }
     .box {
       border: 1px solid var(--line);
@@ -306,7 +307,7 @@
     .empty {
       color: var(--muted);
       font-size: 0.95rem;
-      padding: 18px 4px;
+      padding: 8px 0;
     }
     .notice {
       margin-top: 14px;
@@ -356,6 +357,7 @@
         <a href="/agent01" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" class="is-current" id="navHistory">Run History</a>
+        <a href="/rag" id="navRag">RAG</a>
         <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="/configuration" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
@@ -417,6 +419,7 @@
     document.getElementById("navAgent01").href = isFileMode ? "./agent01.html" : "/agent01";
     document.getElementById("navAgent02").href = isFileMode ? "./agent02.html" : "/agent02";
     document.getElementById("navHistory").href = isFileMode ? "./history.html" : "/history";
+    document.getElementById("navRag").href = isFileMode ? "./rag.html" : "/rag";
     document.getElementById("navConfig").href = isFileMode ? "./configuration.html" : "/configuration";
 
     const runListEl = document.getElementById("runList");
@@ -474,6 +477,38 @@
         .replaceAll(">", "&gt;")
         .replaceAll("\"", "&quot;")
         .replaceAll("'", "&#39;");
+    }
+
+    function renderRetrievedEvidence(retrieval) {
+      const sources = retrieval?.sources || [];
+      if (!sources.length) {
+        return "";
+      }
+      return sources.map((source) => {
+        const score = typeof source.score === "number" ? `score ${source.score.toFixed(2)}` : "score not recorded";
+        return `
+          <div class="decision">
+            <span class="pill">${escapeHtml(source.source_type || source.document_kind || "retrieval")}</span>
+            <strong>${escapeHtml(source.title || source.source_id || source.id)}</strong>
+            <div class="run-sub" style="margin-top: 8px;">${escapeHtml(`${source.source_id || source.id} · ${score}`)}</div>
+            <div class="section-copy" style="margin: 8px 0 0;">${escapeHtml(source.content_excerpt || "No excerpt was stored for this retrieved source.")}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDecisionRetrievedSources(decision) {
+      const sources = decision.metadata?.retrieved_sources || [];
+      if (!sources.length) return "";
+      return `
+        <div class="section-copy" style="margin: 8px 0 0;">
+          <strong>Retrieved sources:</strong>
+          ${sources.slice(0, 3).map((source) => {
+            const score = typeof source.score === "number" ? ` (${source.score.toFixed(2)})` : "";
+            return escapeHtml(`${source.title || source.source_id || source.id}${score}`);
+          }).join("; ")}
+        </div>
+      `;
     }
 
     function renderRunList() {
@@ -573,6 +608,7 @@
               <strong>${escapeHtml(decision.target)}</strong>
               <div>${escapeHtml(decision.action)}</div>
               <div class="section-copy" style="margin: 8px 0 0;">${escapeHtml(decision.rationale)}</div>
+              ${renderDecisionRetrievedSources(decision)}
               <div class="pill-row">
                 <span class="pill">${escapeHtml(`${Math.round(decision.confidence * 100)}% confidence`)}</span>
                 <span class="pill">${escapeHtml(decision.effort)}</span>
@@ -584,7 +620,27 @@
 
       const analysisHtml = run.analysis_log.length
         ? `<ul class="analysis-list">${run.analysis_log.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>`
-        : `<div class="empty">No analysis trace was stored for this run.</div>`;
+        : "";
+      const retrievedEvidenceHtml = renderRetrievedEvidence(run.orchestration?.retrieval);
+      const feedbackHtml = (run.feedback || []).length
+        ? run.feedback.map((item) => `
+            <div class="decision">
+              <span class="pill ${item.accepted ? "ok" : "warn"}">${item.accepted ? "accepted" : "rejected"}</span>
+              <strong>${escapeHtml(item.decision_id)}</strong>
+              <div class="section-copy" style="margin: 8px 0 0;">${escapeHtml(item.notes || "No note")}</div>
+              <div class="run-sub" style="margin-top: 8px;">${escapeHtml(item.engineer_id)} · ${escapeHtml(formatWhen(item.timestamp))}</div>
+            </div>
+          `).join("")
+        : "";
+      const exportHtml = (run.export_history || []).length
+        ? run.export_history.map((item) => `
+            <div class="decision">
+              <span class="pill">${escapeHtml(item.target)}</span>
+              <strong>${escapeHtml(item.title)}</strong>
+              <div class="run-sub" style="margin-top: 8px;">${escapeHtml(item.filename)} · ${escapeHtml(formatWhen(item.created_at))}</div>
+            </div>
+          `).join("")
+        : "";
 
       detailRootEl.innerHTML = `
         <div class="detail-grid">
@@ -635,8 +691,17 @@
               <div class="box-title">Orchestration Preview</div>
               <div><strong>Chip focus:</strong> ${escapeHtml(run.orchestration.chip_focus || "Not captured")}</div>
               <div style="margin-top: 8px;"><strong>Output emphasis:</strong> ${escapeHtml(run.orchestration.output_emphasis || "Not captured")}</div>
-              <div style="margin-top: 12px;" class="mono">${escapeHtml(JSON.stringify(run.orchestration, null, 2))}</div>
+              <details style="margin-top: 12px;">
+                <summary class="run-sub">Full orchestration JSON</summary>
+                <div style="margin-top: 10px;" class="mono">${escapeHtml(JSON.stringify(run.orchestration, null, 2))}</div>
+              </details>
             </div>
+            ${retrievedEvidenceHtml ? `
+              <div class="box">
+                <div class="box-title">Retrieved Evidence</div>
+                ${retrievedEvidenceHtml}
+              </div>
+            ` : ""}
             <div class="box">
               <div class="box-title">Scorecard</div>
               <div><strong>${escapeHtml(run.benchmark_title || "Run scorecard")}</strong></div>
@@ -647,15 +712,17 @@
             </div>
             <div class="box">
               <div class="box-title">Observability</div>
-              <div class="mono">${escapeHtml(JSON.stringify(run.observability, null, 2))}</div>
+              <details>
+                <summary class="run-sub">View observability JSON</summary>
+                <div style="margin-top: 10px;" class="mono">${escapeHtml(JSON.stringify(run.observability, null, 2))}</div>
+              </details>
             </div>
             <div class="box">
               <div class="box-title">Request Snapshot</div>
-              <div class="mono">${escapeHtml(JSON.stringify(run.request_payload, null, 2))}</div>
-            </div>
-            <div class="box">
-              <div class="box-title">Raw Artifact Replay</div>
-              <div class="mono">${escapeHtml(run.raw_artifact || "Raw artifact was not recorded for this run.")}</div>
+              <details>
+                <summary class="run-sub">View request payload</summary>
+                <div style="margin-top: 10px;" class="mono">${escapeHtml(JSON.stringify(run.request_payload, null, 2))}</div>
+              </details>
             </div>
           </div>
           <div class="stack">
@@ -663,38 +730,15 @@
               <div class="box-title">Decision Queue</div>
               ${decisionsHtml}
             </div>
+            ${feedbackHtml ? `<div class="box"><div class="box-title">Feedback History</div>${feedbackHtml}</div>` : ""}
+            ${exportHtml ? `<div class="box"><div class="box-title">Export History</div>${exportHtml}</div>` : ""}
+            ${analysisHtml ? `<div class="box"><div class="box-title">Analysis Trace</div>${analysisHtml}</div>` : ""}
             <div class="box">
-              <div class="box-title">Feedback History</div>
-              ${
-                (run.feedback || []).length
-                  ? run.feedback.map((item) => `
-                      <div class="decision">
-                        <span class="pill ${item.accepted ? "ok" : "warn"}">${item.accepted ? "accepted" : "rejected"}</span>
-                        <strong>${escapeHtml(item.decision_id)}</strong>
-                        <div class="section-copy" style="margin: 8px 0 0;">${escapeHtml(item.notes || "No note")}</div>
-                        <div class="run-sub" style="margin-top: 8px;">${escapeHtml(item.engineer_id)} · ${escapeHtml(formatWhen(item.timestamp))}</div>
-                      </div>
-                    `).join("")
-                  : `<div class="empty">No accept/reject feedback has been captured for this run yet.</div>`
-              }
-            </div>
-            <div class="box">
-              <div class="box-title">Export History</div>
-              ${
-                (run.export_history || []).length
-                  ? run.export_history.map((item) => `
-                      <div class="decision">
-                        <span class="pill">${escapeHtml(item.target)}</span>
-                        <strong>${escapeHtml(item.title)}</strong>
-                        <div class="run-sub" style="margin-top: 8px;">${escapeHtml(item.filename)} · ${escapeHtml(formatWhen(item.created_at))}</div>
-                      </div>
-                    `).join("")
-                  : `<div class="empty">No Jira or email exports have been generated for this run yet.</div>`
-              }
-            </div>
-            <div class="box">
-              <div class="box-title">Analysis Trace</div>
-              ${analysisHtml}
+              <div class="box-title">Raw Artifact Replay</div>
+              <details>
+                <summary class="run-sub">View raw artifact</summary>
+                <div style="margin-top: 10px;" class="mono">${escapeHtml(run.raw_artifact || "Raw artifact was not recorded for this run.")}</div>
+              </details>
             </div>
           </div>
         </div>

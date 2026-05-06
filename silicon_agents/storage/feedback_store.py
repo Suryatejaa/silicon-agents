@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 
+from silicon_agents.core.config import get_settings
 from silicon_agents.core.schemas import (
     Agent01EnterpriseConfig,
     Agent02EnterpriseConfig,
@@ -16,9 +18,12 @@ from silicon_agents.core.schemas import (
     PilotBreakdownItem,
     PilotMetricsResponse,
     PilotParserWarningItem,
+    RetrievalDocument,
     RunHistoryRecord,
     RunHistorySummary,
 )
+from silicon_agents.rag.embeddings import EmbeddingProvider, ensure_document_embedding, pgvector_literal, score_embedding_vector
+from silicon_agents.rag.history import build_run_retrieval_documents, score_retrieval_document
 
 try:
     import aiosqlite  # type: ignore
@@ -31,14 +36,19 @@ except ModuleNotFoundError:  # pragma: no cover - postgres support is optional i
     psycopg = None
 
 
+logger = logging.getLogger(__name__)
+
+
 class FeedbackStore:
     def __init__(self, db_path: str) -> None:
+        self.settings = get_settings()
         normalized = str(db_path or "").strip() or "./silicon_agents.db"
         if normalized.startswith("postgres://"):
             normalized = "postgresql://" + normalized[len("postgres://"):]
         self.db_path = normalized
         self.backend = "postgres" if self.db_path.startswith(("postgresql://", "postgres://")) else "sqlite"
         self._use_async_sqlite = self.backend == "sqlite" and aiosqlite is not None
+        self.vector_backend = str(self.settings.rag_vector_backend or "local").strip().lower()
 
     @property
     def is_postgres(self) -> bool:
@@ -140,6 +150,24 @@ class FeedbackStore:
                 )
                 """
             )
+            await db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS retrieval_documents (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    agent TEXT NOT NULL,
+                    mode TEXT NOT NULL,
+                    source_type TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    embedding TEXT NOT NULL DEFAULT '[]',
+                    embedding_vector TEXT,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
             await self._ensure_async_column(db, "feedback", "run_id", "TEXT NOT NULL DEFAULT ''")
             await self._ensure_async_column(db, "run_history", "benchmark_title", "TEXT NOT NULL DEFAULT ''")
             await self._ensure_async_column(db, "run_history", "benchmark_score", "TEXT NOT NULL DEFAULT ''")
@@ -150,6 +178,8 @@ class FeedbackStore:
             await self._ensure_async_column(db, "run_history", "parser_format", "TEXT NOT NULL DEFAULT ''")
             await self._ensure_async_column(db, "run_history", "parser_confidence", "REAL NOT NULL DEFAULT 0")
             await self._ensure_async_column(db, "run_history", "parser_warnings", "TEXT NOT NULL DEFAULT '[]'")
+            await self._ensure_async_column(db, "retrieval_documents", "embedding", "TEXT NOT NULL DEFAULT '[]'")
+            await self._ensure_async_column(db, "retrieval_documents", "embedding_vector", "TEXT")
             await db.commit()
 
     async def save_decisions(self, decisions: list[Decision]) -> None:
@@ -350,7 +380,118 @@ class FeedbackStore:
                 """,
                 self._run_history_params(record),
             )
+            await self._replace_retrieval_documents_async(db, record)
             await db.commit()
+
+    async def search_retrieval_documents(
+        self,
+        project_id: str,
+        query: str,
+        agent: str | None = None,
+        mode: str | None = None,
+        run_profile_id: str | None = None,
+        source_type: str | None = None,
+        limit: int = 5,
+    ) -> list[RetrievalDocument]:
+        query_embedding = await self._query_embedding(query)
+        if self.is_postgres and self.vector_backend == "pgvector":
+            try:
+                documents = self._search_retrieval_documents_pgvector(
+                    project_id=project_id,
+                    query=query,
+                    query_embedding=query_embedding,
+                    agent=agent,
+                    mode=mode,
+                    run_profile_id=run_profile_id,
+                    source_type=source_type,
+                    limit=limit,
+                )
+                if documents:
+                    return documents
+            except Exception as exc:  # pragma: no cover - optional pgvector path
+                logger.warning("pgvector retrieval failed; falling back to app scoring: %s", exc)
+        if not self._use_async_sqlite:
+            return self._search_retrieval_documents_sync(project_id, query, agent, mode, run_profile_id, source_type, limit, query_embedding)
+
+        sql = """
+            SELECT id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, created_at
+            FROM retrieval_documents
+            WHERE project_id = ?
+        """
+        params: list[object] = [project_id]
+        if agent:
+            sql += " AND agent = ?"
+            params.append(agent)
+        if mode:
+            sql += " AND mode = ?"
+            params.append(mode)
+        if source_type:
+            sql += " AND source_type = ?"
+            params.append(source_type)
+        sql += " ORDER BY created_at DESC LIMIT 200"
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute(sql, tuple(params))
+            rows = await cursor.fetchall()
+        return self._rank_retrieval_rows(rows, query, run_profile_id, limit, query_embedding)
+
+    async def save_retrieval_documents(self, documents: list[RetrievalDocument]) -> None:
+        if not documents:
+            return
+        if not self._use_async_sqlite:
+            self._save_retrieval_documents_sync(documents)
+            return
+        first = documents[0]
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(
+                "DELETE FROM retrieval_documents WHERE source_type = ? AND source_id = ?",
+                (first.source_type, first.source_id),
+            )
+            await db.executemany(
+                """
+                INSERT OR REPLACE INTO retrieval_documents
+                (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [self._retrieval_document_params(document) for document in documents],
+            )
+            await db.commit()
+
+    async def get_retrieval_documents(
+        self,
+        project_id: str,
+        agent: str | None = None,
+        mode: str | None = None,
+        source_type: str | None = None,
+        source_id: str | None = None,
+        limit: int = 200,
+    ) -> list[RetrievalDocument]:
+        if not self._use_async_sqlite:
+            return self._get_retrieval_documents_sync(project_id, agent, mode, source_type, source_id, limit)
+
+        sql = """
+            SELECT id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, created_at
+            FROM retrieval_documents
+            WHERE project_id = ?
+        """
+        params: list[object] = [project_id]
+        if agent:
+            sql += " AND agent = ?"
+            params.append(agent)
+        if mode:
+            sql += " AND mode = ?"
+            params.append(mode)
+        if source_type:
+            sql += " AND source_type = ?"
+            params.append(source_type)
+        if source_id:
+            sql += " AND source_id = ?"
+            params.append(source_id)
+        sql += " ORDER BY created_at DESC LIMIT ?"
+        params.append(max(1, min(limit, 1000)))
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute(sql, tuple(params))
+            rows = await cursor.fetchall()
+        return [self._retrieval_document_from_row(row) for row in rows]
 
     async def get_run_history(
         self,
@@ -506,6 +647,18 @@ class FeedbackStore:
                 return cursor
         return db.executemany(sql, params_seq)
 
+    async def _query_embedding(self, query: str) -> list[float]:
+        embedding, _, _ = await EmbeddingProvider().embed_text(query)
+        return embedding
+
+    def _init_pgvector(self, db) -> None:
+        if not self.is_postgres or self.vector_backend != "pgvector":
+            return
+        try:
+            self._db_execute(db, "CREATE EXTENSION IF NOT EXISTS vector")
+        except Exception as exc:  # pragma: no cover - depends on deployed postgres
+            logger.warning("pgvector extension unavailable; app-scored retrieval remains enabled: %s", exc)
+
     def _init_sync(self) -> None:
         with self._connect_sync() as db:
             self._db_execute(
@@ -604,6 +757,26 @@ class FeedbackStore:
                 )
                 """
             )
+            self._db_execute(
+                db,
+                """
+                CREATE TABLE IF NOT EXISTS retrieval_documents (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    agent TEXT NOT NULL,
+                    mode TEXT NOT NULL,
+                    source_type TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    embedding TEXT NOT NULL DEFAULT '[]',
+                    embedding_vector TEXT,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            self._init_pgvector(db)
             self._ensure_sync_column(db, "feedback", "run_id", "TEXT NOT NULL DEFAULT ''")
             self._ensure_sync_column(db, "run_history", "benchmark_title", "TEXT NOT NULL DEFAULT ''")
             self._ensure_sync_column(db, "run_history", "benchmark_score", "TEXT NOT NULL DEFAULT ''")
@@ -614,6 +787,13 @@ class FeedbackStore:
             self._ensure_sync_column(db, "run_history", "parser_format", "TEXT NOT NULL DEFAULT ''")
             self._ensure_sync_column(db, "run_history", "parser_confidence", "REAL NOT NULL DEFAULT 0")
             self._ensure_sync_column(db, "run_history", "parser_warnings", "TEXT NOT NULL DEFAULT '[]'")
+            self._ensure_sync_column(db, "retrieval_documents", "embedding", "TEXT NOT NULL DEFAULT '[]'")
+            self._ensure_sync_column(
+                db,
+                "retrieval_documents",
+                "embedding_vector",
+                "vector" if self.is_postgres and self.vector_backend == "pgvector" else "TEXT",
+            )
             db.commit()
 
     def _save_decisions_sync(self, decisions: list[Decision]) -> None:
@@ -827,7 +1007,162 @@ class FeedbackStore:
                     """,
                     self._run_history_params(record),
                 )
+            self._replace_retrieval_documents_sync(db, record)
             db.commit()
+
+    def _search_retrieval_documents_sync(
+        self,
+        project_id: str,
+        query: str,
+        agent: str | None,
+        mode: str | None,
+        run_profile_id: str | None,
+        source_type: str | None,
+        limit: int,
+        query_embedding: list[float],
+    ) -> list[RetrievalDocument]:
+        sql = """
+            SELECT id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, created_at
+            FROM retrieval_documents
+            WHERE project_id = ?
+        """
+        params: list[object] = [project_id]
+        if agent:
+            sql += " AND agent = ?"
+            params.append(agent)
+        if mode:
+            sql += " AND mode = ?"
+            params.append(mode)
+        if source_type:
+            sql += " AND source_type = ?"
+            params.append(source_type)
+        sql += " ORDER BY created_at DESC LIMIT 200"
+        with self._connect_sync() as db:
+            cursor = self._db_execute(db, sql, tuple(params))
+            rows = cursor.fetchall()
+        return self._rank_retrieval_rows(rows, query, run_profile_id, limit, query_embedding)
+
+    def _search_retrieval_documents_pgvector(
+        self,
+        project_id: str,
+        query: str,
+        query_embedding: list[float],
+        agent: str | None,
+        mode: str | None,
+        run_profile_id: str | None,
+        source_type: str | None,
+        limit: int,
+    ) -> list[RetrievalDocument]:
+        if not query_embedding:
+            return []
+        sql = """
+            SELECT id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, created_at,
+                   (embedding_vector::vector <=> ?::vector) AS distance
+            FROM retrieval_documents
+            WHERE project_id = ? AND embedding_vector IS NOT NULL AND embedding_vector != ''
+        """
+        params: list[object] = [pgvector_literal(query_embedding), project_id]
+        if agent:
+            sql += " AND agent = ?"
+            params.append(agent)
+        if mode:
+            sql += " AND mode = ?"
+            params.append(mode)
+        if source_type:
+            sql += " AND source_type = ?"
+            params.append(source_type)
+        if run_profile_id:
+            sql += " AND metadata LIKE ?"
+            params.append(f'%"run_profile_id": "{run_profile_id}"%')
+        sql += " ORDER BY embedding_vector::vector <=> ?::vector LIMIT ?"
+        params.extend([pgvector_literal(query_embedding), max(1, min(limit, 20))])
+        with self._connect_sync() as db:
+            cursor = self._db_execute(db, sql, tuple(params))
+            rows = cursor.fetchall()
+        documents: list[RetrievalDocument] = []
+        for row in rows:
+            document = self._retrieval_document_from_row(row)
+            keyword_score = score_retrieval_document(query, document)
+            distance = float(row[11] or 0.0)
+            embedding_score = max(0.0, round(1.0 - distance, 4))
+            document.metadata["keyword_score"] = keyword_score
+            document.metadata["embedding_score"] = embedding_score
+            document.metadata["vector_backend"] = "pgvector"
+            document.score = round(keyword_score * 0.2 + embedding_score * 0.8, 4)
+            documents.append(document)
+        return documents
+
+    def _save_retrieval_documents_sync(self, documents: list[RetrievalDocument]) -> None:
+        first = documents[0]
+        with self._connect_sync() as db:
+            self._db_execute(
+                db,
+                "DELETE FROM retrieval_documents WHERE source_type = ? AND source_id = ?",
+                (first.source_type, first.source_id),
+            )
+            insert_sql = """
+                INSERT OR REPLACE INTO retrieval_documents
+                (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+            if self.is_postgres:
+                insert_sql = """
+                    INSERT INTO retrieval_documents
+                    (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                        project_id = EXCLUDED.project_id,
+                        agent = EXCLUDED.agent,
+                        mode = EXCLUDED.mode,
+                        source_type = EXCLUDED.source_type,
+                        source_id = EXCLUDED.source_id,
+                        title = EXCLUDED.title,
+                        content = EXCLUDED.content,
+                        metadata = EXCLUDED.metadata,
+                        embedding = EXCLUDED.embedding,
+                        embedding_vector = EXCLUDED.embedding_vector,
+                        created_at = EXCLUDED.created_at
+                """
+            self._db_executemany(
+                db,
+                insert_sql,
+                [self._retrieval_document_params(document) for document in documents],
+            )
+            db.commit()
+
+    def _get_retrieval_documents_sync(
+        self,
+        project_id: str,
+        agent: str | None,
+        mode: str | None,
+        source_type: str | None,
+        source_id: str | None,
+        limit: int,
+    ) -> list[RetrievalDocument]:
+        sql = """
+            SELECT id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, created_at
+            FROM retrieval_documents
+            WHERE project_id = ?
+        """
+        params: list[object] = [project_id]
+        if agent:
+            sql += " AND agent = ?"
+            params.append(agent)
+        if mode:
+            sql += " AND mode = ?"
+            params.append(mode)
+        if source_type:
+            sql += " AND source_type = ?"
+            params.append(source_type)
+        if source_id:
+            sql += " AND source_id = ?"
+            params.append(source_id)
+        sql += " ORDER BY created_at DESC LIMIT ?"
+        params.append(max(1, min(limit, 1000)))
+        with self._connect_sync() as db:
+            cursor = self._db_execute(db, sql, tuple(params))
+            rows = cursor.fetchall()
+        return [self._retrieval_document_from_row(row) for row in rows]
 
     def _get_run_history_sync(self, project_id: str | None, agent: str | None, limit: int):
         query = (
@@ -960,6 +1295,110 @@ class FeedbackStore:
             json.dumps(record.benchmark_notes),
             record.scorecard_mode,
             record.error_message or "",
+        )
+
+    async def _replace_retrieval_documents_async(self, db, record: RunHistoryRecord) -> None:
+        await db.execute("DELETE FROM retrieval_documents WHERE source_type = ? AND source_id = ?", ("run_history", record.run_id))
+        documents = build_run_retrieval_documents(record)
+        if not documents:
+            return
+        await db.executemany(
+            """
+            INSERT OR REPLACE INTO retrieval_documents
+            (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [self._retrieval_document_params(document) for document in documents],
+        )
+
+    def _replace_retrieval_documents_sync(self, db, record: RunHistoryRecord) -> None:
+        self._db_execute(db, "DELETE FROM retrieval_documents WHERE source_type = ? AND source_id = ?", ("run_history", record.run_id))
+        documents = build_run_retrieval_documents(record)
+        if not documents:
+            return
+        insert_sql = """
+            INSERT OR REPLACE INTO retrieval_documents
+            (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        if self.is_postgres:
+            insert_sql = """
+                INSERT INTO retrieval_documents
+                (id, project_id, agent, mode, source_type, source_id, title, content, metadata, embedding, embedding_vector, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (id) DO UPDATE SET
+                    project_id = EXCLUDED.project_id,
+                    agent = EXCLUDED.agent,
+                    mode = EXCLUDED.mode,
+                    source_type = EXCLUDED.source_type,
+                    source_id = EXCLUDED.source_id,
+                    title = EXCLUDED.title,
+                    content = EXCLUDED.content,
+                    metadata = EXCLUDED.metadata,
+                    embedding = EXCLUDED.embedding,
+                    embedding_vector = EXCLUDED.embedding_vector,
+                    created_at = EXCLUDED.created_at
+            """
+        self._db_executemany(
+            db,
+            insert_sql,
+            [self._retrieval_document_params(document) for document in documents],
+        )
+
+    def _retrieval_document_params(self, document: RetrievalDocument) -> tuple[object, ...]:
+        document = ensure_document_embedding(document)
+        return (
+            document.id,
+            document.project_id,
+            document.agent,
+            document.mode,
+            document.source_type,
+            document.source_id,
+            document.title,
+            document.content,
+            json.dumps(document.metadata),
+            json.dumps(document.embedding),
+            pgvector_literal(document.embedding),
+            document.created_at.isoformat(),
+        )
+
+    def _rank_retrieval_rows(
+        self,
+        rows,
+        query: str,
+        run_profile_id: str | None,
+        limit: int,
+        query_embedding: list[float],
+    ) -> list[RetrievalDocument]:
+        documents: list[RetrievalDocument] = []
+        for row in rows:
+            document = self._retrieval_document_from_row(row)
+            document = ensure_document_embedding(document)
+            if run_profile_id and str(document.metadata.get("run_profile_id") or "") != run_profile_id:
+                continue
+            keyword_score = score_retrieval_document(query, document)
+            embedding_score = score_embedding_vector(query_embedding, document)
+            document.metadata["keyword_score"] = keyword_score
+            document.metadata["embedding_score"] = embedding_score
+            document.score = round(keyword_score * 0.35 + embedding_score * 0.65, 4)
+            if document.score > 0:
+                documents.append(document)
+        documents.sort(key=lambda item: (item.score or 0, item.created_at), reverse=True)
+        return documents[: max(1, min(limit, 20))]
+
+    def _retrieval_document_from_row(self, row) -> RetrievalDocument:
+        return RetrievalDocument(
+            id=row[0],
+            project_id=row[1],
+            agent=row[2],
+            mode=row[3],
+            source_type=row[4],
+            source_id=row[5],
+            title=row[6],
+            content=row[7],
+            metadata=json.loads(row[8] or "{}"),
+            embedding=json.loads(row[9] or "[]"),
+            created_at=datetime.fromisoformat(row[10]),
         )
 
     def _run_history_summary_from_row(self, row) -> RunHistorySummary:

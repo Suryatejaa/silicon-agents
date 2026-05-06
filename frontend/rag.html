@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silicon Agents · RAG Console</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --line: #dfe1e6;
+      --text: #172b4d;
+      --muted: #5e6c84;
+      --accent: #0c66e4;
+      --ok: #216e4e;
+      --warn: #ae2a19;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    main {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .app-brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .app-brand-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .app-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .app-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .app-nav a:hover,
+    .app-nav a.is-current {
+      color: var(--accent);
+      background: #edf4ff;
+      border-color: #cfe0fb;
+    }
+    .hero {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+    .section-title {
+      color: var(--accent);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 4px 0 8px;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      max-width: 980px;
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(340px, 0.85fr) minmax(0, 1.15fr);
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
+    }
+    .stack {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(9, 30, 66, 0.05);
+    }
+    .panel-title {
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .panel-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .full {
+      grid-column: 1 / -1;
+    }
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 800;
+    }
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 11px 12px;
+      font: inherit;
+    }
+    input,
+    select,
+    textarea {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.5;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 400;
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(180deg, #1d7afc 0%, #0c66e4 100%);
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(12, 102, 228, 0.22);
+    }
+    button.ghost {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      box-shadow: none;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .toolbar button {
+      width: auto;
+      min-width: 130px;
+    }
+    .notice {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .notice.ok { color: var(--ok); }
+    .notice.warn { color: var(--warn); }
+    .results {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .doc-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #ffffff;
+    }
+    .doc-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .doc-title {
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #cfe0fb;
+      background: #edf4ff;
+      color: #0c4fa8;
+      padding: 5px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .excerpt {
+      color: var(--muted);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 8px 0;
+    }
+    @media (max-width: 980px) {
+      .layout,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .app-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .app-nav {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="app-mark">SA</div>
+        <div>
+          <div class="app-brand-title">Silicon Agents Console</div>
+          <div class="app-brand-sub">RAG Corpus and Evidence Tools</div>
+        </div>
+      </div>
+      <nav class="app-nav">
+        <a href="/" id="navHome">Home</a>
+        <a href="/agent01" id="navAgent01">Agent 01</a>
+        <a href="/agent02" id="navAgent02">Agent 02</a>
+        <a href="/history" id="navHistory">Run History</a>
+        <a href="/rag" class="is-current" id="navRag">RAG</a>
+        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
+        <a href="/configuration" id="navConfig">Enterprise Config</a>
+        <a href="/product-docs" id="navDocs">Docs</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="section-title">RAG Console</div>
+      <h1>Retrieval Evidence Workbench</h1>
+      <div class="sub">
+        Search the retrieval corpus, ingest sanitized engineering notes, and reindex existing documents after embedding-provider changes.
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <div class="panel">
+          <div class="panel-title">Search Corpus</div>
+          <div class="panel-copy">Run a metadata-filtered retrieval query against saved run history and ingested notes.</div>
+          <div class="form-grid">
+            <label>Project ID<input id="searchProject" value="api-test" /></label>
+            <label>Agent
+              <select id="searchAgent">
+                <option value="">All agents</option>
+                <option value="agent01">Agent 01</option>
+                <option value="agent02">Agent 02</option>
+              </select>
+            </label>
+            <label>Mode<input id="searchMode" placeholder="coverage, triage, ate, spc" /></label>
+            <label>Run Profile<input id="searchProfile" placeholder="Optional run profile id" /></label>
+            <label>Source Type
+              <select id="searchSourceType">
+                <option value="">All sources</option>
+                <option value="run_history">Run history</option>
+                <option value="manual_note">Manual note</option>
+              </select>
+            </label>
+            <label>Limit<input id="searchLimit" type="number" min="1" max="20" value="8" /></label>
+            <label class="full">Query<textarea id="searchQuery" placeholder="Example: isochronous coverage waiver prior closure note"></textarea></label>
+          </div>
+          <div class="toolbar">
+            <button id="searchBtn" type="button">Search RAG</button>
+            <button id="clearSearchBtn" class="ghost" type="button">Clear</button>
+          </div>
+          <div class="notice" id="searchStatus">Ready to search retrieval documents.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Ingest Manual Note</div>
+          <div class="panel-copy">Add a sanitized engineering note to the retrieval corpus with workflow metadata.</div>
+          <div class="form-grid">
+            <label>Project ID<input id="ingestProject" value="api-test" /></label>
+            <label>Agent
+              <select id="ingestAgent">
+                <option value="agent01">Agent 01</option>
+                <option value="agent02">Agent 02</option>
+              </select>
+            </label>
+            <label>Mode<input id="ingestMode" value="coverage" /></label>
+            <label>Source ID<input id="ingestSourceId" placeholder="Optional stable source id" /></label>
+            <label>Run Profile<input id="ingestProfile" placeholder="Optional run profile id" /></label>
+            <label>Chip Type<input id="ingestChipType" placeholder="Optional chip/IP type" /></label>
+            <label class="full">Title<input id="ingestTitle" placeholder="Example: USB isochronous waiver guidance" /></label>
+            <label class="full">Tags<input id="ingestTags" placeholder="Comma separated, e.g. waiver,coverage,usb" /></label>
+            <label class="full">Content<textarea id="ingestContent" placeholder="Paste sanitized note content"></textarea></label>
+          </div>
+          <div class="toolbar">
+            <button id="ingestBtn" type="button">Ingest Note</button>
+          </div>
+          <div class="notice" id="ingestStatus">Ready to ingest a manual note.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Reindex Documents</div>
+          <div class="panel-copy">Refresh embeddings for matching retrieval documents without changing source content.</div>
+          <div class="form-grid">
+            <label>Project ID<input id="reindexProject" value="api-test" /></label>
+            <label>Agent
+              <select id="reindexAgent">
+                <option value="">All agents</option>
+                <option value="agent01">Agent 01</option>
+                <option value="agent02">Agent 02</option>
+              </select>
+            </label>
+            <label>Mode<input id="reindexMode" placeholder="Optional mode" /></label>
+            <label>Source Type
+              <select id="reindexSourceType">
+                <option value="">All sources</option>
+                <option value="run_history">Run history</option>
+                <option value="manual_note">Manual note</option>
+              </select>
+            </label>
+            <label>Source ID<input id="reindexSourceId" placeholder="Optional source id" /></label>
+            <label>Limit<input id="reindexLimit" type="number" min="1" max="1000" value="200" /></label>
+          </div>
+          <div class="toolbar">
+            <button id="reindexBtn" type="button">Reindex</button>
+          </div>
+          <div class="notice" id="reindexStatus">Ready to reindex matching documents.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Retrieval Results</div>
+        <div class="panel-copy" id="resultsIntro">Search or ingest to inspect documents, scores, embeddings, and metadata.</div>
+        <div class="results" id="resultsRoot">
+          <div class="empty">No retrieval results yet.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const isFileMode = window.location.protocol === "file:";
+    const apiBase = (() => {
+      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      if (isFileMode) return stored || "http://127.0.0.1:8000";
+      return stored;
+    })();
+
+    const links = {
+      navHome: isFileMode ? "./index.html" : "/",
+      navAgent01: isFileMode ? "./agent01.html" : "/agent01",
+      navAgent02: isFileMode ? "./agent02.html" : "/agent02",
+      navHistory: isFileMode ? "./history.html" : "/history",
+      navRag: isFileMode ? "./rag.html" : "/rag",
+      navPilot: isFileMode ? "./pilot.html" : "/pilot",
+      navConfig: isFileMode ? "./configuration.html" : "/configuration",
+      navDocs: isFileMode ? "./docs.html" : "/product-docs"
+    };
+    Object.entries(links).forEach(([id, href]) => {
+      const node = document.getElementById(id);
+      if (node) node.href = href;
+    });
+
+    const resultsRoot = document.getElementById("resultsRoot");
+    const resultsIntro = document.getElementById("resultsIntro");
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function apiFetch(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
+      if (token) headers.set("X-Pilot-Access-Token", token);
+      return fetch(`${apiBase}${path}`, { ...options, headers });
+    }
+
+    function optionalValue(id) {
+      const value = document.getElementById(id).value.trim();
+      return value || null;
+    }
+
+    function setNotice(id, text, type = "") {
+      const node = document.getElementById(id);
+      node.className = `notice ${type}`.trim();
+      node.textContent = text;
+    }
+
+    function renderDocuments(documents, intro) {
+      resultsIntro.textContent = intro;
+      if (!documents.length) {
+        resultsRoot.innerHTML = `<div class="empty">No matching retrieval documents found.</div>`;
+        return;
+      }
+      resultsRoot.innerHTML = documents.map((doc) => {
+        const score = typeof doc.score === "number" ? doc.score.toFixed(3) : "not scored";
+        const embedding = Array.isArray(doc.embedding) ? doc.embedding.length : 0;
+        const tags = Array.isArray(doc.metadata?.tags) ? doc.metadata.tags : [];
+        return `
+          <article class="doc-card">
+            <div class="doc-head">
+              <div>
+                <div class="doc-title">${escapeHtml(doc.title)}</div>
+                <div class="sub">${escapeHtml(doc.source_id)} · ${escapeHtml(doc.source_type)} · score ${escapeHtml(score)}</div>
+              </div>
+              <span class="pill">${escapeHtml(doc.agent)} / ${escapeHtml(doc.mode)}</span>
+            </div>
+            <div class="excerpt">${escapeHtml(doc.content)}</div>
+            <div class="pill-row">
+              <span class="pill">${escapeHtml(doc.project_id)}</span>
+              <span class="pill">${escapeHtml(doc.metadata?.run_profile_id || "no profile")}</span>
+              <span class="pill">${escapeHtml(doc.metadata?.embedding_provider || "embedding provider unknown")}</span>
+              <span class="pill">${escapeHtml(doc.metadata?.embedding_model || "model unknown")}</span>
+              <span class="pill">${embedding} dims</span>
+              ${tags.map((tag) => `<span class="pill">${escapeHtml(tag)}</span>`).join("")}
+            </div>
+            <details>
+              <summary class="sub">Metadata JSON</summary>
+              <div class="mono">${escapeHtml(JSON.stringify(doc.metadata || {}, null, 2))}</div>
+            </details>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function searchRag() {
+      const query = document.getElementById("searchQuery").value.trim();
+      const projectId = document.getElementById("searchProject").value.trim();
+      if (!projectId || !query) {
+        setNotice("searchStatus", "Project ID and query are required.", "warn");
+        return;
+      }
+      setNotice("searchStatus", "Searching retrieval documents...");
+      try {
+        const payload = {
+          project_id: projectId,
+          query,
+          agent: optionalValue("searchAgent"),
+          mode: optionalValue("searchMode"),
+          run_profile_id: optionalValue("searchProfile"),
+          source_type: optionalValue("searchSourceType"),
+          limit: Number(document.getElementById("searchLimit").value) || 8
+        };
+        const response = await apiFetch("/api/v1/rag/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Search failed with ${response.status}`);
+        const data = await response.json();
+        renderDocuments(data.documents || [], `Search returned ${(data.documents || []).length} retrieval documents.`);
+        setNotice("searchStatus", `Search complete: ${(data.documents || []).length} documents.`, "ok");
+      } catch (error) {
+        setNotice("searchStatus", error.message || "Search failed.", "warn");
+      }
+    }
+
+    async function ingestNote() {
+      const projectId = document.getElementById("ingestProject").value.trim();
+      const title = document.getElementById("ingestTitle").value.trim();
+      const content = document.getElementById("ingestContent").value.trim();
+      if (!projectId || !title || !content) {
+        setNotice("ingestStatus", "Project ID, title, and content are required.", "warn");
+        return;
+      }
+      setNotice("ingestStatus", "Ingesting and embedding note...");
+      try {
+        const payload = {
+          project_id: projectId,
+          title,
+          content,
+          agent: document.getElementById("ingestAgent").value,
+          mode: document.getElementById("ingestMode").value.trim() || "coverage",
+          source_id: optionalValue("ingestSourceId"),
+          run_profile_id: optionalValue("ingestProfile"),
+          chip_type: optionalValue("ingestChipType"),
+          tags: document.getElementById("ingestTags").value.split(",").map((item) => item.trim()).filter(Boolean)
+        };
+        const response = await apiFetch("/api/v1/rag/ingest-note", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Ingest failed with ${response.status}`);
+        const data = await response.json();
+        renderDocuments(data.documents || [], `Ingested source ${data.source_id} into ${data.document_count} retrieval chunks.`);
+        setNotice("ingestStatus", `Ingested ${data.document_count} chunks from ${data.source_id}.`, "ok");
+      } catch (error) {
+        setNotice("ingestStatus", error.message || "Ingest failed.", "warn");
+      }
+    }
+
+    async function reindexDocs() {
+      const projectId = document.getElementById("reindexProject").value.trim();
+      if (!projectId) {
+        setNotice("reindexStatus", "Project ID is required.", "warn");
+        return;
+      }
+      setNotice("reindexStatus", "Reindexing matching documents...");
+      try {
+        const payload = {
+          project_id: projectId,
+          agent: optionalValue("reindexAgent"),
+          mode: optionalValue("reindexMode"),
+          source_type: optionalValue("reindexSourceType"),
+          source_id: optionalValue("reindexSourceId"),
+          limit: Number(document.getElementById("reindexLimit").value) || 200
+        };
+        const response = await apiFetch("/api/v1/rag/reindex", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Reindex failed with ${response.status}`);
+        const data = await response.json();
+        renderDocuments(data.documents || [], `Reindexed ${data.document_count} documents using ${data.embedding_provider} / ${data.embedding_model}.`);
+        setNotice("reindexStatus", `Reindexed ${data.document_count} documents.`, "ok");
+      } catch (error) {
+        setNotice("reindexStatus", error.message || "Reindex failed.", "warn");
+      }
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", searchRag);
+    document.getElementById("clearSearchBtn").addEventListener("click", () => {
+      document.getElementById("searchQuery").value = "";
+      resultsIntro.textContent = "Search or ingest to inspect documents, scores, embeddings, and metadata.";
+      resultsRoot.innerHTML = `<div class="empty">No retrieval results yet.</div>`;
+      setNotice("searchStatus", "Ready to search retrieval documents.");
+    });
+    document.getElementById("ingestBtn").addEventListener("click", ingestNote);
+    document.getElementById("reindexBtn").addEventListener("click", reindexDocs);
+  </script>
+</body>
+</html>

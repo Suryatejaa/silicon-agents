@@ -4,11 +4,21 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 
-from silicon_agents.core.schemas import Decision, RunHistoryRecord
+from silicon_agents.core.config import get_settings
+from silicon_agents.core.schemas import Decision, ManualNoteIngestRequest, RunHistoryRecord
+from silicon_agents.rag.documents import build_manual_note_documents
 from silicon_agents.storage.feedback_store import FeedbackStore
 
 
 class FeedbackStoreTests(unittest.TestCase):
+    def setUp(self) -> None:
+        os.environ["SA_RAG_EMBEDDING_PROVIDER"] = "local"
+        get_settings.cache_clear()
+
+    def tearDown(self) -> None:
+        os.environ.pop("SA_RAG_EMBEDDING_PROVIDER", None)
+        get_settings.cache_clear()
+
     def test_postgres_executemany_uses_cursor(self) -> None:
         class FakeCursor:
             def __init__(self) -> None:
@@ -151,6 +161,19 @@ class FeedbackStoreTests(unittest.TestCase):
                     observability={"decision_count": 1},
                 )
                 await store.save_run_history(record)
+                retrieval_docs = await store.search_retrieval_documents(
+                    project_id="history-test",
+                    agent="agent01",
+                    mode="coverage",
+                    run_profile_id="usb_dv_coverage",
+                    query="isochronous coverage directed sequence",
+                    limit=5,
+                )
+                self.assertGreaterEqual(len(retrieval_docs), 1)
+                self.assertEqual(retrieval_docs[0].project_id, "history-test")
+                self.assertIn("run-001", retrieval_docs[0].source_id)
+                self.assertGreater(len(retrieval_docs[0].embedding), 0)
+                self.assertIn("embedding_score", retrieval_docs[0].metadata)
                 await store.record_feedback(
                     decision_id="D001",
                     project_id="history-test",
@@ -173,5 +196,49 @@ class FeedbackStoreTests(unittest.TestCase):
                 self.assertEqual(fetched.decisions[0].target, "isochronous_transfer")
                 self.assertEqual(len(fetched.feedback), 1)
                 self.assertEqual(len(fetched.export_history), 1)
+
+        asyncio.run(run())
+
+    def test_manual_note_retrieval_documents_round_trip(self) -> None:
+        async def run() -> None:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                db_path = os.path.join(temp_dir, "store.db")
+                store = FeedbackStore(db_path)
+                await store.init()
+                request = ManualNoteIngestRequest(
+                    project_id="note-test",
+                    agent="agent01",
+                    mode="coverage",
+                    title="USB waiver review",
+                    content=(
+                        "Isochronous transfer bins should not be waived without a directed sequence. "
+                        "Prior review found the same gap when interrupt overlap constraints blocked ISO traffic."
+                    ),
+                    run_profile_id="usb_dv_coverage",
+                    chip_type="USB 3.0 Controller IP",
+                    tags=["waiver", "coverage"],
+                )
+                documents = build_manual_note_documents(
+                    request=request,
+                    source_id="note-001",
+                    created_at=datetime.now(timezone.utc),
+                )
+                await store.save_retrieval_documents(documents)
+                fetched = await store.search_retrieval_documents(
+                    project_id="note-test",
+                    agent="agent01",
+                    mode="coverage",
+                    run_profile_id="usb_dv_coverage",
+                    source_type="manual_note",
+                    query="isochronous waiver directed sequence",
+                    limit=3,
+                )
+                self.assertEqual(len(fetched), 1)
+                self.assertEqual(fetched[0].source_type, "manual_note")
+                self.assertEqual(fetched[0].source_id, "note-001")
+                self.assertEqual(fetched[0].metadata["tags"], ["waiver", "coverage"])
+                self.assertEqual(fetched[0].metadata["embedding_provider"], "local")
+                self.assertEqual(fetched[0].metadata["embedding_model"], "local-hashing-v1")
+                self.assertGreater(len(fetched[0].embedding), 0)
 
         asyncio.run(run())

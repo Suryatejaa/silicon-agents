@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from statistics import mean, pstdev
 from typing import AsyncIterator
@@ -15,6 +16,9 @@ from silicon_agents.orchestration.prompt_orchestrator import PromptOrchestrator
 from silicon_agents.parsers.ate_parser import parse_ate_csv, parse_spc_csv
 from silicon_agents.prompts.ate_prompt import ATE_SYSTEM_PROMPT
 from silicon_agents.prompts.spc_prompt import SPC_SYSTEM_PROMPT
+
+
+logger = logging.getLogger(__name__)
 
 
 class YieldAgent:
@@ -204,6 +208,9 @@ class YieldAgent:
                 raw += chunk
             if self.llm.last_provider == "mock":
                 fallback["orchestration"] = self._orchestration_payload(prompt_plan)
+                fallback["provider"] = "mock"
+                fallback["llm_diagnostics"] = self._llm_diagnostics("provider_fallback", raw)
+                fallback["orchestration"]["llm_diagnostics"] = fallback["llm_diagnostics"]
                 return fallback
             parsed_json = self._extract_json(raw)
             decisions = self._decisions_from_llm(parsed_json.get("decisions", []), fallback["decisions"], project_id, default_type)
@@ -218,11 +225,36 @@ class YieldAgent:
                 },
                 "decisions": decisions,
                 "provider": self.llm.last_provider,
-                "orchestration": self._orchestration_payload(prompt_plan),
+                "orchestration": {
+                    **self._orchestration_payload(prompt_plan),
+                    "llm_diagnostics": self._llm_diagnostics("live_json", raw),
+                },
+                "llm_diagnostics": self._llm_diagnostics("live_json", raw),
             }
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Agent 02 live LLM response fell back to deterministic analysis provider=%s model=%s error=%s raw_head=%r attempts=%s",
+                self.llm.last_provider,
+                self.llm.last_model,
+                exc,
+                raw[:500],
+                self.llm.provider_attempts,
+            )
             fallback["orchestration"] = self._orchestration_payload(prompt_plan)
+            fallback["provider"] = self.llm.last_provider if self.llm.last_provider != "mock" else "mock"
+            fallback["llm_diagnostics"] = self._llm_diagnostics(f"parse_or_decision_fallback: {exc}", raw)
+            fallback["orchestration"]["llm_diagnostics"] = fallback["llm_diagnostics"]
             return fallback
+
+    def _llm_diagnostics(self, reason: str, raw: str = "") -> dict:
+        return {
+            "provider": self.llm.last_provider,
+            "model": self.llm.last_model,
+            "attempts": list(self.llm.provider_attempts),
+            "fallback_reason": self.llm.fallback_reason or reason,
+            "raw_response_chars": len(raw or ""),
+            "raw_response_excerpt": (raw or "")[:500],
+        }
 
     def _fallback_text(self, fallback: dict) -> str:
         analyse = fallback["steps"]["analyse"]
@@ -249,6 +281,7 @@ class YieldAgent:
             "parser_confidence": self.last_parser_confidence,
             "parser_warnings": list(self.last_parser_warnings),
             "provider": self.orchestrator.last_provider,
+            "orchestration_llm_diagnostics": dict(self.orchestrator.last_diagnostics),
         }
 
     def _capture_parser_signals(self, parsed) -> None:

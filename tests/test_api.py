@@ -13,6 +13,7 @@ class ApiTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.temp_dir = tempfile.TemporaryDirectory()
         os.environ["SA_DB_PATH"] = os.path.join(cls.temp_dir.name, "test.db")
+        os.environ["SA_RAG_EMBEDDING_PROVIDER"] = "local"
         os.environ.pop("DATABASE_URL", None)
         os.environ.pop("PILOT_ACCESS_TOKEN", None)
         get_settings.cache_clear()
@@ -25,6 +26,7 @@ class ApiTests(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.temp_dir.cleanup()
         os.environ.pop("SA_DB_PATH", None)
+        os.environ.pop("SA_RAG_EMBEDDING_PROVIDER", None)
         os.environ.pop("DATABASE_URL", None)
         os.environ.pop("PILOT_ACCESS_TOKEN", None)
         get_settings.cache_clear()
@@ -48,6 +50,10 @@ class ApiTests(unittest.TestCase):
         docs = self.client.get("/product-docs")
         self.assertEqual(docs.status_code, 200)
         self.assertIn("Silicon Agents documentation", docs.text)
+
+        rag = self.client.get("/rag")
+        self.assertEqual(rag.status_code, 200)
+        self.assertIn("Retrieval Evidence Workbench", rag.text)
 
     def test_enterprise_config_defaults_and_update(self) -> None:
         default_agent01 = self.client.get("/api/v1/config/agent01")
@@ -115,6 +121,37 @@ class ApiTests(unittest.TestCase):
         self.assertGreater(detail.json()["parser_confidence"], 0)
         self.assertIsInstance(detail.json()["parser_warnings"], list)
 
+        rag_search = self.client.post(
+            "/api/v1/rag/search",
+            json={
+                "project_id": "api-test",
+                "agent": "agent01",
+                "mode": "coverage",
+                "run_profile_id": "usb_dv_coverage",
+                "query": "gap_case protocol escape review",
+                "limit": 5,
+            },
+        )
+        self.assertEqual(rag_search.status_code, 200)
+        self.assertGreaterEqual(len(rag_search.json()["documents"]), 1)
+        self.assertEqual(rag_search.json()["documents"][0]["project_id"], "api-test")
+
+        second_response = self.client.post(
+            "/api/v1/verify",
+            json={
+                "report_text": "Cover Group: demo [Coverage: 50.0%]\nbins gap_case: 0 hits FAIL gap",
+                "mode": "coverage",
+                "project_id": "api-test",
+                "artifact_name": "demo_coverage_second.log",
+                "artifact_source": "pasted_text",
+                "run_profile_id": "usb_dv_coverage",
+                "run_profile_name": "USB Controller Benchmark",
+            },
+        )
+        self.assertEqual(second_response.status_code, 200)
+        self.assertIn("retrieved_sources", second_response.text)
+        self.assertIn("content_excerpt", second_response.text)
+
         jira_export = self.client.get(f"/api/v1/runs/{run_id}/export/jira")
         self.assertEqual(jira_export.status_code, 200)
         self.assertEqual(jira_export.json()["format"], "jira")
@@ -128,6 +165,66 @@ class ApiTests(unittest.TestCase):
         detail_after_exports = self.client.get(f"/api/v1/runs/{run_id}")
         self.assertEqual(detail_after_exports.status_code, 200)
         self.assertEqual(len(detail_after_exports.json()["export_history"]), 2)
+
+    def test_rag_manual_note_ingest_and_search(self) -> None:
+        ingest = self.client.post(
+            "/api/v1/rag/ingest-note",
+            json={
+                "project_id": "rag-note-api",
+                "agent": "agent01",
+                "mode": "coverage",
+                "source_id": "note-api-001",
+                "title": "Secure boot waiver guidance",
+                "content": (
+                    "Lifecycle lockdown coverage gaps require security review before waiver. "
+                    "Image authentication negative-path bins should cite prior escape risk."
+                ),
+                "run_profile_id": "secure_boot_coverage",
+                "run_profile_name": "Secure Boot Coverage",
+                "chip_type": "Secure Boot ROM",
+                "client_profile": "Security DV team",
+                "tags": ["waiver", "security"],
+            },
+        )
+        self.assertEqual(ingest.status_code, 200)
+        self.assertEqual(ingest.json()["source_id"], "note-api-001")
+        self.assertGreaterEqual(ingest.json()["document_count"], 1)
+
+        search = self.client.post(
+            "/api/v1/rag/search",
+            json={
+                "project_id": "rag-note-api",
+                "agent": "agent01",
+                "mode": "coverage",
+                "run_profile_id": "secure_boot_coverage",
+                "source_type": "manual_note",
+                "query": "lifecycle lockdown waiver security review",
+                "limit": 5,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        self.assertEqual(len(search.json()["documents"]), 1)
+        self.assertEqual(search.json()["documents"][0]["source_type"], "manual_note")
+        self.assertEqual(search.json()["documents"][0]["source_id"], "note-api-001")
+        self.assertGreater(len(search.json()["documents"][0]["embedding"]), 0)
+        self.assertEqual(search.json()["documents"][0]["metadata"]["embedding_provider"], "local")
+        self.assertIn("embedding_score", search.json()["documents"][0]["metadata"])
+
+        reindex = self.client.post(
+            "/api/v1/rag/reindex",
+            json={
+                "project_id": "rag-note-api",
+                "agent": "agent01",
+                "mode": "coverage",
+                "source_type": "manual_note",
+                "source_id": "note-api-001",
+                "limit": 10,
+            },
+        )
+        self.assertEqual(reindex.status_code, 200)
+        self.assertEqual(reindex.json()["document_count"], 1)
+        self.assertEqual(reindex.json()["embedding_provider"], "local")
+        self.assertEqual(reindex.json()["documents"][0]["metadata"]["embedding_model"], "local-hashing-v1")
 
     def test_yield_endpoint_accepts_enterprise_fields(self) -> None:
         response = self.client.post(
@@ -165,6 +262,32 @@ class ApiTests(unittest.TestCase):
         self.assertIn("analysis_events", detail.json()["observability"])
         self.assertEqual(detail.json()["parser_format"], "ate_csv")
         self.assertGreater(detail.json()["parser_confidence"], 0)
+
+        second_response = self.client.post(
+            "/api/v1/yield",
+            json={
+                "csv_data": "chip_id,max_freq_ghz,leakage_ua,vmin_mv,bin,pass\nC001,3.82,142,780,1,PASS\nC005,3.80,143,779,2,PASS\nC008,1.90,720,1010,3,FAIL\n",
+                "lot_id": "LOT_004_RERUN",
+                "mode": "ate",
+                "project_id": "yield-api-test",
+                "artifact_name": "ate_parametric_rerun.csv",
+                "artifact_source": "pasted_text",
+                "run_profile_id": "mobile_soc_yield",
+                "run_profile_name": "Mobile SoC Yield Review",
+                "chip_type": "Mobile SoC",
+                "client_profile": "Enterprise yield team",
+                "custom_instructions": "Prioritize premium-bin recovery.",
+            },
+        )
+        self.assertEqual(second_response.status_code, 200)
+        self.assertIn("retrieved_sources", second_response.text)
+        self.assertIn("content_excerpt", second_response.text)
+
+        second_runs = self.client.get("/api/v1/runs", params={"project_id": "yield-api-test", "agent": "agent02"})
+        second_run_id = second_runs.json()["runs"][0]["run_id"]
+        second_detail = self.client.get(f"/api/v1/runs/{second_run_id}")
+        self.assertGreaterEqual(second_detail.json()["observability"]["retrieval_document_count"], 1)
+        self.assertIn("content_excerpt", second_detail.json()["orchestration"]["retrieval"]["sources"][0])
 
     def test_feedback_round_trip(self) -> None:
         self.client.post(

@@ -226,6 +226,72 @@ class RunHistoryListResponse(BaseModel):
     runs: list[RunHistorySummary] = Field(default_factory=list)
 
 
+class RetrievalDocument(BaseModel):
+    id: str
+    project_id: str
+    agent: Literal["agent01", "agent02"]
+    mode: str
+    source_type: Literal["run_history", "manual_note"] = "run_history"
+    source_id: str
+    title: str
+    content: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+    embedding: list[float] = Field(default_factory=list)
+    score: Optional[float] = None
+
+
+class RetrievalSearchRequest(BaseModel):
+    project_id: str
+    agent: Optional[Literal["agent01", "agent02"]] = None
+    mode: Optional[str] = None
+    run_profile_id: Optional[str] = None
+    source_type: Optional[Literal["run_history", "manual_note"]] = None
+    query: str
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class RetrievalSearchResponse(BaseModel):
+    documents: list[RetrievalDocument] = Field(default_factory=list)
+
+
+class ManualNoteIngestRequest(BaseModel):
+    project_id: str
+    title: str
+    content: str
+    agent: Literal["agent01", "agent02"] = "agent01"
+    mode: str = "coverage"
+    source_id: Optional[str] = None
+    run_profile_id: Optional[str] = None
+    run_profile_name: Optional[str] = None
+    chip_type: Optional[str] = None
+    client_profile: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ManualNoteIngestResponse(BaseModel):
+    source_id: str
+    document_count: int
+    documents: list[RetrievalDocument] = Field(default_factory=list)
+
+
+class RetrievalReindexRequest(BaseModel):
+    project_id: str
+    agent: Optional[Literal["agent01", "agent02"]] = None
+    mode: Optional[str] = None
+    source_type: Optional[Literal["run_history", "manual_note"]] = None
+    source_id: Optional[str] = None
+    limit: int = Field(default=200, ge=1, le=1000)
+
+
+class RetrievalReindexResponse(BaseModel):
+    document_count: int
+    embedding_provider: str
+    embedding_model: str
+    documents: list[RetrievalDocument] = Field(default_factory=list)
+
+
 class PilotBreakdownItem(BaseModel):
     label: str
     count: int

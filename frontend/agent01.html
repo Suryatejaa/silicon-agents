@@ -392,6 +392,10 @@
       background: #fbfcfe;
     }
 
+    .orchestration-box.full-span {
+      grid-column: 1 / -1;
+    }
+
     .orchestration-list {
       margin: 6px 0 0;
       padding-left: 18px;
@@ -701,6 +705,7 @@
         <a href="/agent01" class="is-current" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
+        <a href="/rag" id="navRag">RAG</a>
         <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="./configuration.html" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
@@ -940,11 +945,17 @@
                 <li>Reference weighting for this run will appear here.</li>
               </ul>
             </div>
+            <div class="orchestration-box full-span">
+              <div class="summary-k">Retrieved evidence</div>
+              <ul class="orchestration-list" id="ragSources">
+                <li>No retrieved evidence yet.</li>
+              </ul>
+            </div>
           </div>
         </div>
         <div class="status-line">
           <div id="statusText">Awaiting a verification artifact for analysis.</div>
-          <div id="providerText">Model source: mock/local</div>
+          <div id="providerText">Model source: not run yet</div>
         </div>
         <div class="results-actions">
           <button id="exportBrief" class="ghost" type="button" disabled>Export Verification Brief</button>
@@ -1014,6 +1025,7 @@
     document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
     document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
     document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+    document.getElementById("navRag").href = window.location.protocol === "file:" ? "./rag.html" : "/rag";
     document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
     openConfigBtnEl.onclick = () => {
       window.location.href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
@@ -1104,7 +1116,7 @@
       scorecardMode: "live",
       decisionsData: [],
       analysisLog: [],
-      provider: "mock/local",
+      provider: "not run yet",
       orchestration: null,
       runProfileId: "",
       runId: null,
@@ -1126,10 +1138,62 @@
       document.getElementById("highValue").textContent = state.high;
     }
 
-    function setStatus(text, provider = "mock/local") {
+    function setStatus(text, provider = state.provider || "not run yet") {
       state.provider = provider;
       document.getElementById("statusText").textContent = text;
       document.getElementById("providerText").textContent = `Model source: ${provider}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function renderRetrievedSources(metadata, className = "muted") {
+      const sources = metadata?.retrieved_sources || [];
+      if (!sources.length) return "";
+      const sourceText = sources.slice(0, 3).map((source) => {
+        const score = typeof source.score === "number" ? ` (${source.score.toFixed(2)})` : "";
+        return `${escapeHtml(source.title || source.source_id || source.id)}${score}`;
+      }).join("; ");
+      return `<div class="${className}"><strong>Retrieved sources:</strong> ${sourceText}</div>`;
+    }
+
+    function renderRetrievalEvidenceList(elementId, retrieval, fallbackText) {
+      const node = document.getElementById(elementId);
+      const sources = retrieval?.sources || [];
+      node.innerHTML = "";
+      if (!sources.length) {
+        const li = document.createElement("li");
+        li.textContent = fallbackText;
+        node.appendChild(li);
+        return;
+      }
+      sources.slice(0, 4).forEach((source) => {
+        const li = document.createElement("li");
+        const score = typeof source.score === "number" ? ` · score ${source.score.toFixed(2)}` : "";
+        const type = source.source_type || source.document_kind ? ` · ${source.source_type || source.document_kind}` : "";
+        li.innerHTML = `
+          <strong>${escapeHtml(source.title || source.source_id || source.id)}${escapeHtml(score)}</strong>
+          <div class="muted">${escapeHtml(`${source.source_id || source.id}${type}`)}</div>
+          <div class="muted">${escapeHtml(source.content_excerpt || "No excerpt available for this source.")}</div>
+        `;
+        node.appendChild(li);
+      });
+    }
+
+    function formatRetrievalSources(retrieval) {
+      const sources = retrieval?.sources || [];
+      if (!sources.length) return [];
+      return sources.slice(0, 4).map((source) => {
+        const score = typeof source.score === "number" ? ` · score ${source.score.toFixed(2)}` : "";
+        return `${source.title || source.source_id || source.id}${score}`;
+      });
     }
 
     function updateSignalSummary() {
@@ -1248,6 +1312,7 @@
       setOrchestrationList("parserWarnings", [], "Any format warnings for the active artifact will appear here.");
       setOrchestrationList("orchInstructions", [], "Run an analysis to preview the active run plan.");
       setOrchestrationList("orchReferences", [], "Reference weighting for this run will appear here.");
+      renderRetrievalEvidenceList("ragSources", null, "No retrieved evidence yet.");
       state.orchestration = null;
       updateSignalSummary();
     }
@@ -1266,6 +1331,7 @@
       setOrchestrationList("parserWarnings", payload.parser_warnings || [], "No parser warnings for this artifact.");
       setOrchestrationList("orchInstructions", payload.instruction_overrides || [], "No instruction overrides supplied.");
       setOrchestrationList("orchReferences", payload.reference_priorities || [], "No reference priorities supplied.");
+      renderRetrievalEvidenceList("ragSources", payload.retrieval, "No matching prior evidence found for this run.");
       updateSignalSummary();
     }
 
@@ -1509,6 +1575,7 @@
       const sourceGroup = decision.metadata?.group ? `<div class="muted"><strong>Covergroup:</strong> ${decision.metadata.group}</div>` : "";
       const rankBasis = decision.metadata?.rank_basis ? `<div class="muted"><strong>Why ranked here:</strong> ${decision.metadata.rank_basis}</div>` : "";
       const samples = decision.metadata?.sample_tests?.length ? `<div class="muted"><strong>Representative tests:</strong> ${decision.metadata.sample_tests.join(", ")}</div>` : "";
+      const retrievedSources = renderRetrievedSources(decision.metadata);
       node.innerHTML = `
         <div class="badge ${decision.priority}">${decision.priority}</div>
         <h4>${decision.target}</h4>
@@ -1518,6 +1585,7 @@
         ${evidence}
         ${samples}
         ${rankBasis}
+        ${retrievedSources}
         <div class="muted">Confidence ${Math.round(decision.confidence * 100)}% · Effort ${decision.effort}</div>
       `;
       const row = document.createElement("div");
@@ -1772,7 +1840,7 @@
       resetRun();
       setRunControls(true);
       syncStats("Running");
-      setStatus("Analysing the verification artifact and ranking the next engineering actions...");
+      setStatus("Analysing the verification artifact and ranking the next engineering actions...", "pending live response");
       try {
         const config = loadAgent01Config();
         const activeProfile = getRunProfile(state.runProfileId);
@@ -1840,10 +1908,15 @@
               updateImpactSummary(seenDecisions);
               appendDecision(event.payload);
             }
+            if (event.type === "error") {
+              completeActiveStep("Error");
+              setStatus(event.payload.message || "Analysis failed on the API server. Check the terminal log.", state.provider || "provider unavailable");
+              syncStats("Error");
+            }
             if (event.type === "done") {
               completeActiveStep("Complete");
               syncStats("Done");
-              setStatus("Analysis completed. Review the evidence and approve or reject findings.", event.payload.provider || "mock/local");
+              setStatus("Analysis completed. Review the evidence and approve or reject findings.", event.payload.provider || state.provider || "provider unavailable");
               state.runId = event.payload.run_id || null;
               updateImpactSummary(seenDecisions);
               appendSummary(event.payload);

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Any
 
@@ -19,6 +20,7 @@ Rules:
 - never invent client processes, thresholds, or design context
 - output valid JSON only
 """.strip()
+logger = logging.getLogger(__name__)
 
 
 class PromptOrchestrator:
@@ -27,6 +29,7 @@ class PromptOrchestrator:
     def __init__(self) -> None:
         self.llm = LLMProvider()
         self.last_provider = "mock"
+        self.last_diagnostics: dict[str, Any] = {}
 
     async def build_plan(
         self,
@@ -81,9 +84,12 @@ class PromptOrchestrator:
                 raw += chunk
             if self.llm.last_provider == "mock":
                 self.last_provider = "mock"
+                self.last_diagnostics = self._llm_diagnostics("provider_fallback", raw)
+                fallback["llm_diagnostics"] = self.last_diagnostics
                 return fallback
             plan = self._extract_json(raw)
             self.last_provider = self.llm.last_provider
+            self.last_diagnostics = self._llm_diagnostics("live_json", raw)
             return {
                 "chip_focus": str(plan.get("chip_focus", fallback["chip_focus"])),
                 "instruction_overrides": self._as_list(plan.get("instruction_overrides"), fallback["instruction_overrides"]),
@@ -91,10 +97,31 @@ class PromptOrchestrator:
                 "analysis_directives": self._as_list(plan.get("analysis_directives"), fallback["analysis_directives"]),
                 "output_emphasis": str(plan.get("output_emphasis", fallback["output_emphasis"])),
                 "prompt_addendum": str(plan.get("prompt_addendum", fallback["prompt_addendum"])),
+                "llm_diagnostics": self.last_diagnostics,
             }
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Orchestration LLM fell back provider=%s model=%s error=%s raw_head=%r attempts=%s",
+                self.llm.last_provider,
+                self.llm.last_model,
+                exc,
+                raw[:500],
+                self.llm.provider_attempts,
+            )
             self.last_provider = "mock"
+            self.last_diagnostics = self._llm_diagnostics(f"parse_or_provider_fallback: {exc}", raw)
+            fallback["llm_diagnostics"] = self.last_diagnostics
             return fallback
+
+    def _llm_diagnostics(self, reason: str, raw: str = "") -> dict[str, Any]:
+        return {
+            "provider": self.llm.last_provider,
+            "model": self.llm.last_model,
+            "attempts": list(self.llm.provider_attempts),
+            "fallback_reason": self.llm.fallback_reason or reason,
+            "raw_response_chars": len(raw or ""),
+            "raw_response_excerpt": (raw or "")[:500],
+        }
 
     def _fallback_plan(
         self,

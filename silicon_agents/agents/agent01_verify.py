@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from collections import defaultdict
 from typing import AsyncIterator
@@ -16,6 +17,9 @@ from silicon_agents.parsers.coverage_parser import parse_coverage_report
 from silicon_agents.parsers.regression_parser import parse_regression_log
 from silicon_agents.prompts.coverage_prompt import COVERAGE_SYSTEM_PROMPT
 from silicon_agents.prompts.regression_prompt import REGRESSION_SYSTEM_PROMPT
+
+
+logger = logging.getLogger(__name__)
 
 
 class VerificationAgent:
@@ -157,6 +161,7 @@ class VerificationAgent:
         )
         result["decisions"] = self._enrich_coverage_decisions(result["decisions"], parsed)
         result["orchestration"] = self._orchestration_payload(prompt_plan)
+        result["orchestration"]["llm_diagnostics"] = result.get("llm_diagnostics", {})
         return result
 
     async def _run_triage_llm(self, parsed, request: VerifyRequest, fallback_decisions: list[Decision], clusters: dict) -> dict:
@@ -207,6 +212,7 @@ class VerificationAgent:
         )
         result["decisions"] = self._enrich_triage_decisions(result["decisions"], clusters)
         result["orchestration"] = self._orchestration_payload(prompt_plan)
+        result["orchestration"]["llm_diagnostics"] = result.get("llm_diagnostics", {})
         return result
 
     async def _run_llm_json(self, system_prompt: str, user_prompt: str, fallback: dict, decision_type: str, project_id: str) -> dict:
@@ -215,6 +221,8 @@ class VerificationAgent:
             async for chunk in self.llm.stream(system_prompt, user_prompt, self._fallback_text(fallback)):
                 raw += chunk
             if self.llm.last_provider == "mock":
+                fallback["provider"] = "mock"
+                fallback["llm_diagnostics"] = self._llm_diagnostics("provider_fallback", raw)
                 return fallback
             parsed_json = self._extract_json(raw)
             decisions = self._decisions_from_llm(parsed_json.get("decisions", []), fallback["decisions"], project_id, decision_type)
@@ -229,9 +237,30 @@ class VerificationAgent:
                 },
                 "decisions": decisions,
                 "provider": self.llm.last_provider,
+                "llm_diagnostics": self._llm_diagnostics("live_json", raw),
             }
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "Agent 01 live LLM response fell back to deterministic analysis provider=%s model=%s error=%s raw_head=%r attempts=%s",
+                self.llm.last_provider,
+                self.llm.last_model,
+                exc,
+                raw[:500],
+                self.llm.provider_attempts,
+            )
+            fallback["provider"] = self.llm.last_provider if self.llm.last_provider != "mock" else "mock"
+            fallback["llm_diagnostics"] = self._llm_diagnostics(f"parse_or_decision_fallback: {exc}", raw)
             return fallback
+
+    def _llm_diagnostics(self, reason: str, raw: str = "") -> dict:
+        return {
+            "provider": self.llm.last_provider,
+            "model": self.llm.last_model,
+            "attempts": list(self.llm.provider_attempts),
+            "fallback_reason": self.llm.fallback_reason or reason,
+            "raw_response_chars": len(raw or ""),
+            "raw_response_excerpt": (raw or "")[:500],
+        }
 
     def _fallback_text(self, fallback: dict) -> str:
         analyse = fallback["steps"]["analyse"]
@@ -258,6 +287,7 @@ class VerificationAgent:
             "parser_confidence": self.last_parser_confidence,
             "parser_warnings": list(self.last_parser_warnings),
             "provider": self.orchestrator.last_provider,
+            "orchestration_llm_diagnostics": dict(self.orchestrator.last_diagnostics),
         }
 
     def _capture_parser_signals(self, parsed) -> None:

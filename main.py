@@ -15,7 +15,9 @@ from fastapi.staticfiles import StaticFiles
 
 from silicon_agents.api.router_benchmark import router as benchmark_router
 from silicon_agents.api.router_config import router as config_router
+from silicon_agents.api.router_debug import router as debug_router
 from silicon_agents.api.router_feedback import router as feedback_router
+from silicon_agents.api.router_rag import router as rag_router
 from silicon_agents.api.router_verify import router as verify_router
 from silicon_agents.api.router_yield import router as yield_router
 from silicon_agents.core.config import get_settings
@@ -31,6 +33,7 @@ def configure_logging(level: str) -> None:
     logging.basicConfig(
         level=getattr(logging, level.upper(), logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s :: %(message)s",
+        force=True,
     )
 
 
@@ -73,6 +76,8 @@ def create_app() -> FastAPI:
     app.include_router(verify_router)
     app.include_router(yield_router)
     app.include_router(feedback_router)
+    app.include_router(rag_router)
+    app.include_router(debug_router)
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
     app.mount("/sample-data", StaticFiles(directory=SAMPLE_DATA_DIR), name="sample-data")
 
@@ -134,6 +139,10 @@ def create_app() -> FastAPI:
     @app.get("/history")
     async def history_page() -> FileResponse:
         return FileResponse(FRONTEND_DIR / "history.html")
+
+    @app.get("/rag")
+    async def rag_page() -> FileResponse:
+        return FileResponse(FRONTEND_DIR / "rag.html")
 
     @app.get("/pilot")
     async def pilot_page() -> FileResponse:

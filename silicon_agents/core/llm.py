@@ -24,6 +24,8 @@ class LLMProvider:
         self.settings = get_settings()
         self.last_provider = "mock"
         self.last_model = ""
+        self.provider_attempts: list[dict[str, str]] = []
+        self.fallback_reason = ""
 
     async def stream(
         self,
@@ -32,18 +34,26 @@ class LLMProvider:
         fallback_text: str,
         response_mime_type: str = "application/json",
     ) -> AsyncIterator[str]:
+        self.provider_attempts = []
+        self.fallback_reason = ""
+        self.last_provider = "mock"
+        self.last_model = ""
         providers = [self.settings.llm_primary, "openai" if self.settings.llm_primary == "gemini" else "gemini"]
         for provider in providers:
             if not self._provider_enabled(provider):
+                self.provider_attempts.append({"provider": provider, "status": "disabled", "reason": "missing_api_key_or_unknown_provider"})
+                logger.info("LLM provider %s disabled or not configured.", provider)
                 continue
             try:
                 async for chunk in self._stream_provider(provider, system_prompt, user_prompt, response_mime_type):
-                    self.last_provider = provider
                     yield chunk
                 return
             except Exception as exc:  # pragma: no cover - best effort live fallback
+                self.provider_attempts.append({"provider": provider, "status": "failed", "reason": str(exc)[:1000]})
                 logger.warning("Provider %s failed: %s", provider, exc)
         self.last_provider = "mock"
+        self.fallback_reason = "all_configured_providers_failed_or_disabled"
+        logger.error("LLM falling back to mock. Attempts=%s", self.provider_attempts)
         async for chunk in self._stream_mock(fallback_text):
             yield chunk
 
@@ -98,9 +108,12 @@ class LLMProvider:
                         yield text
                         await asyncio.sleep(0)
                 if emitted:
+                    self.provider_attempts.append({"provider": "gemini", "model": model, "status": "success"})
+                    logger.info("Gemini model %s succeeded.", model)
                     return
             except Exception as exc:
                 last_error = exc
+                self.provider_attempts.append({"provider": "gemini", "model": model, "status": "failed", "reason": str(exc)[:1000]})
                 logger.warning("Gemini model %s failed: %s", model, exc)
         if last_error:
             raise last_error
@@ -129,4 +142,7 @@ class LLMProvider:
         async for event in stream:
             delta = event.choices[0].delta.content if event.choices else None
             if delta:
+                self.last_provider = f"openai/{self.settings.openai_model}"
+                self.last_model = self.settings.openai_model
                 yield delta
+        self.provider_attempts.append({"provider": "openai", "model": self.settings.openai_model, "status": "success"})

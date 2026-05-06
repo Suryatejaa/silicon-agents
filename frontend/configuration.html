@@ -166,6 +166,9 @@
       padding: 12px 14px;
       font: inherit;
     }
+    select, input, button {
+      min-height: 52px;
+    }
     textarea {
       min-height: 120px;
       resize: vertical;
@@ -187,6 +190,9 @@
       display: grid;
       gap: 8px;
       margin-bottom: 12px;
+    }
+    .field-stack.align-end {
+      align-content: end;
     }
     .field-label {
       font-size: 0.76rem;
@@ -228,6 +234,31 @@
       color: var(--muted);
       border: 1px solid var(--line);
       box-shadow: none;
+    }
+    .deployment-row {
+      grid-template-columns: 1.25fr 1fr 0.28fr;
+      align-items: end;
+    }
+    .input-with-action {
+      position: relative;
+    }
+    .input-with-action input {
+      padding-right: 184px;
+    }
+    .inline-action-button {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: auto;
+      min-width: 164px;
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      z-index: 1;
     }
     .summary-grid {
       display: grid;
@@ -285,6 +316,7 @@
         <a href="/agent01" id="navAgent01">Agent 01</a>
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
+        <a href="/rag" id="navRag">RAG</a>
         <a href="/pilot" id="navPilot">Pilot Dashboard</a>
         <a href="/configuration" class="is-current" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
@@ -308,16 +340,19 @@
     <section class="panel">
       <div class="section-title">Deployment API Base</div>
       <div class="section-copy">Use this only when the frontend is hosted separately from the backend, such as Vercel for the UI and Render for the API. Leave it blank for same-origin local runs.</div>
-      <div class="row" style="grid-template-columns: 1.2fr 1fr 0.6fr;">
+      <div class="row deployment-row">
         <div class="field-stack">
           <div class="field-label">Backend API Base URL</div>
-          <input id="backendApiBase" placeholder="https://your-render-backend.onrender.com" />
+          <div class="input-with-action">
+            <input id="backendApiBase" placeholder="https://your-render-backend.onrender.com" />
+            <button id="loadRenderBackend" class="ghost inline-action-button" type="button">Load Backend URL</button>
+          </div>
         </div>
         <div class="field-stack">
           <div class="field-label">Pilot Access Token</div>
-          <input id="pilotAccessToken" placeholder="Optional shared token for protected Render APIs" />
+          <input id="pilotAccessToken" type="password" placeholder="Optional shared token for protected Render APIs" />
         </div>
-        <div class="field-stack" style="justify-content:end;">
+        <div class="field-stack align-end">
           <div class="field-label">Action</div>
           <button id="saveApiBase" type="button">Save API Base</button>
         </div>
@@ -428,10 +463,13 @@
   </main>
 
   <script>
+    const RENDER_BACKEND_URL = "https://silicon-agent-mvp.onrender.com";
+
     document.getElementById("navHome").href = window.location.protocol === "file:" ? "./index.html" : "/";
     document.getElementById("navAgent01").href = window.location.protocol === "file:" ? "./agent01.html" : "/agent01";
     document.getElementById("navAgent02").href = window.location.protocol === "file:" ? "./agent02.html" : "/agent02";
     document.getElementById("navHistory").href = window.location.protocol === "file:" ? "./history.html" : "/history";
+    document.getElementById("navRag").href = window.location.protocol === "file:" ? "./rag.html" : "/rag";
     document.getElementById("navConfig").href = window.location.protocol === "file:" ? "./configuration.html" : "/configuration";
 
     const FIELD_CONFIG = {
@@ -710,6 +748,10 @@
 
     document.getElementById("saveAll").addEventListener("click", () => {
       saveAll();
+    });
+    document.getElementById("loadRenderBackend").addEventListener("click", () => {
+      document.getElementById("backendApiBase").value = RENDER_BACKEND_URL;
+      setSaveStatus("Render backend URL loaded. Save to apply it on this device.");
     });
     document.getElementById("saveApiBase").addEventListener("click", () => {
       const value = document.getElementById("backendApiBase").value.trim().replace(/\/$/, "");

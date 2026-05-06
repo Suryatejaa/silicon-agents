@@ -24,16 +24,17 @@ The platform is designed as an orchestration layer above existing semiconductor 
 
 ### Product pages delivered
 
-The frontend currently includes 8 product pages:
+The frontend currently includes 9 product pages:
 
 1. `Home / Executive Brief`
 2. `Agent 01`
 3. `Agent 02`
 4. `Enterprise Configuration`
 5. `Run History`
-6. `Pitch Deck`
-7. `Pilot Dashboard`
-8. `Product Docs`
+6. `RAG Console`
+7. `Pitch Deck`
+8. `Pilot Dashboard`
+9. `Product Docs`
 
 ### Active workflow scope
 
@@ -87,6 +88,21 @@ The frontend currently includes 8 product pages:
 - Pilot metrics aggregation across saved runs
 - Pilot access-code generation utility
 
+### Retrieval / RAG foundation delivered
+
+- Saved run history converted into retrieval documents
+- Manual engineering-note ingestion with deterministic chunking
+- Gemini embedding provider for retrieval documents
+- Local deterministic embedding fallback for offline development and tests
+- Metadata-filtered retrieval by project, agent, mode, run profile, and source type
+- Agent 01 retrieval context injection before analysis
+- Agent 02 retrieval context injection before yield/SPC analysis
+- Retrieved source metadata attached to Agent 01 and Agent 02 decisions
+- Retrieved source citations displayed on Agent 01 and Agent 02 decision cards
+- Browser RAG console for retrieval search, manual note ingestion, and reindexing
+- Reindex endpoint for refreshing embeddings without re-ingesting source content
+- PostgreSQL / pgvector-ready storage column with local app-scored fallback
+
 ### Pilot access and deployment delivered
 
 - Dockerfile
@@ -135,6 +151,8 @@ Artifact parser layer
     ->
 Enterprise orchestration layer
     ->
+Retrieval layer
+    ->
 LLM analysis layer
     ->
 Decision extraction and ranking
@@ -149,11 +167,12 @@ Streaming response / run persistence / structured exports / stored feedback
 1. User uploads or pastes a coverage or regression artifact.
 2. Backend parses the artifact into structured report objects.
 3. Enterprise orchestration builds a run-specific prompt plan.
-4. Analysis agent runs the 5-step reasoning flow.
-5. Decisions are ranked and streamed to the UI.
-6. Benchmark scoring can run for known bundled artifacts.
-7. Run data is persisted with scorecard, observability, feedback, and export trail.
-8. User can export a verification brief, Jira payload, email payload, and/or submit feedback.
+4. Retrieval layer searches saved run history and ingested notes for same-project evidence.
+5. Analysis agent runs the 5-step reasoning flow with retrieved context when available.
+6. Decisions are ranked and streamed to the UI with retrieved source metadata.
+7. Benchmark scoring can run for known bundled artifacts.
+8. Run data is persisted with scorecard, observability, feedback, retrieval documents, and export trail.
+9. User can export a verification brief, Jira payload, email payload, and/or submit feedback.
 
 #### Agent 02 flow
 
@@ -168,7 +187,7 @@ Streaming response / run persistence / structured exports / stored feedback
 
 ## 4. Architectural Layers
 
-The currently implemented system is best described as **8 functional layers**.
+The currently implemented system is best described as **9 functional layers**.
 
 ### Layer 1. Experience Layer
 
@@ -207,6 +226,7 @@ Files:
 - [silicon_agents/api/router_feedback.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_feedback.py)
 - [silicon_agents/api/router_benchmark.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_benchmark.py)
 - [silicon_agents/api/router_config.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_config.py)
+- [silicon_agents/api/router_rag.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_rag.py)
 
 Responsibilities:
 
@@ -218,6 +238,7 @@ Responsibilities:
 - benchmark and feedback endpoints
 - configuration endpoints
 - run-history and structured-export endpoints
+- retrieval search, note ingestion, and reindex endpoints
 - pilot metrics endpoint
 - pilot access-code generation endpoint
 - browser pilot-gate enforcement
@@ -233,6 +254,7 @@ Responsibilities:
 - typed request models
 - typed parsed-report models
 - typed decision models
+- typed retrieval document, search, ingest, and reindex models
 - benchmark request / response models
 - export request model
 - run-history, export-history, and feedback-summary models
@@ -265,7 +287,26 @@ Responsibilities:
 - synthesize historical notes
 - build compact run-specific prompt plans
 
-### Layer 6. LLM Reasoning Layer
+### Layer 6. Retrieval / RAG Layer
+
+Files:
+
+- [silicon_agents/rag/documents.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/rag/documents.py)
+- [silicon_agents/rag/history.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/rag/history.py)
+- [silicon_agents/rag/embeddings.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/rag/embeddings.py)
+- [silicon_agents/api/router_rag.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/api/router_rag.py)
+
+Responsibilities:
+
+- convert saved run history into retrieval documents
+- chunk manually ingested engineering notes
+- generate Gemini embeddings with local fallback
+- store portable JSON embeddings and pgvector-ready vectors
+- search retrieval documents with metadata filters
+- reindex retrieval documents after provider or model changes
+- attach retrieved source metadata to Agent 01 decisions
+
+### Layer 7. LLM Reasoning Layer
 
 Files:
 
@@ -283,7 +324,7 @@ Responsibilities:
 - JSON-oriented response generation
 - streamed model output
 
-### Layer 7. Agent and Decision Layer
+### Layer 8. Agent and Decision Layer
 
 Files:
 
@@ -300,7 +341,7 @@ Responsibilities:
 - ranking and deduplication
 - SSE event sequencing
 
-### Layer 8. Output / Memory / Evaluation Layer
+### Layer 9. Output / Memory / Evaluation Layer
 
 Files:
 
@@ -645,6 +686,7 @@ From [requirements.txt](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/requirement
 - `numpy`
 - `scipy`
 - `aiosqlite`
+- `psycopg[binary]`
 - `python-dotenv`
 - `click`
 - `pytest`
@@ -655,6 +697,8 @@ From [requirements.txt](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/requirement
 - SQLite
 - async path: `aiosqlite`
 - sync fallback path: builtin `sqlite3`
+- optional PostgreSQL path through `DATABASE_URL`
+- pgvector-ready retrieval storage when `SA_RAG_VECTOR_BACKEND=pgvector`
 
 ### Data storage tables
 
@@ -665,6 +709,7 @@ Current tables:
 - `enterprise_config`
 - `run_history`
 - `export_history`
+- `retrieval_documents`
 
 Stored decision fields:
 
@@ -722,6 +767,21 @@ Stored run-history fields:
 - status
 - timestamp
 
+Stored retrieval document fields:
+
+- document ID
+- project ID
+- agent
+- mode
+- source type (`run_history` or `manual_note`)
+- source ID
+- title
+- content chunk
+- metadata JSON
+- embedding JSON
+- pgvector-ready embedding vector
+- created timestamp
+
 ## 8. Frontend Stack
 
 Current frontend stack is intentionally simple and local-first:
@@ -760,6 +820,21 @@ From [silicon_agents/core/config.py](/Volumes/D-Drive/Projects/Silicon-Agents-MV
 - Gemini model default: `gemini-2.5-pro`
 - Gemini fallback model: `gemini-2.5-flash`
 - OpenAI model default: `gpt-4o`
+- RAG embedding provider default in local samples: `gemini`
+- Gemini embedding model default: `gemini-embedding-001`
+- RAG vector backend default: `local`
+
+### Embedding and retrieval usage
+
+The RAG layer uses `EmbeddingProvider` in [silicon_agents/rag/embeddings.py](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/rag/embeddings.py).
+
+Current behavior:
+
+- `SA_RAG_EMBEDDING_PROVIDER=gemini` uses Gemini `embed_content`
+- `GEMINI_EMBEDDING_MODEL=gemini-embedding-001` is the configured hosted embedding model
+- local hashing embeddings remain available for offline development and tests
+- `SA_RAG_VECTOR_BACKEND=local` ranks candidates in application memory
+- `SA_RAG_VECTOR_BACKEND=pgvector` enables PostgreSQL vector ranking when pgvector is available
 
 ### LLM usage pattern
 
@@ -1120,6 +1195,7 @@ silicon_agents/
   output/
   parsers/
   prompts/
+  rag/
   storage/
 ```
 
@@ -1160,10 +1236,11 @@ Current test coverage areas include:
 - orchestration schema behavior
 - feedback storage
 - run history and structured exports
+- RAG search, manual-note ingestion, reindexing, and embedding metadata
 
 Current observed suite status in this workspace:
 
-- `38/38` tests passing
+- `41/41` tests passing
 
 Notes:
 
@@ -1180,7 +1257,7 @@ Notes:
 - no multi-user persistence
 - no direct EDA integration
 - no job queue
-- no long-term memory beyond SQLite-backed run, config, and feedback persistence
+- RAG is implemented as pilot-safe retrieval, not yet a fully governed enterprise knowledge platform
 
 ### Practical limitations
 
@@ -1190,6 +1267,8 @@ Notes:
 - no tenant isolation or per-client workspace isolation
 - no direct EDA/API integration layer yet
 - no Confluence export yet
+- retrieved evidence is visible on decision cards, but does not yet have a dedicated standalone evidence-review panel
+- Agent 02 runtime retrieval is wired, but still uses the same lightweight retrieval scorer as Agent 01
 
 ## 19. Current Product Readiness Assessment
 
@@ -1202,6 +1281,7 @@ Notes:
 - centralized enterprise configuration model
 - human-in-the-loop review posture
 - auditable run history and observability
+- initial RAG pipeline over saved runs and manual engineering notes
 
 ### Areas still considered MVP / pre-pilot
 
@@ -1210,17 +1290,18 @@ Notes:
 - richer benchmark corpus
 - real customer artifact integration
 - stronger parser coverage for heterogeneous client report formats
+- production hardening of pgvector retrieval and the dedicated retrieved-evidence review UI
 - pilot dashboard trend depth and downstream analytics
 
 ## 20. Recommended Next Engineering Steps
 
-1. Expose enterprise integration APIs so EDA and review tools can submit artifacts and consume structured outcomes.
-2. Expand benchmark corpus further with richer sanitized client-style artifacts.
-3. Add deeper pilot dashboard trends and sponsor reporting views.
-4. Improve parser tolerance for heterogeneous client report formats.
-5. Add tenant-aware enterprise policy management and versioning.
-6. Add Confluence-ready export and workflow integrations beyond Jira/email.
-7. Introduce fuller auth, role boundaries, and workspace-level project separation.
+1. Productionize pgvector retrieval on PostgreSQL with index tuning and migration checks.
+2. Add a dedicated retrieved-evidence UI panel and run-history replay of retrieved chunks.
+3. Tune retrieval quality with thresholds, reranking, and workflow-specific evals.
+4. Expose enterprise integration APIs so EDA and review tools can submit artifacts and consume structured outcomes.
+5. Expand benchmark corpus further with richer sanitized client-style artifacts.
+6. Improve parser tolerance for heterogeneous client report formats.
+7. Add tenant-aware enterprise policy management, auth, and workspace-level project separation.
 
 ## 21. One-Line Summary
 
@@ -1228,9 +1309,10 @@ Silicon Agents today is a verification-first semiconductor AI workflow platform 
 
 - 2 agents
 - 8 frontend pages
-- 8 implemented functional layers
+- 9 implemented functional layers
 - 5 prompt families
 - 2-stage orchestration + analysis LLM flow
+- RAG over run history and manually ingested notes
 - SSE-based step streaming
 - benchmark scoring
 - HTML + Jira + email exportable reporting

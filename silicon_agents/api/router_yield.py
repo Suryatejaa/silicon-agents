@@ -29,6 +29,13 @@ async def analyse_yield(request: YieldRequest) -> StreamingResponse:
     if len(request.csv_data) > settings.max_csv_chars:
         raise HTTPException(status_code=400, detail="CSV input exceeds configured size limit.")
 
+    logger.info(
+        "Agent02 yield request accepted project=%s mode=%s artifact=%s chars=%s",
+        request.project_id,
+        request.mode,
+        request.artifact_name or "",
+        len(request.csv_data),
+    )
     agent = YieldAgent()
     store = FeedbackStore(settings.db_path)
     await store.init()
@@ -43,15 +50,31 @@ async def analyse_yield(request: YieldRequest) -> StreamingResponse:
         done_payload: dict[str, object] = {}
         error_message: str | None = None
         status = "completed"
+        logger.info("Agent02 stream started run=%s project=%s", run_id, request.project_id)
+        retrieval_documents = await store.search_retrieval_documents(
+            project_id=request.project_id,
+            agent="agent02",
+            mode=request.mode,
+            run_profile_id=request.run_profile_id,
+            query=_retrieval_query(request),
+            limit=4,
+        )
+        enriched_request = _request_with_retrieved_context(request, retrieval_documents)
         try:
-            async for event_type, payload in agent.stream(request):
+            async for event_type, payload in agent.stream(enriched_request):
                 if event_type == "decision":
+                    if retrieval_documents:
+                        payload = _decision_with_retrieval_sources(payload, retrieval_documents)
                     decisions.append(Decision(**payload))
                 elif event_type == "chunk":
                     text = str(payload.get("text", "")).strip()
                     if text:
                         analysis_log.append(text)
                 elif event_type == "orchestration":
+                    payload = {
+                        **payload,
+                        "retrieval": _retrieval_observability(retrieval_documents),
+                    }
                     orchestration = payload
                 elif event_type == "done":
                     payload = dict(payload)
@@ -112,6 +135,13 @@ async def analyse_yield(request: YieldRequest) -> StreamingResponse:
                     "decision_count": len(decisions),
                     "provider_family": provider.split("/")[0] if provider else "mock",
                     "runtime_label": request.lot_id,
+                    "retrieval_document_count": len(retrieval_documents),
+                    "llm": {
+                        "provider": agent.llm.last_provider,
+                        "model": agent.llm.last_model,
+                        "attempts": list(agent.llm.provider_attempts),
+                        "fallback_reason": agent.llm.fallback_reason,
+                    },
                 },
                 benchmark_title=str(scorecard["title"]),
                 benchmark_score=str(scorecard["score"]),
@@ -152,3 +182,70 @@ def _yield_request_snapshot(request: YieldRequest) -> dict[str, object]:
     payload["csv_data_excerpt"] = str(csv_data)[:4000]
     payload["csv_data_chars"] = len(str(csv_data))
     return payload
+
+
+def _retrieval_query(request: YieldRequest) -> str:
+    return "\n".join(
+        part
+        for part in [
+            request.lot_id,
+            request.mode,
+            request.chip_type or "",
+            request.context or "",
+            request.custom_instructions or "",
+            request.csv_data[:2500],
+        ]
+        if part
+    )
+
+
+def _request_with_retrieved_context(request: YieldRequest, documents: list) -> YieldRequest:
+    if not documents:
+        return request
+    retrieved_context = "\n\n".join(
+        f"[{index}] {document.title}\n{document.content[:1200]}"
+        for index, document in enumerate(documents, start=1)
+    )
+    existing = request.reference_data or ""
+    label = request.reference_data_label or "retrieved yield history"
+    return request.model_copy(
+        update={
+            "reference_data": f"{existing}\n\nRetrieved prior yield evidence:\n{retrieved_context}".strip(),
+            "reference_data_label": label,
+        }
+    )
+
+
+def _decision_with_retrieval_sources(payload: dict, documents: list) -> dict:
+    metadata = dict(payload.get("metadata") or {})
+    metadata["retrieved_sources"] = [
+        {
+            "id": document.id,
+            "source_id": document.source_id,
+            "title": document.title,
+            "score": document.score,
+            "document_kind": document.metadata.get("document_kind"),
+        }
+        for document in documents
+    ]
+    metadata["retrieval_augmented"] = True
+    return {**payload, "metadata": metadata}
+
+
+def _retrieval_observability(documents: list) -> dict[str, object]:
+    return {
+        "enabled": True,
+        "document_count": len(documents),
+        "sources": [
+            {
+                "id": document.id,
+                "source_id": document.source_id,
+                "title": document.title,
+                "source_type": document.source_type,
+                "document_kind": document.metadata.get("document_kind"),
+                "score": document.score,
+                "content_excerpt": document.content[:700],
+            }
+            for document in documents
+        ],
+    }

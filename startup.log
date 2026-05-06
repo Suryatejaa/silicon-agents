@@ -1,0 +1,175 @@
+INFO:     Started server process [25552]
+INFO:     Waiting for application startup.
+ERROR:    Traceback (most recent call last):
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/starlette/routing.py", line 694, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/fastapi/routing.py", line 203, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 175, in __aenter__
+    return await self.gen.__anext__()
+  File "/Volumes/D-Drive/Projects/Silicon-Agents-MVP/main.py", line 53, in lifespan
+    await FeedbackStore(settings.db_path).init()
+  File "/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/storage/feedback_store.py", line 51, in init
+    self._init_sync()
+  File "/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/storage/feedback_store.py", line 585, in _init_sync
+    with self._connect_sync() as db:
+  File "/Volumes/D-Drive/Projects/Silicon-Agents-MVP/silicon_agents/storage/feedback_store.py", line 567, in _connect_sync
+    return psycopg.connect(self.db_path)
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/psycopg/connection.py", line 98, in connect
+    attempts = conninfo_attempts(params)
+  File "/Users/suryateja/Library/Python/3.9/lib/python/site-packages/psycopg/_conninfo_attempts.py", line 55, in conninfo_attempts
+    raise last_exc
+psycopg.OperationalError: failed to resolve host 'dpg-d7rlanpj2pic73fddjpg-a': [Errno 8] nodename nor servname provided, or not known
+
+ERROR:    Application startup failed. Exiting.
+INFO:     Started server process [26204]
+INFO:     Waiting for application startup.
+2026-05-06 20:25:43,284 INFO main :: Silicon Agents starting version=0.1.0 db_path=./silicon_agents.db pilot_access=enabled
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-05-06 20:26:05,014 WARNING main :: Redirected unauthorized browser request method=GET path=/ duration_ms=0
+INFO:     127.0.0.1:53259 - "GET / HTTP/1.1" 307 Temporary Redirect
+2026-05-06 20:26:05,023 INFO main :: Request method=GET path=/pilot-login status=200 duration_ms=5
+INFO:     127.0.0.1:53259 - "GET /pilot-login?next=/ HTTP/1.1" 200 OK
+2026-05-06 20:26:05,169 WARNING main :: Rejected unauthorized request method=GET path=/favicon.ico duration_ms=0
+INFO:     127.0.0.1:53259 - "GET /favicon.ico HTTP/1.1" 401 Unauthorized
+2026-05-06 20:26:13,421 WARNING main :: Redirected unauthorized browser request method=GET path=/ duration_ms=0
+INFO:     127.0.0.1:53260 - "GET / HTTP/1.1" 307 Temporary Redirect
+2026-05-06 20:26:13,463 WARNING main :: Rejected unauthorized request method=GET path=/favicon.ico duration_ms=0
+INFO:     127.0.0.1:53260 - "GET /favicon.ico HTTP/1.1" 401 Unauthorized
+2026-05-06 20:26:21,903 WARNING main :: Redirected unauthorized browser request method=GET path=/agent1 duration_ms=0
+INFO:     127.0.0.1:53285 - "GET /agent1 HTTP/1.1" 307 Temporary Redirect
+2026-05-06 20:26:21,914 INFO main :: Request method=GET path=/pilot-login status=200 duration_ms=1
+INFO:     127.0.0.1:53285 - "GET /pilot-login?next=/agent1 HTTP/1.1" 200 OK
+2026-05-06 20:26:21,949 WARNING main :: Rejected unauthorized request method=GET path=/favicon.ico duration_ms=0
+INFO:     127.0.0.1:53285 - "GET /favicon.ico HTTP/1.1" 401 Unauthorized
+2026-05-06 20:26:43,491 WARNING main :: Rejected unauthorized request method=GET path=/.well-known/appspecific/com.chrome.devtools.json duration_ms=0
+INFO:     127.0.0.1:53300 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 401 Unauthorized
+2026-05-06 20:28:25,725 INFO main :: Request method=POST path=/pilot/unlock status=200 duration_ms=3
+INFO:     127.0.0.1:53859 - "POST /pilot/unlock HTTP/1.1" 200 OK
+2026-05-06 20:28:25,759 INFO main :: Request method=GET path=/agent1 status=404 duration_ms=5
+INFO:     127.0.0.1:53859 - "GET /agent1 HTTP/1.1" 404 Not Found
+2026-05-06 20:28:25,821 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=7
+INFO:     127.0.0.1:53859 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:28:25,954 INFO main :: Request method=GET path=/favicon.ico status=404 duration_ms=5
+INFO:     127.0.0.1:53859 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+2026-05-06 20:28:32,676 INFO main :: Request method=GET path=/agent-1 status=404 duration_ms=0
+INFO:     127.0.0.1:53860 - "GET /agent-1 HTTP/1.1" 404 Not Found
+2026-05-06 20:28:32,727 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=24
+INFO:     127.0.0.1:53860 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:28:41,354 INFO main :: Request method=GET path=/configuration status=200 duration_ms=11
+INFO:     127.0.0.1:53901 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:28:41,682 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=271
+INFO:     127.0.0.1:53901 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:28:41,728 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=232
+INFO:     127.0.0.1:53953 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:28:41,729 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=23
+INFO:     127.0.0.1:53954 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:28:43,028 INFO main :: Request method=GET path=/pilot status=200 duration_ms=2
+INFO:     127.0.0.1:53954 - "GET /pilot HTTP/1.1" 200 OK
+2026-05-06 20:28:43,100 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=14
+INFO:     127.0.0.1:53954 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:28:46,269 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=0
+INFO:     127.0.0.1:53953 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:28:46,352 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=57
+INFO:     127.0.0.1:54002 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:28:46,364 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=79
+INFO:     127.0.0.1:54001 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:34:53,791 INFO main :: Request method=GET path=/configuration status=200 duration_ms=22
+INFO:     127.0.0.1:55757 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:34:53,882 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=44
+INFO:     127.0.0.1:55757 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 20:34:53,930 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=48
+INFO:     127.0.0.1:55758 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:34:53,934 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=48
+INFO:     127.0.0.1:55762 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:40:03,838 INFO main :: Request method=GET path=/configuration status=200 duration_ms=4
+INFO:     127.0.0.1:55984 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:40:04,051 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=84
+INFO:     127.0.0.1:55985 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:40:04,053 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=150
+INFO:     127.0.0.1:55984 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:40:43,046 INFO main :: Request method=GET path=/configuration status=200 duration_ms=4
+INFO:     127.0.0.1:56050 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:40:43,394 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=269
+INFO:     127.0.0.1:56050 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:40:43,433 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=306
+INFO:     127.0.0.1:56051 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:40:44,752 INFO main :: Request method=GET path=/configuration status=200 duration_ms=1
+INFO:     127.0.0.1:56051 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:40:44,828 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=42
+INFO:     127.0.0.1:56050 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:40:44,829 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=44
+INFO:     127.0.0.1:56051 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:40:55,097 INFO main :: Request method=GET path=/configuration status=200 duration_ms=1
+INFO:     127.0.0.1:56088 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:40:55,176 INFO main :: Request method=GET path=/api/v1/config/agent01 status=200 duration_ms=56
+INFO:     127.0.0.1:56088 - "GET /api/v1/config/agent01 HTTP/1.1" 200 OK
+2026-05-06 20:40:55,178 INFO main :: Request method=GET path=/api/v1/config/agent02 status=200 duration_ms=57
+INFO:     127.0.0.1:56089 - "GET /api/v1/config/agent02 HTTP/1.1" 200 OK
+2026-05-06 20:43:35,692 INFO main :: Request method=GET path=/configuration status=200 duration_ms=7
+INFO:     127.0.0.1:56226 - "GET /configuration HTTP/1.1" 200 OK
+2026-05-06 20:43:53,072 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=4
+INFO:     127.0.0.1:56227 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+2026-05-06 21:09:27,173 INFO main :: Request method=GET path=/pilot status=200 duration_ms=1
+INFO:     127.0.0.1:57484 - "GET /pilot HTTP/1.1" 200 OK
+2026-05-06 21:09:29,356 INFO main :: Request method=GET path=/product-docs status=200 duration_ms=2
+INFO:     127.0.0.1:57484 - "GET /product-docs HTTP/1.1" 200 OK
+2026-05-06 21:11:18,662 INFO main :: Request method=GET path=/agent01 status=200 duration_ms=5
+INFO:     127.0.0.1:57580 - "GET /agent01 HTTP/1.1" 200 OK
+2026-05-06 21:11:18,684 INFO main :: Request method=GET path=/sample-data/client_profiles.json status=304 duration_ms=1
+INFO:     127.0.0.1:57580 - "GET /sample-data/client_profiles.json HTTP/1.1" 304 Not Modified
+2026-05-06 21:11:19,537 INFO main :: Request method=GET path=/sample-data/coverage_vcs_sample.log status=304 duration_ms=1
+INFO:     127.0.0.1:57580 - "GET /sample-data/coverage_vcs_sample.log HTTP/1.1" 304 Not Modified
+2026-05-06 21:11:20,266 INFO main :: Request method=GET path=/ status=200 duration_ms=1
+INFO:     127.0.0.1:57580 - "GET / HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [26204]
+INFO:     Started server process [36220]
+INFO:     Waiting for application startup.
+2026-05-06 21:12:03,379 INFO main :: Silicon Agents starting version=0.1.0 db_path=./silicon_agents.db pilot_access=enabled
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-05-06 21:12:46,087 INFO main :: Request method=GET path=/agent01 status=200 duration_ms=8
+INFO:     127.0.0.1:57674 - "GET /agent01 HTTP/1.1" 200 OK
+2026-05-06 21:12:51,857 INFO main :: Request method=GET path=/agent01 status=200 duration_ms=1
+INFO:     127.0.0.1:57675 - "GET /agent01 HTTP/1.1" 200 OK
+2026-05-06 21:13:30,675 INFO main :: Request method=GET path=/.well-known/appspecific/com.chrome.devtools.json status=404 duration_ms=2
+INFO:     127.0.0.1:57690 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36220]
+INFO:     Started server process [39037]
+INFO:     Waiting for application startup.
+2026-05-06 21:21:27,295 INFO main :: Silicon Agents starting version=0.1.0 db_path=./silicon_agents.db pilot_access=enabled
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [39037]
