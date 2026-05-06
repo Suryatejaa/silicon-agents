@@ -730,8 +730,9 @@
 
       <section class="section anchor-target" id="hld">
         <h2>High-level design</h2>
-        <pre>Input artifact
+<pre>Input artifact
   -> Parser layer
+  -> Retrieval / RAG layer
   -> Orchestration layer
   -> LLM analysis layer
   -> Decision generation
@@ -741,6 +742,7 @@
 Supporting layers:
   - Enterprise policy store
   - Run profile presets
+  - Retrieval documents + embeddings
   - Benchmark / live scorecard engine
   - Pilot access gate
   - Structured export adapters</pre>
@@ -755,9 +757,10 @@ Supporting layers:
               <li>User uploads or pastes a coverage report or regression log.</li>
               <li>Artifact provenance is captured as bundled sample, uploaded file, or pasted text.</li>
               <li>Parser extracts structured items and computes parser confidence and warnings.</li>
-              <li>Orchestration layer merges enterprise policy, active run profile, and artifact context.</li>
-              <li>LLM produces five-step reasoning and ranked actions.</li>
-              <li>Run history persists raw artifact, orchestration, analysis trace, decisions, and scorecard.</li>
+              <li>RAG retrieves prior closure notes, waiver context, regression decisions, and similar run history.</li>
+              <li>Orchestration layer merges enterprise policy, active run profile, artifact context, and retrieved evidence.</li>
+              <li>LLM produces five-step reasoning, ranked actions, and cited sources.</li>
+              <li>Run history persists raw artifact, retrieved evidence, orchestration, analysis trace, decisions, and scorecard.</li>
             </ol>
           </div>
           <div class="card">
@@ -765,8 +768,9 @@ Supporting layers:
             <ol>
               <li>User provides ATE parametric CSV or SPC trend input.</li>
               <li>Parser extracts chips, bins, pass/fail state, and anomaly signals.</li>
-              <li>Orchestration emphasizes revenue risk, containment, and operational review style.</li>
-              <li>LLM generates lot-level review steps and ranked mis-bin or anomaly actions.</li>
+              <li>RAG retrieves prior lot reviews, yield notes, SPC playbooks, and similar run history.</li>
+              <li>Orchestration emphasizes revenue risk, containment, operational review style, and retrieved evidence.</li>
+              <li>LLM generates lot-level review steps, ranked mis-bin or anomaly actions, and cited sources.</li>
               <li>Human reviewer accepts or rejects actions and exports results into workflow targets.</li>
             </ol>
           </div>
@@ -848,12 +852,12 @@ Supporting layers:
       <section class="section anchor-target" id="layers">
         <h2>System layers</h2>
         <div class="grid-3">
-          <div class="card"><h3>1. Presentation layer</h3><p>HTML dashboards for landing, agents, configuration, history, pitch, pilot dashboard, and docs.</p></div>
+          <div class="card"><h3>1. Presentation layer</h3><p>HTML dashboards for landing, agents, configuration, RAG console, history, pitch, pilot dashboard, and docs.</p></div>
           <div class="card"><h3>2. API layer</h3><p>FastAPI routes for verification, yield, RAG search/ingest/reindex, feedback, config, benchmark, history, exports, pilot metrics, and access-code generation.</p></div>
           <div class="card"><h3>3. Parser layer</h3><p>Coverage, regression, ATE, and SPC parsers normalize artifacts into structured summaries and items.</p></div>
-          <div class="card"><h3>4. Orchestration layer</h3><p>Builds run-specific prompt plans using enterprise policy, run profile, artifact metadata, and workflow mode.</p></div>
-          <div class="card"><h3>5. Retrieval layer</h3><p>Run history and manual notes become metadata-filtered retrieval documents with Gemini-ready embeddings and cited sources.</p></div>
-          <div class="card"><h3>6. LLM reasoning layer</h3><p>Primary/fallback provider path for multi-step analysis and action ranking.</p></div>
+          <div class="card"><h3>4. Retrieval / RAG layer</h3><p>Run history and manual notes become metadata-filtered retrieval documents with Gemini-ready embeddings, evidence excerpts, and cited sources.</p></div>
+          <div class="card"><h3>5. Orchestration layer</h3><p>Builds run-specific prompt plans using enterprise policy, run profile, artifact metadata, workflow mode, and retrieved evidence.</p></div>
+          <div class="card"><h3>6. LLM reasoning layer</h3><p>Primary/fallback provider path for multi-step analysis, action ranking, and source-aware recommendations.</p></div>
           <div class="card"><h3>7. Persistence layer</h3><p>SQLite stores enterprise config, decisions, feedback, run history, retrieval documents, raw artifacts, parser trust, and export history, with PostgreSQL/pgvector-ready columns.</p></div>
         </div>
       </section>

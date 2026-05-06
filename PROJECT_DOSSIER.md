@@ -99,6 +99,7 @@ The frontend currently includes 9 product pages:
 - Agent 02 retrieval context injection before yield/SPC analysis
 - Retrieved source metadata attached to Agent 01 and Agent 02 decisions
 - Retrieved source citations displayed on Agent 01 and Agent 02 decision cards
+- Retrieved-evidence panels with excerpts in Agent 01, Agent 02, and Run History
 - Browser RAG console for retrieval search, manual note ingestion, and reindexing
 - Reindex endpoint for refreshing embeddings without re-ingesting source content
 - PostgreSQL / pgvector-ready storage column with local app-scored fallback
@@ -178,12 +179,13 @@ Streaming response / run persistence / structured exports / stored feedback
 
 1. User pastes or loads ATE or SPC data.
 2. Backend parses CSV into structured yield / SPC report objects.
-3. Enterprise orchestration builds a run-specific prompt plan.
-4. Analysis agent runs the 5-step reasoning flow.
-5. Decisions are ranked and streamed to the UI.
-6. Benchmark or live scorecard evaluation can run after completion.
-7. Run data is persisted for later feedback, export, review, and audit.
-8. User can export a yield brief, Jira payload, email payload, and/or submit feedback.
+3. Retrieval layer searches prior yield/SPC runs and ingested notes for same-project context.
+4. Enterprise orchestration builds a run-specific prompt plan with retrieved context when available.
+5. Analysis agent runs the 5-step reasoning flow.
+6. Decisions are ranked and streamed to the UI with retrieved source metadata.
+7. Benchmark or live scorecard evaluation can run after completion.
+8. Run data is persisted for later feedback, export, retrieval replay, review, and audit.
+9. User can export a yield brief, Jira payload, email payload, and/or submit feedback.
 
 ## 4. Architectural Layers
 
@@ -198,9 +200,11 @@ Files:
 - [frontend/agent02.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/agent02.html)
 - [frontend/configuration.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/configuration.html)
 - [frontend/history.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/history.html)
+- [frontend/rag.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/rag.html)
 - [frontend/pitch.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pitch.html)
 - [frontend/pilot.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pilot.html)
 - [frontend/docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/docs.html)
+- [frontend/product-docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/product-docs.html)
 - [frontend/pilot_access.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/pilot_access.html)
 
 Responsibilities:
@@ -209,6 +213,7 @@ Responsibilities:
 - input collection
 - step-by-step reasoning display
 - decision review
+- RAG corpus search, note ingestion, and reindex controls
 - benchmark and impact visibility
 - configuration management
 - run-history review and workflow exports
@@ -1169,11 +1174,15 @@ Its purpose is to expose measurable proof signals such as:
 The product now includes a dedicated product docs experience at:
 
 - [frontend/docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/docs.html)
+- [frontend/product-docs.html](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/frontend/product-docs.html)
+
+`docs.html` is a symlink to `product-docs.html`, so the route-served docs page and the explicitly named product docs file stay synchronized.
 
 Its purpose is to explain:
 
 - architecture
 - workflow lifecycle
+- interactive circuit-style runtime flow chart with clickable step details
 - Agent 01 and Agent 02 use cases
 - enterprise config importance
 - field-by-field semantics
@@ -1208,9 +1217,11 @@ frontend/
   agent02.html
   configuration.html
   history.html
+  rag.html
   pitch.html
   pilot.html
-  docs.html
+  docs.html -> product-docs.html
+  product-docs.html
   pilot_access.html
 ```
 
@@ -1267,8 +1278,8 @@ Notes:
 - no tenant isolation or per-client workspace isolation
 - no direct EDA/API integration layer yet
 - no Confluence export yet
-- retrieved evidence is visible on decision cards, but does not yet have a dedicated standalone evidence-review panel
-- Agent 02 runtime retrieval is wired, but still uses the same lightweight retrieval scorer as Agent 01
+- retrieved evidence is visible in agent panels and run history, but retrieval quality controls are still basic
+- Agent 01 and Agent 02 runtime retrieval use the same lightweight retrieval scorer
 
 ## 19. Current Product Readiness Assessment
 
@@ -1290,14 +1301,14 @@ Notes:
 - richer benchmark corpus
 - real customer artifact integration
 - stronger parser coverage for heterogeneous client report formats
-- production hardening of pgvector retrieval and the dedicated retrieved-evidence review UI
+- production hardening of pgvector retrieval and retrieval quality controls
 - pilot dashboard trend depth and downstream analytics
 
 ## 20. Recommended Next Engineering Steps
 
 1. Productionize pgvector retrieval on PostgreSQL with index tuning and migration checks.
-2. Add a dedicated retrieved-evidence UI panel and run-history replay of retrieved chunks.
-3. Tune retrieval quality with thresholds, reranking, and workflow-specific evals.
+2. Tune retrieval quality with thresholds, reranking, deduplication, and workflow-specific evals.
+3. Add tenant/client/program governance for retrieval filtering, deletion, and audit.
 4. Expose enterprise integration APIs so EDA and review tools can submit artifacts and consume structured outcomes.
 5. Expand benchmark corpus further with richer sanitized client-style artifacts.
 6. Improve parser tolerance for heterogeneous client report formats.
@@ -1308,11 +1319,11 @@ Notes:
 Silicon Agents today is a verification-first semiconductor AI workflow platform with:
 
 - 2 agents
-- 8 frontend pages
+- 9 frontend pages
 - 9 implemented functional layers
 - 5 prompt families
 - 2-stage orchestration + analysis LLM flow
-- RAG over run history and manually ingested notes
+- RAG over run history and manually ingested notes with browser corpus controls
 - SSE-based step streaming
 - benchmark scoring
 - HTML + Jira + email exportable reporting
