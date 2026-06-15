@@ -1,193 +1,279 @@
 # Silicon Agents
 
-Silicon Agents is an AI workflow copilot for semiconductor engineering. The current product wedge focuses on the highest-friction workflow in fabless design organizations:
+**AI Workflow Copilot for Semiconductor Engineering**
 
-- Agent 01: verification coverage closure and regression triage
+Silicon Agents is a verification-first AI workflow platform designed to help semiconductor teams accelerate coverage closure, regression triage, yield analysis, and SPC review.
 
-Agent 02 remains in the repository as a secondary workflow preview for ATE anomaly detection, binning validation, and SPC drift analysis.
+Instead of replacing existing EDA workflows, Silicon Agents acts as an intelligent orchestration layer above engineering tools, transforming raw artifacts into ranked, actionable decisions with enterprise-aware reasoning.
 
-This repository was scaffolded from the attached architecture, MVP strategy, and development plan documents. It now serves as a sponsor-facing prototype for a verification-first semiconductor AI product.
+## Why This Exists
 
-The implementation follows a six-layer design:
+Modern semiconductor teams spend thousands of engineering hours reviewing:
 
-1. Input interface
-2. Parser layer
-3. Reasoning and analysis
-4. Decision layer
-5. Output generator
-6. Feedback and memory
+- Coverage reports
+- Regression failures
+- ATE outputs
+- SPC trend data
 
-## MVP Scope
+Most of these workflows involve repetitive analysis, historical context lookup, prioritization, documentation, and review cycles.
 
-The repo is intentionally local-first but structured like a serious workflow product:
+Silicon Agents was built to reduce that cognitive overhead.
 
-- FastAPI backend with SSE streaming
-- Vanilla HTML frontend with a visible 5-step agent loop
-- Direct local artifact upload for verification reports and logs
-- Synthetic benchmark artifacts for controlled demos
-- Built-in benchmark scorecard for Agent 01 sample artifacts
-- One-click verification brief export for sponsor or client review
-- Executive-style verification brief with business impact, risk posture, and pilot next step
-- Enterprise orchestration layer for chip-specific instructions, historical logs, and custom analysis style
-- Saved client profile templates for one-click demo switching across chip programs and workflow styles
-- SQLite-backed enterprise policy, run history, feedback, and export audit trail
-- Run history console with Jira-ready and email-ready exports
-- Pilot access gate with a shared header token and browser unlock flow
-- Deterministic offline reasoning fallback so the demo works without live API keys
-- Optional Gemini/OpenAI provider hooks for later activation
+The platform ingests engineering artifacts, applies enterprise context, retrieves historical evidence, runs structured AI reasoning, and generates ranked actions with full traceability.
 
-Non-goals for the current prototype:
+---
 
-- Direct EDA tool integration
-- Production deployment
-- Multi-user auth
-- Fine-tuning on proprietary client data
+## Current Product
 
-## Repository Layout
+### Agent 01: Verification Workflow Copilot
+
+Designed for DV and Verification Engineers.
+
+Capabilities:
+
+- Coverage closure analysis
+- Regression triage
+- Coverage gap prioritization
+- Failure clustering
+- Ranked recommendations
+- Verification brief generation
+- Human feedback capture
+
+### Agent 02: Yield Intelligence Copilot
+
+Designed for Product, Test, and Manufacturing teams.
+
+Capabilities:
+
+- ATE anomaly detection
+- Mis-bin review
+- SPC drift analysis
+- Yield action recommendations
+- Jira-ready exports
+- Email-ready reports
+- Benchmark evaluation
+
+---
+
+## Core Architecture
+
+Silicon Agents is built as a 9-layer AI workflow system.
 
 ```text
-silicon_agents/
-  api/
-  agents/
-  core/
-  output/
-  parsers/
-  prompts/
-  storage/
-frontend/
-sample_data/
-cli/
-tests/
-devlog/
+Engineer
+   ↓
+Frontend
+   ↓
+FastAPI
+   ↓
+Artifact Parsing
+   ↓
+Enterprise Orchestration
+   ↓
+RAG Retrieval
+   ↓
+LLM Reasoning
+   ↓
+Decision Ranking
+   ↓
+Persistence & Feedback
 ```
 
-## Quick Start
+The platform combines:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn main:app --reload
-```
+- Structured parsers
+- Retrieval-Augmented Generation (RAG)
+- Multi-provider LLM routing
+- Streaming reasoning
+- Human-in-the-loop feedback
+- Benchmark evaluation
 
-Then open `http://127.0.0.1:8000/`.
+---
 
-If `PILOT_ACCESS_TOKEN` is set, the app will redirect browsers to `/pilot-login` until the token is unlocked for that session. API clients can call protected routes with the `X-Pilot-Access-Token` header.
+## Technical Highlights
 
-## Docker / Pilot Deployment
+### Retrieval-Augmented Intelligence
 
-Build and run locally with Docker:
+- Engineering note ingestion
+- Historical run retrieval
+- Metadata-filtered search
+- Gemini embeddings
+- pgvector-ready architecture
+- Source-level citations
 
-```bash
-docker compose up --build
-```
+### Multi-Provider AI Layer
 
-Deployment artifacts now included:
+Supports:
 
-- [Dockerfile](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/Dockerfile)
-- [docker-compose.yml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/docker-compose.yml)
-- [render.yaml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/render.yaml)
+- Gemini
+- OpenAI
+- Mock fallback mode
 
-Recommended pilot env values:
+Features:
 
-```env
-PILOT_ACCESS_TOKEN=replace-with-shared-pilot-token
-GEMINI_API_KEY=...
-OPENAI_API_KEY=
-DATABASE_URL=postgresql://...
-SA_DB_PATH=./silicon_agents.db
-SA_LOG_LEVEL=INFO
-```
+- Provider abstraction
+- Fallback routing
+- Structured JSON outputs
+- Streaming analysis
 
-Recommended deployment split:
+### Enterprise Orchestration
 
-- `Frontend`: Vercel
-- `Backend`: Render web service
-- `Database`: Render PostgreSQL
+Every analysis run is dynamically customized using:
 
-Repository split for deployment:
+- Chip type
+- Client profile
+- Enterprise policies
+- Historical context
+- Reference data
 
-- `Render backend repo`: `https://github.com/EchoLift/silicon-agent-mvp.git`
-- `Vercel frontend repo`: your personal frontend deployment repo
-- Render should be connected to the backend repo only, even though the codebase currently contains both frontend and backend assets.
+This allows the same system to adapt to different engineering organizations without forking prompts or workflows.
 
-Deployment notes:
+---
 
-- The backend now supports `DATABASE_URL` for PostgreSQL deployments and falls back to `SA_DB_PATH` for local SQLite development.
-- Export a frontend-only Vercel bundle with:
-  ```bash
-  zsh scripts/export_frontend.sh
-  ```
-- The export lands in `dist/silicon-agents-frontend` and includes route-mapped files for `/product-docs` and `/pilot-login`.
-- If you host the frontend separately from the backend, open `Enterprise Config` and save the Render backend URL in `Deployment API Base`.
-- Leave `Deployment API Base` blank for local same-origin runs.
+## Example Workflow
 
-## Core Endpoints
+### Verification Analysis
 
-- `GET /health`
-- `GET /pitch`
-- `GET /pilot`
-- `GET /product-docs`
-- `POST /api/v1/verify`
-- `POST /api/v1/yield`
-- `POST /api/v1/feedback`
-- `GET /api/v1/feedback/{project_id}`
-- `GET /api/v1/decisions/{project_id}`
-- `GET /api/v1/runs`
-- `GET /api/v1/runs/{run_id}`
-- `GET /api/v1/runs/{run_id}/export/jira`
-- `GET /api/v1/runs/{run_id}/export/email`
-- `GET /api/v1/pilot/metrics`
-- `POST /api/v1/pilot/access-code/generate`
+1. Upload coverage report
+2. Parse report into structured format
+3. Retrieve historical project context
+4. Generate orchestration plan
+5. Run AI analysis
+6. Rank findings
+7. Export verification brief
+8. Capture reviewer feedback
 
-## Testing From Day One
+### Yield Analysis
 
-The repo now includes a baseline automated test setup intended to stay in place from the first week of development:
+1. Upload ATE/SPC data
+2. Parse manufacturing artifacts
+3. Retrieve prior yield intelligence
+4. Execute AI reasoning pipeline
+5. Generate ranked actions
+6. Export Jira/email payloads
+7. Persist run history
 
-```bash
-make test-compile
-make test
-```
+---
 
-If `make` is unavailable:
+## Built Features
 
-```bash
-PYTHONPYCACHEPREFIX=/tmp/sa-pycache python3 -m compileall silicon_agents main.py cli tests
-PYTHONPYCACHEPREFIX=/tmp/sa-pycache python3 -m unittest discover -s tests -v
-```
+- Verification Copilot
+- Yield Intelligence Copilot
+- Enterprise Configuration Engine
+- RAG Console
+- Pilot Dashboard
+- Run History & Audit Trail
+- Benchmark Evaluation System
+- Feedback Learning Pipeline
+- HTML Report Generation
+- Jira Export
+- Email Export
+- Docker Deployment
+- Render Deployment Support
 
-There is also a starter CI workflow at [.github/workflows/tests.yml](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/.github/workflows/tests.yml) so every push and PR can run the suite automatically once the repo is connected to Git hosting.
+---
 
-## Sample Demo Flow
+## Tech Stack
 
-1. Open the landing page.
-2. Launch the verification workflow.
-3. Upload a verification artifact or load a benchmark sample.
-4. Watch the agent stream the five-stage reasoning process.
-5. Review findings with evidence, ranking, and the benchmark scorecard.
-6. Export a verification brief for sponsor or engineering review circulation.
-7. Accept or reject recommendations to build the memory layer.
-8. Open Run History to review saved runs, scorecards, feedback, and Jira/email exports.
+### Backend
 
-Saved demo templates for enterprise profiles live in [sample_data/client_profiles.json](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/sample_data/client_profiles.json).
+- Python
+- FastAPI
+- SQLite
+- PostgreSQL
+- SSE Streaming
 
-## Notes on LLM Use
+### AI
 
-The repo exposes a single `LLMProvider` interface. When provider keys and SDKs are available, it can try Gemini first and then OpenAI. If they are unavailable, it falls back to a deterministic local stream so the product loop remains runnable during early MVP development.
+- Gemini
+- OpenAI
+- RAG
+- Embeddings
+- Prompt Orchestration
 
-Agent 01 and Agent 02 now also support an enterprise-oriented two-stage prompt flow:
+### Frontend
 
-1. An orchestration pass synthesizes chip context, client instructions, and historical reference data into a run-specific prompt plan.
-2. The analysis pass uses that plan to generate the ranked findings and actions.
+- HTML
+- JavaScript
 
-This gives enterprise teams a path to tailor the agents without forking the product logic for every chip program.
+### Infrastructure
 
-## Planning Docs
+- Docker
+- Render
+- PostgreSQL
+- GitHub Actions
 
-- [DEV_PLAN.md](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/DEV_PLAN.md)
-- [ARCHITECTURE.md](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/ARCHITECTURE.md)
-- [EVALUATION_PLAN.md](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/EVALUATION_PLAN.md)
-- [devlog/week01.md](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/devlog/week01.md)
-- [devlog/week02.md](/Volumes/D-Drive/Projects/Silicon-Agents-MVP/devlog/week02.md)
-# silicon-agents
+---
+
+## Engineering Challenges Solved
+
+### Problem
+
+Semiconductor workflows are highly specialized and vary across organizations.
+
+### Solution
+
+Built a two-stage orchestration system that generates enterprise-specific analysis plans before reasoning begins.
+
+### Result
+
+The same platform can adapt to different review styles, escalation policies, and engineering priorities.
+
+---
+
+### Problem
+
+Engineering knowledge is scattered across reports, notes, and historical reviews.
+
+### Solution
+
+Implemented retrieval over historical runs and engineering notes with metadata filtering and contextual evidence injection.
+
+### Result
+
+Recommendations include supporting evidence and historical context rather than isolated AI outputs.
+
+---
+
+## Metrics
+
+Current MVP includes:
+
+- 2 AI Agents
+- 9 Product Pages
+- 9 Architectural Layers
+- 5 Prompt Families
+- 41 / 41 Automated Tests Passing
+- Benchmark-backed Evaluation Pipeline
+
+---
+
+## Vision
+
+Today's AI tools help engineers write code.
+
+Silicon Agents aims to help engineers make decisions.
+
+The long-term goal is to become the workflow intelligence layer sitting above verification, validation, yield engineering, and semiconductor operations.
+
+---
+
+## About Me
+
+Surya Teja
+
+Senior Systems Associate at Infosys working on Goldman Sachs enterprise systems.
+
+I enjoy building AI-native products, agentic systems, infrastructure, and developer tooling.
+
+Recently shortlisted in the Infosys Business Incubator Cohort for Silicon Agents.
+
+Open to:
+
+- Founding Engineer
+- AI Engineer
+- Agent Engineer
+- Platform Engineer
+
+LinkedIn: https://www.linkedin.com/in/surya-teja-illa-706108232/
+Email: illasuryanani2001@gmail.com
