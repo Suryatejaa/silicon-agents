@@ -263,6 +263,93 @@
       font-size: 0.86rem;
       line-height: 1.6;
     }
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .screenshot-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(14, 30, 54, 0.05);
+    }
+    .screenshot-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      object-position: top left;
+      background: #f7faff;
+      border-bottom: 1px solid var(--line);
+      cursor: zoom-in;
+    }
+    .screenshot-card figcaption {
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    .screenshot-card strong {
+      color: var(--text);
+    }
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(8, 18, 34, 0.88);
+      overflow: hidden;
+    }
+    .image-modal.is-open {
+      display: flex;
+    }
+    .image-modal-panel {
+      width: min(96vw, 1800px);
+      height: calc(100vh - 36px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    }
+    .image-modal img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #ffffff;
+    }
+    .image-modal-caption {
+      position: sticky;
+      bottom: 0;
+      padding: 12px 14px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--line);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .image-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    .image-modal-close:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
     .flow-shell {
       display: grid;
       gap: 18px;
@@ -521,6 +608,7 @@
       }
       .kpi-grid,
       .grid-3,
+      .screenshot-grid,
       .flow-lane,
       .circuit-layout,
       .flow-legend {
@@ -538,6 +626,7 @@
       .grid-2,
       .grid-3,
       .kpi-grid,
+      .screenshot-grid,
       .flow-lane,
       .circuit-layout,
       .flow-legend {
@@ -647,6 +736,7 @@
         <a href="#exports">Exports and workflow fit</a>
         <a href="#api-surface">Current API surface</a>
         <a href="#rag-next">RAG status</a>
+        <a href="#multi-provider-benchmark">Multi-provider benchmark</a>
         <a href="#phase2-next">Next MVP phase</a>
       </div>
     </aside>
@@ -1235,6 +1325,124 @@ Supporting layers:
         </p>
       </section>
 
+      <section class="section anchor-target" id="multi-provider-benchmark">
+        <h2>22. Multi-Provider LLM Benchmark</h2>
+        <p>
+          Silicon Agents is architected to be provider-agnostic at the reasoning layer. To validate this in practice, and to evaluate
+          cost and quality tradeoffs across available LLM providers, Agent 01 and Agent 02 were benchmarked against the same bundled
+          artifacts using Sarvam-105B, OpenAI o3, and OpenAI GPT-5.2-nano.
+        </p>
+
+        <div class="grid-2" style="margin-top:14px;">
+          <div class="card">
+            <h3>Purpose</h3>
+            <p>
+              The benchmark proves that Silicon Agents is not locked to one model vendor. The same parser, orchestration, RAG, scorecard,
+              and review workflow can run against Indian and frontier-model providers while preserving the same enterprise audit surface.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Methodology</h3>
+            <p>
+              Each provider was run against the same bundled benchmark artifact per agent, using the platform's existing scoring system:
+              expected-finding recall, first-action alignment, evidence coverage, and review-time savings. Runs were repeated across
+              sessions to check result stability rather than relying on a single sample.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:14px;">
+          <strong>Bug found and fixed during benchmarking.</strong>
+          Initial cross-provider runs showed a suspicious score gap, with Sarvam-105B and OpenAI o3/GPT-5.2 scoring as low as
+          <strong>20/100</strong> with <strong>0/4 matched findings</strong>, even though the reasoning trace contained substantively
+          correct root-cause analysis. Investigation traced this to target naming, not reasoning quality: some runs returned compound
+          <code>group:bin</code> target names such as <code>usb_transfer_type:control_transfer_error</code>, while the benchmark scorer
+          expected bare bin names such as <code>control_transfer_error</code>. Retrieved RAG evidence from prior runs contributed to
+          the naming drift because models mirrored qualified-name styles present in historical summaries.
+          <br /><br />
+          <strong>Fix applied:</strong> the benchmark scorer now normalizes group-qualified target names and matches qualified suffixes
+          against benchmark aliases. The scorecard now evaluates the underlying engineering finding instead of penalizing harmless
+          namespace formatting differences.
+        </div>
+
+        <h3 style="margin-top:18px;">Results - Agent 01: Verification Workflow Copilot</h3>
+        <p>
+          Benchmark artifact: <code>coverage_vcs_sample.log</code> - USB Controller v2.3 coverage closure.
+        </p>
+        <table class="field-table">
+          <tr><th>Provider</th><th>Score</th><th>Findings matched</th><th>First action alignment</th><th>Cost per run</th></tr>
+          <tr><td>Sarvam-105B</td><td><strong>77/100</strong></td><td>4/4</td><td>Diverged from benchmark's preferred first pick</td><td>~₹0.05 using startup credits</td></tr>
+          <tr><td>OpenAI o3</td><td><strong>77/100</strong></td><td>4/4</td><td>Diverged from benchmark's preferred first pick</td><td>Premium reasoning-tier pricing</td></tr>
+          <tr><td>OpenAI GPT-5.2-nano</td><td><strong>20/100*</strong></td><td>0/4*</td><td>Not yet re-run post-fix</td><td>Standard pricing</td></tr>
+        </table>
+        <p style="margin-top:8px;">
+          * Pre-normalization-fix result for GPT-5.2-nano. Re-run is pending for a complete like-for-like post-fix comparison.
+        </p>
+
+        <div class="screenshot-grid">
+          <figure class="screenshot-card">
+            <img src="/static/images/benchmark-agent01-sarvam.png" alt="Agent 01 Sarvam-105B benchmark screenshot" />
+            <figcaption><strong>Agent 01 / Sarvam-105B.</strong> Post-fix scorecard showing 4/4 expected findings with ranking divergence from the benchmark-preferred first action.</figcaption>
+          </figure>
+          <figure class="screenshot-card">
+            <img src="/static/images/benchmark-agent01-o3.png" alt="Agent 01 OpenAI o3 benchmark screenshot" />
+            <figcaption><strong>Agent 01 / OpenAI o3.</strong> Same bundled coverage artifact, same matched-finding result, and same first-action divergence pattern.</figcaption>
+          </figure>
+        </div>
+
+        <h3 style="margin-top:18px;">Results - Agent 02: Yield Intelligence Copilot</h3>
+        <p>
+          Benchmark artifact: <code>ate_parametric_sample.csv</code> - Mobile SoC LOT_004 yield review.
+        </p>
+        <table class="field-table">
+          <tr><th>Provider</th><th>Score</th><th>Findings matched</th><th>First action alignment</th><th>Cost per run</th></tr>
+          <tr><td>Sarvam-105B</td><td><strong>100/100</strong></td><td>2/2</td><td>Aligned exactly with benchmark</td><td>~₹0.05 using startup credits</td></tr>
+          <tr><td>OpenAI o3</td><td><strong>100/100</strong></td><td>2/2</td><td>Aligned exactly with benchmark</td><td>Premium reasoning-tier pricing</td></tr>
+        </table>
+
+        <div class="screenshot-grid">
+          <figure class="screenshot-card">
+            <img src="/static/images/benchmark-agent02-sarvam.png" alt="Agent 02 Sarvam-105B benchmark screenshot" />
+            <figcaption><strong>Agent 02 / Sarvam-105B.</strong> Perfect score on the bundled ATE parametric benchmark with C005 and C008 correctly prioritized.</figcaption>
+          </figure>
+          <figure class="screenshot-card">
+            <img src="/static/images/benchmark-agent02-o3.png" alt="Agent 02 OpenAI o3 benchmark screenshot" />
+            <figcaption><strong>Agent 02 / OpenAI o3.</strong> Matching 100/100 score and identical benchmark alignment on numerical yield reasoning.</figcaption>
+          </figure>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px;">
+          <div class="card">
+            <h3>Observations</h3>
+            <ul>
+              <li>Sarvam-105B matches OpenAI o3 exactly on both agents post-fix: same scores and same matched findings.</li>
+              <li>Agent 02 shows perfect cross-provider agreement on numerical and statistical yield reasoning.</li>
+              <li>Agent 01 shows a shared minor divergence from the benchmark's preferred first action, suggesting a benchmark calibration nuance rather than a provider-specific weakness.</li>
+              <li>At equal quality, Sarvam-105B is the cost-efficient primary provider while startup-program credits are available.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Enterprise signal</h3>
+            <p>
+              The result directly addresses data-ownership and vendor-dependency questions for enterprise evaluators. Silicon Agents can
+              operate across providers, and an Indian-built model performs at parity with a frontier OpenAI reasoning model on real
+              semiconductor workflow tasks.
+            </p>
+          </div>
+        </div>
+
+        <h3 style="margin-top:18px;">Configuration change</h3>
+        <pre><code>SA_LLM_PRIMARY=sarvam
+SA_LLM_SECONDARY=openai</code></pre>
+
+        <h3 style="margin-top:18px;">Next steps</h3>
+        <ul>
+          <li>Re-run GPT-5.2-nano and GPT-5.2 full post-fix for a complete like-for-like table.</li>
+          <li>Extend the benchmark corpus beyond the two bundled samples to reduce single-artifact bias.</li>
+          <li>Track provider agreement and divergence over time as a running reliability signal in the Pilot Dashboard.</li>
+        </ul>
+      </section>
+
       <section class="section anchor-target" id="phase2-next">
         <h2>Next MVP phase: enterprise API integration for EDA workflows</h2>
         <p>
@@ -1262,6 +1470,13 @@ Supporting layers:
           </div>
         </div>
       </section>
+    </div>
+  </div>
+  <div class="image-modal" id="imageModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Benchmark screenshot preview">
+    <button class="image-modal-close" id="imageModalClose" type="button" aria-label="Close image preview">&times;</button>
+    <div class="image-modal-panel">
+      <img id="imageModalImg" alt="" />
+      <div class="image-modal-caption" id="imageModalCaption"></div>
     </div>
   </div>
   <script>
@@ -1342,6 +1557,40 @@ Supporting layers:
 
     document.querySelectorAll("[data-flow-step]").forEach((node) => {
       node.addEventListener("click", () => selectFlowStep(node.dataset.flowStep));
+    });
+
+    const imageModal = document.getElementById("imageModal");
+    const imageModalImg = document.getElementById("imageModalImg");
+    const imageModalCaption = document.getElementById("imageModalCaption");
+    const imageModalClose = document.getElementById("imageModalClose");
+
+    function closeImageModal() {
+      imageModal.classList.remove("is-open");
+      imageModal.setAttribute("aria-hidden", "true");
+      imageModalImg.removeAttribute("src");
+      imageModalImg.alt = "";
+      document.body.style.overflow = "";
+    }
+
+    document.querySelectorAll(".screenshot-card img").forEach((image) => {
+      image.addEventListener("click", () => {
+        const caption = image.closest(".screenshot-card")?.querySelector("figcaption")?.textContent?.trim() || image.alt;
+        imageModalImg.src = image.src;
+        imageModalImg.alt = image.alt;
+        imageModalCaption.textContent = caption;
+        imageModal.classList.add("is-open");
+        imageModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        imageModalClose.focus();
+      });
+    });
+
+    imageModalClose.addEventListener("click", closeImageModal);
+    imageModal.addEventListener("click", (event) => {
+      if (event.target === imageModal) closeImageModal();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && imageModal.classList.contains("is-open")) closeImageModal();
     });
   </script>
 </body>

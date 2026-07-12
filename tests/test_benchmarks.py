@@ -64,6 +64,64 @@ class Agent01BenchmarkTests(unittest.TestCase):
         self.assertEqual(result["metrics"]["matched_expected_findings"], 4)
         self.assertEqual(result["review_time_saved_minutes"], 59)
 
+    def test_coverage_benchmark_accepts_group_qualified_targets(self) -> None:
+        decisions = [
+            Decision(
+                id="D001",
+                project_id="bench-test",
+                type="coverage_gap",
+                target="usb_transfer_type:isochronous_transfer",
+                action="Force isochronous transfer stimulus.",
+                rationale="Zero-hit transfer mode gap.",
+                priority="HIGH",
+                confidence=0.9,
+                effort="2hrs",
+                metadata={"evidence": "bins isochronous_transfer: 0 hits FAIL gap"},
+            ),
+            Decision(
+                id="D002",
+                project_id="bench-test",
+                type="coverage_gap",
+                target="usb_transfer_type/control_transfer_error",
+                action="Inject explicit control transfer error path.",
+                rationale="Zero-hit protocol error path.",
+                priority="HIGH",
+                confidence=0.88,
+                effort="2hrs",
+                metadata={"evidence": "bins control_transfer_error: 0 hits FAIL gap"},
+            ),
+            Decision(
+                id="D003",
+                project_id="bench-test",
+                type="coverage_gap",
+                target="dma_arbitration::concurrent_dma_conflict",
+                action="Enable concurrent DMA conflict stimulus.",
+                rationale="Zero-hit arbitration conflict path.",
+                priority="HIGH",
+                confidence=0.86,
+                effort="2hrs",
+                metadata={"evidence": "bins concurrent_dma_conflict: 0 hits FAIL gap"},
+            ),
+            Decision(
+                id="D004",
+                project_id="bench-test",
+                type="coverage_gap",
+                target="dma_arbitration.dma_during_interrupt",
+                action="Overlap interrupt windows with DMA arbitration.",
+                rationale="Below-threshold interrupt overlap coverage.",
+                priority="MEDIUM",
+                confidence=0.77,
+                effort="30min",
+                metadata={"evidence": "bins dma_during_interrupt: 3 hits FAIL below threshold"},
+            ),
+        ]
+
+        result = evaluate_agent01_benchmark("coverage_vcs_sample.log", decisions)
+
+        self.assertEqual(result["metrics"]["matched_expected_findings"], 4)
+        self.assertEqual(result["metrics"]["first_action_alignment"], 1.0)
+        self.assertEqual(result["metrics"]["overall_score"], 100)
+
     def test_regression_benchmark_accepts_cluster_aliases(self) -> None:
         decisions = [
             Decision(

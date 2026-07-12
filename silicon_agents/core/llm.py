@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from typing import AsyncIterator
 
@@ -38,7 +39,7 @@ class LLMProvider:
         self.fallback_reason = ""
         self.last_provider = "mock"
         self.last_model = ""
-        providers = [self.settings.llm_primary, "openai" if self.settings.llm_primary == "gemini" else "gemini"]
+        providers = self._provider_order()
         for provider in providers:
             if not self._provider_enabled(provider):
                 self.provider_attempts.append({"provider": provider, "status": "disabled", "reason": "missing_api_key_or_unknown_provider"})
@@ -62,7 +63,17 @@ class LLMProvider:
             return bool(self.settings.gemini_api_key)
         if provider == "openai":
             return bool(self.settings.openai_api_key)
+        if provider == "sarvam":
+            return bool(self.settings.sarvam_api_key)
         return False
+
+    def _provider_order(self) -> list[str]:
+        providers: list[str] = []
+        for provider in [self.settings.llm_primary, "gemini", "sarvam", "openai"]:
+            cleaned = str(provider or "").strip().lower()
+            if cleaned and cleaned not in providers:
+                providers.append(cleaned)
+        return providers
 
     async def _stream_provider(self, provider: str, system_prompt: str, user_prompt: str, response_mime_type: str) -> AsyncIterator[str]:
         if provider == "gemini":
@@ -71,6 +82,10 @@ class LLMProvider:
             return
         if provider == "openai":
             async for chunk in self._stream_openai(system_prompt, user_prompt):
+                yield chunk
+            return
+        if provider == "sarvam":
+            async for chunk in self._stream_sarvam(system_prompt, user_prompt):
                 yield chunk
             return
         raise RuntimeError(f"Unknown provider: {provider}")
@@ -146,3 +161,59 @@ class LLMProvider:
                 self.last_model = self.settings.openai_model
                 yield delta
         self.provider_attempts.append({"provider": "openai", "model": self.settings.openai_model, "status": "success"})
+
+    async def _stream_sarvam(self, system_prompt: str, user_prompt: str) -> AsyncIterator[str]:
+        import httpx  # pragma: no cover
+
+        base_url = self.settings.sarvam_base_url.rstrip("/")
+        payload = {
+            "model": self.settings.sarvam_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.2,
+            "top_p": 1,
+            "max_tokens": 4000,
+            "stream": True,
+        }
+        headers = {
+            "api-subscription-key": self.settings.sarvam_api_key,
+            "Content-Type": "application/json",
+        }
+        emitted = False
+        async with httpx.AsyncClient(timeout=self.settings.stream_timeout_s) as client:
+            async with client.stream(
+                "POST",
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    line = line.strip()
+                    if not line or not line.startswith("data:"):
+                        continue
+                    data = line.removeprefix("data:").strip()
+                    if data == "[DONE]":
+                        break
+                    try:
+                        event = json.loads(data)
+                    except json.JSONDecodeError:
+                        continue
+                    choices = event.get("choices") or []
+                    if not choices:
+                        continue
+                    delta = choices[0].get("delta") or {}
+                    text = delta.get("content")
+                    if text:
+                        emitted = True
+                        self.last_provider = f"sarvam/{self.settings.sarvam_model}"
+                        self.last_model = self.settings.sarvam_model
+                        yield str(text)
+                        await asyncio.sleep(0)
+        if emitted:
+            self.provider_attempts.append({"provider": "sarvam", "model": self.settings.sarvam_model, "status": "success"})
+            logger.info("Sarvam model %s succeeded.", self.settings.sarvam_model)
+            return
+        raise RuntimeError("Sarvam stream completed without text output.")

@@ -36,6 +36,12 @@ def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", lowered).strip("_")
 
 
+def _matches_finding(target: str, finding: BenchmarkFinding) -> bool:
+    aliases = {_normalize(alias) for alias in finding.aliases}
+    aliases.add(_normalize(finding.label))
+    return any(target == alias or target.endswith(f"_{alias}") for alias in aliases)
+
+
 AGENT01_BENCHMARKS: dict[str, BenchmarkDefinition] = {
     "coverage_vcs_sample.log": BenchmarkDefinition(
         id="coverage_vcs_sample.log",
@@ -335,9 +341,7 @@ def evaluate_agent01_benchmark(benchmark_id: str, decisions: list[Decision]) -> 
     for decision in decisions:
         target = _normalize(decision.target)
         for finding in benchmark.findings:
-            aliases = {_normalize(alias) for alias in finding.aliases}
-            aliases.add(_normalize(finding.label))
-            if target in aliases and finding.id not in matched_by_finding:
+            if _matches_finding(target, finding) and finding.id not in matched_by_finding:
                 matched_by_finding[finding.id] = decision
 
     matched_ids = set(matched_by_finding)
@@ -359,9 +363,7 @@ def evaluate_agent01_benchmark(benchmark_id: str, decisions: list[Decision]) -> 
     if decisions:
         first_target = _normalize(decisions[0].target)
         for finding in benchmark.findings:
-            aliases = {_normalize(alias) for alias in finding.aliases}
-            aliases.add(_normalize(finding.label))
-            if finding.id in first_candidates and first_target in aliases:
+            if finding.id in first_candidates and _matches_finding(first_target, finding):
                 first_action_alignment = 1.0
                 break
 

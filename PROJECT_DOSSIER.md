@@ -806,6 +806,7 @@ This keeps the prototype easy to run locally and easy to demo in sponsor setting
 Current provider abstraction:
 
 - `Gemini` via `google.genai`
+- `Sarvam` through its OpenAI-compatible `/v1/chat/completions` API using `api-subscription-key`
 - `OpenAI` via `openai`
 - deterministic `mock` fallback
 
@@ -814,8 +815,8 @@ Current provider abstraction:
 `LLMProvider` behavior:
 
 1. try primary provider from env
-2. try secondary provider
-3. if both fail or are unavailable, use mock fallback
+2. try remaining configured providers in fallback order
+3. if all fail or are unavailable, use mock fallback
 
 ### Current model configuration
 
@@ -824,6 +825,8 @@ From [silicon_agents/core/config.py](/Volumes/D-Drive/Projects/Silicon-Agents-MV
 - primary provider env: `SA_LLM_PRIMARY`
 - Gemini model default: `gemini-2.5-pro`
 - Gemini fallback model: `gemini-2.5-flash`
+- Sarvam model default: `sarvam-105b`
+- Sarvam base URL default: `https://api.sarvam.ai/v1`
 - OpenAI model default: `gpt-4o`
 - RAG embedding provider default in local samples: `gemini`
 - Gemini embedding model default: `gemini-embedding-001`
@@ -1251,7 +1254,7 @@ Current test coverage areas include:
 
 Current observed suite status in this workspace:
 
-- `41/41` tests passing
+- `42/42` tests passing
 
 Notes:
 

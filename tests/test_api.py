@@ -55,6 +55,14 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(rag.status_code, 200)
         self.assertIn("Retrieval Evidence Workbench", rag.text)
 
+    def test_llm_debug_includes_sarvam_config(self) -> None:
+        response = self.client.get("/api/v1/debug/llm")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("sarvam_api_key_present", payload)
+        self.assertEqual(payload["sarvam_model"], "sarvam-105b")
+        self.assertIn("sarvam", payload["provider_order"])
+
     def test_enterprise_config_defaults_and_update(self) -> None:
         default_agent01 = self.client.get("/api/v1/config/agent01")
         self.assertEqual(default_agent01.status_code, 200)
