@@ -6,6 +6,7 @@ import json
 import logging
 import sqlite3
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from silicon_agents.core.config import get_settings
 from silicon_agents.core.schemas import (
@@ -630,7 +631,20 @@ class FeedbackStore:
         if self.is_postgres:
             if psycopg is None:
                 raise RuntimeError("PostgreSQL support requires the optional 'psycopg' package.")
-            return psycopg.connect(self.db_path)
+            try:
+                return psycopg.connect(self.db_path)
+            except Exception as exc:
+                host = urlparse(self.db_path).hostname or "unknown-host"
+                logger.error(
+                    "Postgres connection failed for host=%s. If this is a Render deployment, verify DATABASE_URL uses a "
+                    "reachable Render Postgres URL: use the internal database URL only when the web service and database "
+                    "are in the same Render region/private network; otherwise use the external database URL. To run "
+                    "without Postgres, remove DATABASE_URL and set SA_DB_PATH to a SQLite path, noting that container "
+                    "storage is ephemeral unless a persistent disk is attached. Original error: %s",
+                    host,
+                    exc,
+                )
+                raise
         return sqlite3.connect(self.db_path)
 
     def _db_execute(self, db, query: str, params: tuple[object, ...] | list[object] | None = None):

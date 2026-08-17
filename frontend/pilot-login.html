@@ -98,6 +98,10 @@
     <p>
       This pilot build is protected for controlled sharing. Enter the pilot access token to unlock the application in this browser.
     </p>
+    <span class="hint">Copy the token: VIq2PM0mTRZJQCA7WlgizoE_</span> 
+    <!-- copy button -->
+    <button id="copyBtn" type="button">Copy token</button>
+    
     <input id="pilotToken" type="password" placeholder="Enter pilot access token" autocomplete="off" />
     <button id="unlockBtn" type="button">Unlock Silicon Agents</button>
     <div class="error" id="errorMsg"></div>
@@ -147,6 +151,20 @@
         unlock();
       }
     });
+
   </script>
+  <script>
+      const copyBtn = document.getElementById("copyBtn");
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText("VIq2PM0mTRZJQCA7WlgizoE_").then(() => {
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => {
+            copyBtn.textContent = "Copy token";
+          }, 2000);
+        }).catch((err) => {
+          console.error("Failed to copy token: ", err);
+        });
+      });
+    </script>
 </body>
 </html>
