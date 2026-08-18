@@ -51,7 +51,12 @@ class LLMProvider:
                 return
             except Exception as exc:  # pragma: no cover - best effort live fallback
                 self.provider_attempts.append({"provider": provider, "status": "failed", "reason": str(exc)[:1000]})
-                logger.warning("Provider %s failed: %s", provider, exc)
+                logger.exception(
+                    "Provider %s failed: type=%s repr=%r",
+                    provider,
+                    type(exc).__name__,
+                    exc,
+                )
         self.last_provider = "mock"
         self.fallback_reason = "all_configured_providers_failed_or_disabled"
         logger.error("LLM falling back to mock. Attempts=%s", self.provider_attempts)
@@ -163,57 +168,55 @@ class LLMProvider:
         self.provider_attempts.append({"provider": "openai", "model": self.settings.openai_model, "status": "success"})
 
     async def _stream_sarvam(self, system_prompt: str, user_prompt: str) -> AsyncIterator[str]:
-        import httpx  # pragma: no cover
+        # Use the official Sarvam SDK to handle transport and streaming quirks.
+        from sarvamai import SarvamAI  # pragma: no cover
 
-        base_url = self.settings.sarvam_base_url.rstrip("/")
-        payload = {
-            "model": self.settings.sarvam_model,
-            "messages": [
+        client = SarvamAI(api_subscription_key=self.settings.sarvam_api_key)
+
+        # Run the SDK call on a thread to avoid blocking the event loop; the SDK
+        # returns a synchronous iterator that yields stream events.
+        stream = await asyncio.to_thread(
+            client.chat.completions,
+            model=self.settings.sarvam_model,
+            messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.2,
-            "top_p": 1,
-            "max_tokens": 4000,
-            "stream": True,
-        }
-        headers = {
-            "api-subscription-key": self.settings.sarvam_api_key,
-            "Content-Type": "application/json",
-        }
+            temperature=0.2,
+            top_p=1,
+            max_tokens=4000,
+            reasoning_effort=None,
+            stream=True,
+        )
+
+        def _next_chunk(iterator):
+            try:
+                return next(iterator)
+            except StopIteration:
+                return None
+
         emitted = False
-        async with httpx.AsyncClient(timeout=self.settings.stream_timeout_s) as client:
-            async with client.stream(
-                "POST",
-                f"{base_url}/chat/completions",
-                headers=headers,
-                json=payload,
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    line = line.strip()
-                    if not line or not line.startswith("data:"):
-                        continue
-                    data = line.removeprefix("data:").strip()
-                    if data == "[DONE]":
-                        break
-                    try:
-                        event = json.loads(data)
-                    except json.JSONDecodeError:
-                        continue
-                    choices = event.get("choices") or []
-                    if not choices:
-                        continue
-                    delta = choices[0].get("delta") or {}
-                    text = delta.get("content")
-                    if text:
-                        emitted = True
-                        self.last_provider = f"sarvam/{self.settings.sarvam_model}"
-                        self.last_model = self.settings.sarvam_model
-                        yield str(text)
-                        await asyncio.sleep(0)
+        while True:
+            event = await asyncio.to_thread(_next_chunk, stream)
+            if event is None:
+                break
+
+            choices = getattr(event, "choices", None) or []
+            if not choices:
+                continue
+
+            delta = getattr(choices[0], "delta", None)
+            text = getattr(delta, "content", None) if delta else None
+            if text:
+                emitted = True
+                self.last_provider = f"sarvam/{self.settings.sarvam_model}"
+                self.last_model = self.settings.sarvam_model
+                yield str(text)
+                await asyncio.sleep(0)
+
         if emitted:
             self.provider_attempts.append({"provider": "sarvam", "model": self.settings.sarvam_model, "status": "success"})
             logger.info("Sarvam model %s succeeded.", self.settings.sarvam_model)
             return
-        raise RuntimeError("Sarvam stream completed without text output.")
+
+        raise RuntimeError("Sarvam SDK stream completed without text output.")
