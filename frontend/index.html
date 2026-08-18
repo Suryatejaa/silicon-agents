@@ -367,7 +367,7 @@
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
         <a href="/rag" id="navRag">RAG</a>
-        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
+        <!-- <a href="/pilot" id="navPilot">Pilot Dashboard</a> -->
         <a href="/configuration" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
@@ -408,7 +408,7 @@
           <a class="button primary" href="/agent01">Open Verification Workflow</a>
           <a class="button secondary" href="/agent02">Open Yield Workflow Preview</a>
           <a class="button tertiary" href="/pitch" id="pitchDeckLink">Open Pitch Deck</a>
-          <a class="button secondary" href="/pilot">Open Pilot Dashboard</a>
+          <!-- <a class="button secondary" href="/pilot">Open Pilot Dashboard</a> -->
           <a class="button secondary" href="/product-docs">Open Product Docs</a>
         </div>
       </div>
@@ -567,17 +567,14 @@
     const scoreBenchmarks = document.getElementById("scoreBenchmarks");
     const latestRunsBoard = document.getElementById("latestRunsBoard");
     const apiBase = (() => {
-      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      const stored = "https://silicon-agents-mvp-production.up.railway.app";
       if (isFileMode) {
-        return stored || "http://127.0.0.1:8000";
+        return "http://127.0.0.1:8000";
       }
       return stored;
     })();
-    const pilotToken = window.localStorage.getItem("silicon_agents_pilot_token") || "";
-
     function authorizedFetch(path, options = {}) {
       const headers = new Headers(options.headers || {});
-      if (pilotToken) headers.set("X-Pilot-Access-Token", pilotToken);
       return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 

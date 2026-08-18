@@ -300,7 +300,7 @@
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
         <a href="/rag" class="is-current" id="navRag">RAG</a>
-        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
+        <!-- <a href="/pilot" id="navPilot">Pilot Dashboard</a> -->
         <a href="/configuration" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
@@ -415,8 +415,8 @@
   <script>
     const isFileMode = window.location.protocol === "file:";
     const apiBase = (() => {
-      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
-      if (isFileMode) return stored || "http://127.0.0.1:8000";
+      const stored = "https://silicon-agents-mvp-production.up.railway.app"
+      if (isFileMode) return "http://127.0.0.1:8000";
       return stored;
     })();
 
@@ -426,7 +426,7 @@
       navAgent02: isFileMode ? "./agent02.html" : "/agent02",
       navHistory: isFileMode ? "./history.html" : "/history",
       navRag: isFileMode ? "./rag.html" : "/rag",
-      navPilot: isFileMode ? "./pilot.html" : "/pilot",
+      // navPilot: isFileMode ? "./pilot.html" : "/pilot",
       navConfig: isFileMode ? "./configuration.html" : "/configuration",
       navDocs: isFileMode ? "./docs.html" : "/product-docs"
     };
@@ -449,8 +449,6 @@
 
     async function apiFetch(path, options = {}) {
       const headers = new Headers(options.headers || {});
-      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
-      if (token) headers.set("X-Pilot-Access-Token", token);
       return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 

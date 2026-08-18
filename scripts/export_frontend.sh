@@ -20,10 +20,10 @@ copy_page "agent01.html" "agent01.html"
 copy_page "agent02.html" "agent02.html"
 copy_page "configuration.html" "configuration.html"
 copy_page "history.html" "history.html"
-copy_page "pilot.html" "pilot.html"
+# copy_page "pilot.html" "pilot.html"
 copy_page "pitch.html" "pitch.html"
 copy_page "docs.html" "product-docs.html"
-copy_page "pilot_access.html" "pilot-login.html"
+# copy_page "pilot_access.html" "pilot-login.html"
 
 cp "${SAMPLE_DATA_DIR}/client_profiles.json" "${OUT_DIR}/sample-data/client_profiles.json"
 cp "${SAMPLE_DATA_DIR}/"* "${OUT_DIR}/sample-data/"
@@ -46,10 +46,10 @@ Included routes:
 - `/agent02`
 - `/configuration`
 - `/history`
-- `/pilot`
+# - `/pilot`
 - `/pitch`
 - `/product-docs`
-- `/pilot-login`
+# - `/pilot-login`
 
 Backend configuration:
 - After deployment, open `/configuration`

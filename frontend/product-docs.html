@@ -680,7 +680,7 @@
       <a href="/agent02">Agent 02</a>
       <a href="/history">Run History</a>
       <a href="/rag">RAG</a>
-      <a href="/pilot">Pilot Dashboard</a>
+      <!-- <a href="/pilot">Pilot Dashboard</a> -->
       <a href="/configuration">Enterprise Config</a>
       <a href="/product-docs" class="is-current">Docs</a>
     </nav>
@@ -731,7 +731,7 @@
 
       <div class="sidebar-group">
         <div class="sidebar-group-title">Pilot Operations</div>
-        <a href="#pilot-ops">Pilot operations</a>
+        <!-- <a href="#pilot-ops">Pilot operations</a> -->
         <a href="#parser-trust">Parser confidence</a>
         <a href="#exports">Exports and workflow fit</a>
         <a href="#api-surface">Current API surface</a>
@@ -1206,7 +1206,7 @@ Supporting layers:
           </div>
         </div>
       </section>
-
+<!-- 
       <section class="section anchor-target" id="pilot-ops">
         <h2>Pilot operations</h2>
         <div class="grid-2">
@@ -1228,7 +1228,7 @@ Supporting layers:
             </ul>
           </div>
         </div>
-      </section>
+      </section> -->
 
       <section class="section anchor-target" id="parser-trust">
         <h2>Parser confidence and parser trust</h2>
@@ -1264,8 +1264,8 @@ Supporting layers:
           <tr><td><code>POST /api/v1/feedback</code></td><td>Persist accept/reject review signals.</td><td>Critical for human-in-the-loop trust measurement.</td></tr>
           <tr><td><code>GET /api/v1/runs/{run_id}/export/jira</code></td><td>Generate Jira-ready payload for a saved run.</td><td>Proves workflow fit beyond the UI.</td></tr>
           <tr><td><code>GET /api/v1/runs/{run_id}/export/email</code></td><td>Generate email-ready payload for a saved run.</td><td>Lets teams circulate findings immediately.</td></tr>
-          <tr><td><code>GET /api/v1/pilot/metrics</code></td><td>Aggregate pilot evidence across all saved runs.</td><td>Provides sponsor-grade usage and trust signals.</td></tr>
-          <tr><td><code>POST /api/v1/pilot/access-code/generate</code></td><td>Generate a suggested pilot access token value.</td><td>Supports controlled sharing without building full auth.</td></tr>
+          <!-- <tr><td><code>GET /api/v1/pilot/metrics</code></td><td>Aggregate pilot evidence across all saved runs.</td><td>Provides sponsor-grade usage and trust signals.</td></tr> -->
+          <!-- <tr><td><code>POST /api/v1/pilot/access-code/generate</code></td><td>Generate a suggested pilot access token value.</td><td>Supports controlled sharing without building full auth.</td></tr> -->
           <tr><td><code>GET /api/v1/config/agent01</code> / <code>agent02</code></td><td>Read server-backed enterprise policy for each agent.</td><td>Separates governance from day-to-day run selection.</td></tr>
         </table>
       </section>

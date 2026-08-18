@@ -706,7 +706,7 @@
         <a href="/agent02" id="navAgent02">Agent 02</a>
         <a href="/history" id="navHistory">Run History</a>
         <a href="/rag" id="navRag">RAG</a>
-        <a href="/pilot" id="navPilot">Pilot Dashboard</a>
+        <!-- <a href="/pilot" id="navPilot">Pilot Dashboard</a> -->
         <a href="./configuration.html" id="navConfig">Enterprise Config</a>
         <a href="/product-docs" id="navDocs">Docs</a>
       </nav>
@@ -1014,9 +1014,9 @@
     const clearRunBtnEl = document.getElementById("clearRun");
     const openConfigBtnEl = document.getElementById("openConfig");
     const apiBase = (() => {
-      const stored = "silicon-agents-mvp-production.up.railway.app";
+      const stored = "https://silicon-agents-mvp-production.up.railway.app";
       if (window.location.protocol === "file:") {
-        return stored || "http://127.0.0.1:8000";
+        return "http://127.0.0.1:8000";
       }
       return stored;
     })();
@@ -1498,8 +1498,6 @@
 
     async function apiFetch(path, options = {}) {
       const headers = new Headers(options.headers || {});
-      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
-      if (token) headers.set("X-Pilot-Access-Token", token);
       return fetch(`${apiBase}${path}`, { ...options, headers });
     }
 

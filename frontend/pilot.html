@@ -575,9 +575,9 @@
   <script>
     const isFileMode = window.location.protocol === "file:";
     const apiBase = (() => {
-      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      const stored = "https://silicon-agents-mvp-production.up.railway.app"
       if (isFileMode) {
-        return stored || "http://127.0.0.1:8000";
+        return "http://127.0.0.1:8000";
       }
       return stored;
     })();
@@ -610,8 +610,6 @@
 
     async function apiFetch(path, options = {}) {
       const headers = new Headers(options.headers || {});
-      const token = window.localStorage.getItem("silicon_agents_pilot_token") || "";
-      if (token) headers.set("X-Pilot-Access-Token", token);
       const response = await fetch(`${apiBase}${path}`, {
         ...options,
         headers,

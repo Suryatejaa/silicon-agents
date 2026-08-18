@@ -108,9 +108,9 @@
 
   <script>
     const apiBase = (() => {
-      const stored = window.localStorage.getItem("silicon_agents_api_base") || "";
+      const stored = "https://silicon-agents-mvp-production.up.railway.app";
       if (window.location.protocol === "file:") {
-        return stored || "http://127.0.0.1:8000";
+        return "http://127.0.0.1:8000";
       }
       return stored;
     })();
