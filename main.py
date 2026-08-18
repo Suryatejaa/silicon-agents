@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from importlib.resources import path
 from pathlib import Path
 import logging
 from time import perf_counter
-from urllib.parse import quote
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from httpcore import request
 
 from silicon_agents.api.router_benchmark import router as benchmark_router
 from silicon_agents.api.router_config import router as config_router
@@ -54,10 +55,9 @@ def create_app() -> FastAPI:
     async def lifespan(_: FastAPI):
         await FeedbackStore(settings.db_path).init()
         logger.info(
-            "Silicon Agents starting version=%s db_path=%s pilot_access=%s",
+            "Silicon Agents starting version=%s db_path=%s",
             settings.app_version,
             redact_db_target(settings.db_path),
-            "enabled" if settings.pilot_access_token else "disabled",
         )
         yield
 
@@ -81,31 +81,14 @@ def create_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
     app.mount("/sample-data", StaticFiles(directory=SAMPLE_DATA_DIR), name="sample-data")
 
+
     @app.middleware("http")
-    async def pilot_access_and_logging(request: Request, call_next):
+    async def request_logging(request: Request, call_next):
         started = perf_counter()
         path = request.url.path
-        method = request.method.upper()
-        access_enabled = bool(settings.pilot_access_token)
-        exempt_paths = {"/health", "/pilot-login", "/pilot/unlock"}
-        exempt_prefixes = ("/docs", "/openapi.json", "/redoc", "/sample-data")
-        header_token = request.headers.get("X-Pilot-Access-Token", "")
-        cookie_token = request.cookies.get(settings.pilot_cookie_name, "")
-
-        if access_enabled and method != "OPTIONS" and path not in exempt_paths and not path.startswith(exempt_prefixes):
-            authorized = header_token == settings.pilot_access_token or cookie_token == settings.pilot_access_token
-            if not authorized:
-                accepts_html = "text/html" in request.headers.get("accept", "")
-                if path.startswith("/api/") or not accepts_html:
-                    duration_ms = int((perf_counter() - started) * 1000)
-                    logger.warning("Rejected unauthorized request method=%s path=%s duration_ms=%s", request.method, path, duration_ms)
-                    return JSONResponse(status_code=401, content={"detail": "Pilot access token required."})
-                next_path = quote(str(request.url.path if not request.url.query else f"{request.url.path}?{request.url.query}"), safe="/?=&")
-                duration_ms = int((perf_counter() - started) * 1000)
-                logger.warning("Redirected unauthorized browser request method=%s path=%s duration_ms=%s", request.method, path, duration_ms)
-                return RedirectResponse(url=f"/pilot-login?next={next_path}", status_code=307)
 
         response = await call_next(request)
+
         duration_ms = int((perf_counter() - started) * 1000)
         logger.info(
             "Request method=%s path=%s status=%s duration_ms=%s",
@@ -114,6 +97,7 @@ def create_app() -> FastAPI:
             response.status_code,
             duration_ms,
         )
+
         return response
 
     @app.get("/health")
@@ -144,10 +128,6 @@ def create_app() -> FastAPI:
     async def rag_page() -> FileResponse:
         return FileResponse(FRONTEND_DIR / "rag.html")
 
-    @app.get("/pilot")
-    async def pilot_page() -> FileResponse:
-        return FileResponse(FRONTEND_DIR / "pilot.html")
-
     @app.get("/product-docs")
     async def product_docs_page() -> FileResponse:
         return FileResponse(FRONTEND_DIR / "docs.html")
@@ -155,28 +135,6 @@ def create_app() -> FastAPI:
     @app.get("/pitch")
     async def pitch_page() -> FileResponse:
         return FileResponse(FRONTEND_DIR / "pitch.html")
-
-    @app.get("/pilot-login")
-    async def pilot_login_page() -> FileResponse:
-        return FileResponse(FRONTEND_DIR / "pilot_access.html")
-
-    @app.post("/pilot/unlock")
-    async def pilot_unlock(request: Request) -> JSONResponse:
-        if not settings.pilot_access_token:
-            return JSONResponse({"unlocked": True, "mode": "disabled"})
-        header_token = request.headers.get("X-Pilot-Access-Token", "")
-        if header_token != settings.pilot_access_token:
-            return JSONResponse(status_code=401, content={"detail": "Invalid pilot access token."})
-        response = JSONResponse({"unlocked": True})
-        response.set_cookie(
-            key=settings.pilot_cookie_name,
-            value=settings.pilot_access_token,
-            httponly=True,
-            samesite="lax",
-            secure=False,
-            max_age=60 * 60 * 12,
-        )
-        return response
 
     return app
 
